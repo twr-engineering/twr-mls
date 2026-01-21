@@ -1,0 +1,176 @@
+import type { CollectionConfig, Access, Where } from 'payload'
+import { adminOnly } from '@/access'
+
+/**
+ * Notifications Collection
+ *
+ * Stores in-app notifications for users about listing status changes
+ * and other system events.
+ */
+
+// Notification type options
+export const NotificationTypes = [
+  'listing_published',
+  'listing_needs_revision',
+  'listing_rejected',
+  'listing_submitted',
+] as const
+export type NotificationType = (typeof NotificationTypes)[number]
+
+/**
+ * Access Control Functions
+ */
+
+// Read: Users can only read their own notifications
+const canReadNotification: Access = ({ req: { user } }) => {
+  if (!user) return false
+
+  // Admin can see all notifications
+  if (user.role === 'admin') return true
+
+  // Users can only see their own notifications
+  const query: Where = {
+    recipient: { equals: user.id },
+  }
+  return query
+}
+
+// Create: System only (no direct user creation)
+// We'll use overrideAccess in hooks to create notifications
+const canCreateNotification: Access = ({ req: { user } }) => {
+  // Only admin can create directly (for testing purposes)
+  // Normal creation happens via hooks with overrideAccess
+  if (!user) return false
+  return user.role === 'admin'
+}
+
+// Update: Users can only mark their own notifications as read
+const canUpdateNotification: Access = ({ req: { user } }) => {
+  if (!user) return false
+
+  // Admin can update all
+  if (user.role === 'admin') return true
+
+  // Users can only update their own notifications
+  const query: Where = {
+    recipient: { equals: user.id },
+  }
+  return query
+}
+
+export const Notifications: CollectionConfig = {
+  slug: 'notifications',
+  admin: {
+    useAsTitle: 'message',
+    defaultColumns: ['type', 'recipient', 'message', 'read', 'createdAt'],
+    group: 'System',
+    description: 'System notifications for users',
+  },
+  access: {
+    read: canReadNotification,
+    create: canCreateNotification,
+    update: canUpdateNotification,
+    delete: adminOnly,
+  },
+  hooks: {
+    beforeChange: [
+      // Auto-set readAt when marking as read
+      async ({ data, originalDoc }) => {
+        if (data.read === true && originalDoc?.read !== true) {
+          data.readAt = new Date().toISOString()
+        }
+        // Clear readAt if marking as unread
+        if (data.read === false && originalDoc?.read === true) {
+          data.readAt = null
+        }
+        return data
+      },
+    ],
+  },
+  fields: [
+    // ==========================================
+    // Notification Details
+    // ==========================================
+    {
+      name: 'type',
+      type: 'select',
+      required: true,
+      options: [
+        { label: 'Listing Published', value: 'listing_published' },
+        { label: 'Listing Needs Revision', value: 'listing_needs_revision' },
+        { label: 'Listing Rejected', value: 'listing_rejected' },
+        { label: 'Listing Submitted', value: 'listing_submitted' },
+      ],
+      admin: {
+        description: 'Type of notification',
+      },
+    },
+    {
+      name: 'message',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Notification message',
+      },
+    },
+    {
+      name: 'recipient',
+      type: 'relationship',
+      relationTo: 'users',
+      required: true,
+      hasMany: false,
+      admin: {
+        description: 'User who receives this notification',
+      },
+    },
+    {
+      name: 'listing',
+      type: 'relationship',
+      relationTo: 'listings',
+      hasMany: false,
+      admin: {
+        description: 'Related listing (if applicable)',
+      },
+    },
+
+    // ==========================================
+    // Read Status
+    // ==========================================
+    {
+      name: 'read',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Has the user read this notification?',
+      },
+    },
+    {
+      name: 'readAt',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+        description: 'When the notification was read',
+        condition: (data) => data?.read === true,
+      },
+    },
+  ],
+  indexes: [
+    {
+      fields: ['recipient'],
+    },
+    {
+      fields: ['type'],
+    },
+    {
+      fields: ['read'],
+    },
+    {
+      fields: ['listing'],
+    },
+  ],
+}
