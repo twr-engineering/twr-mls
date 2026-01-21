@@ -1,5 +1,7 @@
 import type { CollectionConfig, Access, FieldAccess, Where } from 'payload'
 import { authenticated } from '@/access'
+import { validateStatusTransition } from '@/hooks/listings/validateStatusTransition'
+import { notifyStatusChange } from '@/hooks/listings/notifyStatusChange'
 
 /**
  * Listings Collection
@@ -198,6 +200,12 @@ export const Listings: CollectionConfig = {
         }
         return data
       },
+      // Validate status transitions
+      validateStatusTransition,
+    ],
+    afterChange: [
+      // Send notifications on status changes
+      notifyStatusChange,
     ],
   },
   fields: [

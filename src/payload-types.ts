@@ -76,6 +76,7 @@ export interface Config {
     townships: Township;
     listings: Listing;
     documents: Document;
+    notifications: Notification;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -92,6 +93,7 @@ export interface Config {
     townships: TownshipsSelect<false> | TownshipsSelect<true>;
     listings: ListingsSelect<false> | ListingsSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -481,6 +483,41 @@ export interface Document {
   createdAt: string;
 }
 /**
+ * System notifications for users
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: number;
+  /**
+   * Type of notification
+   */
+  type: 'listing_published' | 'listing_needs_revision' | 'listing_rejected' | 'listing_submitted';
+  /**
+   * Notification message
+   */
+  message: string;
+  /**
+   * User who receives this notification
+   */
+  recipient: number | User;
+  /**
+   * Related listing (if applicable)
+   */
+  listing?: (number | null) | Listing;
+  /**
+   * Has the user read this notification?
+   */
+  read?: boolean | null;
+  /**
+   * When the notification was read
+   */
+  readAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -539,6 +576,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'documents';
         value: number | Document;
+      } | null)
+    | ({
+        relationTo: 'notifications';
+        value: number | Notification;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -741,6 +782,20 @@ export interface DocumentsSelect<T extends boolean = true> {
   verified?: T;
   verifiedBy?: T;
   verifiedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  type?: T;
+  message?: T;
+  recipient?: T;
+  listing?: T;
+  read?: T;
+  readAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

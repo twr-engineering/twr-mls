@@ -10,6 +10,7 @@ import { Media } from './collections/Media'
 import { Cities, Barangays, Developments, Estates, Townships } from './collections/locations'
 import { Listings } from './collections/Listings'
 import { Documents } from './collections/Documents'
+import { Notifications } from './collections/Notifications'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -21,7 +22,18 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Cities, Barangays, Developments, Estates, Townships, Listings, Documents],
+  collections: [
+    Users,
+    Media,
+    Cities,
+    Barangays,
+    Developments,
+    Estates,
+    Townships,
+    Listings,
+    Documents,
+    Notifications,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
