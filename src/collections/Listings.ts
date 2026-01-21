@@ -633,10 +633,26 @@ export const Listings: CollectionConfig = {
       fields: ['listingType'],
     },
     {
+      fields: ['transactionType'],
+    },
+    {
       fields: ['city'],
     },
     {
+      fields: ['barangay'],
+    },
+    {
+      fields: ['development'],
+    },
+    {
+      fields: ['price'],
+    },
+    {
       fields: ['createdBy'],
+    },
+    // Compound index for MLS search (published listings by type)
+    {
+      fields: ['status', 'listingType'],
     },
   ],
 }
