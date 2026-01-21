@@ -74,6 +74,7 @@ export interface Config {
     developments: Development;
     estates: Estate;
     townships: Township;
+    listings: Listing;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,6 +89,7 @@ export interface Config {
     developments: DevelopmentsSelect<false> | DevelopmentsSelect<true>;
     estates: EstatesSelect<false> | EstatesSelect<true>;
     townships: TownshipsSelect<false> | TownshipsSelect<true>;
+    listings: ListingsSelect<false> | ListingsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -301,6 +303,87 @@ export interface Township {
   createdAt: string;
 }
 /**
+ * Property listings for the MLS system
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "listings".
+ */
+export interface Listing {
+  id: number;
+  title: string;
+  /**
+   * Detailed description for internal use and client sharing
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Agents can only create Resale listings
+   */
+  listingType: 'resale' | 'preselling';
+  /**
+   * Automatically set to the current user
+   */
+  createdBy: number | User;
+  status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
+  transactionType: 'sale' | 'rent';
+  price: number;
+  /**
+   * Required for lot-type properties
+   */
+  pricePerSqm?: number | null;
+  /**
+   * For condos, offices, buildings
+   */
+  floorAreaSqm?: number | null;
+  /**
+   * For lots, house-and-lot
+   */
+  lotAreaSqm?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  parkingSlots?: number | null;
+  furnishing?: ('unfurnished' | 'semi_furnished' | 'fully_furnished') | null;
+  constructionYear?: number | null;
+  tenure?: ('freehold' | 'leasehold') | null;
+  titleStatus?: ('clean' | 'mortgaged') | null;
+  paymentTerms?: ('cash' | 'bank' | 'pagibig' | 'deferred')[] | null;
+  /**
+   * Select city first
+   */
+  city: number | City;
+  /**
+   * Filtered by selected city
+   */
+  barangay: number | Barangay;
+  /**
+   * Filtered by selected barangay (optional)
+   */
+  development?: (number | null) | Development;
+  /**
+   * Complete address for internal reference
+   */
+  fullAddress: string;
+  /**
+   * Upload listing photos
+   */
+  images?: (number | Media)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -351,6 +434,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'townships';
         value: number | Township;
+      } | null)
+    | ({
+        relationTo: 'listings';
+        value: number | Listing;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -496,6 +583,37 @@ export interface TownshipsSelect<T extends boolean = true> {
   slug?: T;
   coveredBarangays?: T;
   isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "listings_select".
+ */
+export interface ListingsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  listingType?: T;
+  createdBy?: T;
+  status?: T;
+  transactionType?: T;
+  price?: T;
+  pricePerSqm?: T;
+  floorAreaSqm?: T;
+  lotAreaSqm?: T;
+  bedrooms?: T;
+  bathrooms?: T;
+  parkingSlots?: T;
+  furnishing?: T;
+  constructionYear?: T;
+  tenure?: T;
+  titleStatus?: T;
+  paymentTerms?: T;
+  city?: T;
+  barangay?: T;
+  development?: T;
+  fullAddress?: T;
+  images?: T;
   updatedAt?: T;
   createdAt?: T;
 }
