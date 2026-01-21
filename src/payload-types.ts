@@ -137,7 +137,7 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   /**
-   * User role determines access permissions
+   * User role determines access permissions (Admin only can modify)
    */
   role: 'agent' | 'approver' | 'admin';
   firstName?: string | null;
@@ -166,12 +166,21 @@ export interface User {
   password?: string | null;
 }
 /**
+ * Uploaded media files (images, documents)
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  /**
+   * Alternative text for accessibility
+   */
   alt: string;
+  /**
+   * User who uploaded this file
+   */
+  uploadedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -382,6 +391,42 @@ export interface Listing {
    * Upload listing photos
    */
   images?: (number | Media)[] | null;
+  /**
+   * Unit model or type name
+   */
+  modelName?: string | null;
+  /**
+   * Starting price range
+   */
+  indicativePriceMin?: number | null;
+  /**
+   * Upper price range
+   */
+  indicativePriceMax?: number | null;
+  minLotArea?: number | null;
+  minFloorArea?: number | null;
+  /**
+   * Standard inclusions and features
+   */
+  standardInclusions?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Internal notes about this preselling listing
+   */
+  presellingNotes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -570,6 +615,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  uploadedBy?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -670,6 +716,13 @@ export interface ListingsSelect<T extends boolean = true> {
   development?: T;
   fullAddress?: T;
   images?: T;
+  modelName?: T;
+  indicativePriceMin?: T;
+  indicativePriceMax?: T;
+  minLotArea?: T;
+  minFloorArea?: T;
+  standardInclusions?: T;
+  presellingNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

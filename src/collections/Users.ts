@@ -1,7 +1,47 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Access, Where } from 'payload'
+import { adminOnly, adminOnlyField } from '@/access'
 
 export const UserRoles = ['agent', 'approver', 'admin'] as const
 export type UserRole = (typeof UserRoles)[number]
+
+/**
+ * Access Control for Users Collection
+ */
+
+// Read: Users see own profile, Approvers see agents/approvers, Admin sees all
+const canReadUser: Access = ({ req: { user } }) => {
+  if (!user) return false
+
+  // Admin can see all users
+  if (user.role === 'admin') return true
+
+  // Approvers can see agents and other approvers (for assignment purposes)
+  if (user.role === 'approver') {
+    const query: Where = {
+      or: [
+        { role: { in: ['agent', 'approver'] } },
+        { id: { equals: user.id } },
+      ],
+    }
+    return query
+  }
+
+  // Agents can only see themselves
+  const query: Where = { id: { equals: user.id } }
+  return query
+}
+
+// Update: Users can update own profile (except role), Admin can update all
+const canUpdateUser: Access = ({ req: { user } }) => {
+  if (!user) return false
+
+  // Admin can update all users
+  if (user.role === 'admin') return true
+
+  // Users can update their own profile
+  const query: Where = { id: { equals: user.id } }
+  return query
+}
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -11,6 +51,12 @@ export const Users: CollectionConfig = {
     group: 'System',
   },
   auth: true,
+  access: {
+    read: canReadUser,
+    create: adminOnly,
+    update: canUpdateUser,
+    delete: adminOnly,
+  },
   fields: [
     {
       name: 'role',
@@ -23,9 +69,12 @@ export const Users: CollectionConfig = {
         { label: 'Admin', value: 'admin' },
       ],
       saveToJWT: true,
+      access: {
+        update: adminOnlyField,
+      },
       admin: {
         position: 'sidebar',
-        description: 'User role determines access permissions',
+        description: 'User role determines access permissions (Admin only can modify)',
       },
     },
     {

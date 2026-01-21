@@ -121,6 +121,7 @@ export const Documents: CollectionConfig = {
             collection: 'listings',
             id: data.listing,
             depth: 0,
+            req, // Pass req for transaction safety
           })
 
           if (listing && listing.createdBy !== req.user.id) {

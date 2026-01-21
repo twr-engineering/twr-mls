@@ -68,7 +68,7 @@ const canReadListing: Access = ({ req: { user } }) => {
 // Create: All authenticated users can create (listingType restriction handled in field access)
 const canCreateListing: Access = authenticated
 
-// Update: Agents can update own draft/needs_revision, Approvers/Admin can update all
+// Update: Agents can update own RESALE draft/needs_revision, Approvers/Admin can update all
 const canUpdateListing: Access = ({ req: { user } }) => {
   if (!user) return false
 
@@ -82,10 +82,12 @@ const canUpdateListing: Access = ({ req: { user } }) => {
     return true
   }
 
-  // Agents can only update their own listings that are draft or needs_revision
+  // Agents can only update their own RESALE listings that are draft or needs_revision
+  // Preselling listings are read-only for agents (per core-collection.md)
   const query: Where = {
     and: [
       { createdBy: { equals: user.id } },
+      { listingType: { equals: 'resale' } }, // Agents cannot update preselling
       {
         or: [
           { status: { equals: 'draft' } },
@@ -172,6 +174,7 @@ export const Listings: CollectionConfig = {
               collection: 'barangays',
               id: data.barangay,
               depth: 0,
+              req, // Pass req for transaction safety
             })
 
             if (barangay && barangay.city !== data.city) {
@@ -185,6 +188,7 @@ export const Listings: CollectionConfig = {
               collection: 'developments',
               id: data.development,
               depth: 0,
+              req, // Pass req for transaction safety
             })
 
             if (development && development.barangay !== data.barangay) {
@@ -526,6 +530,91 @@ export const Listings: CollectionConfig = {
       admin: {
         description: 'Upload listing photos',
       },
+    },
+
+    // ==========================================
+    // Preselling-Specific Fields (Admin Only)
+    // ==========================================
+    {
+      type: 'collapsible',
+      label: 'Preselling Details',
+      admin: {
+        condition: (data) => data?.listingType === 'preselling',
+        description: 'Additional fields for preselling listings (Admin only)',
+      },
+      fields: [
+        {
+          name: 'modelName',
+          type: 'text',
+          admin: {
+            placeholder: 'e.g., 2BR Unit Type A',
+            description: 'Unit model or type name',
+          },
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'indicativePriceMin',
+              type: 'number',
+              min: 0,
+              admin: {
+                placeholder: 'Minimum price',
+                width: '50%',
+                description: 'Starting price range',
+              },
+            },
+            {
+              name: 'indicativePriceMax',
+              type: 'number',
+              min: 0,
+              admin: {
+                placeholder: 'Maximum price',
+                width: '50%',
+                description: 'Upper price range',
+              },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'minLotArea',
+              type: 'number',
+              min: 0,
+              admin: {
+                placeholder: 'Min lot area (sqm)',
+                width: '50%',
+              },
+            },
+            {
+              name: 'minFloorArea',
+              type: 'number',
+              min: 0,
+              admin: {
+                placeholder: 'Min floor area (sqm)',
+                width: '50%',
+              },
+            },
+          ],
+        },
+        {
+          name: 'standardInclusions',
+          type: 'richText',
+          admin: {
+            description: 'Standard inclusions and features',
+          },
+        },
+        {
+          name: 'presellingNotes',
+          type: 'textarea',
+          admin: {
+            placeholder: 'Additional notes, disclaimers, or special conditions',
+            description: 'Internal notes about this preselling listing',
+          },
+        },
+      ],
     },
   ],
   indexes: [
