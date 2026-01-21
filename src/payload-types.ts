@@ -77,6 +77,7 @@ export interface Config {
     listings: Listing;
     documents: Document;
     notifications: Notification;
+    'external-share-links': ExternalShareLink;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -94,6 +95,7 @@ export interface Config {
     listings: ListingsSelect<false> | ListingsSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    'external-share-links': ExternalShareLinksSelect<false> | ExternalShareLinksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -518,6 +520,45 @@ export interface Notification {
   createdAt: string;
 }
 /**
+ * Share links for external clients to view published listings
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "external-share-links".
+ */
+export interface ExternalShareLink {
+  id: number;
+  /**
+   * Auto-generated secure token for the share URL
+   */
+  token: string;
+  /**
+   * The listing to share (must be published)
+   */
+  listing: number | Listing;
+  /**
+   * User who created this share link
+   */
+  createdBy: number | User;
+  /**
+   * Optional expiry date (leave empty for no expiry)
+   */
+  expiresAt?: string | null;
+  /**
+   * Set to false to revoke this share link
+   */
+  isActive?: boolean | null;
+  /**
+   * Number of times this link has been accessed
+   */
+  viewCount?: number | null;
+  /**
+   * Last time this link was accessed
+   */
+  lastViewedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -580,6 +621,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'notifications';
         value: number | Notification;
+      } | null)
+    | ({
+        relationTo: 'external-share-links';
+        value: number | ExternalShareLink;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -796,6 +841,21 @@ export interface NotificationsSelect<T extends boolean = true> {
   listing?: T;
   read?: T;
   readAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "external-share-links_select".
+ */
+export interface ExternalShareLinksSelect<T extends boolean = true> {
+  token?: T;
+  listing?: T;
+  createdBy?: T;
+  expiresAt?: T;
+  isActive?: T;
+  viewCount?: T;
+  lastViewedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

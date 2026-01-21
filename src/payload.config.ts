@@ -11,6 +11,7 @@ import { Cities, Barangays, Developments, Estates, Townships } from './collectio
 import { Listings } from './collections/Listings'
 import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
+import { ExternalShareLinks } from './collections/ExternalShareLinks'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -33,6 +34,7 @@ export default buildConfig({
     Listings,
     Documents,
     Notifications,
+    ExternalShareLinks,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
