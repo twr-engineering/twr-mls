@@ -75,6 +75,7 @@ export interface Config {
     estates: Estate;
     townships: Township;
     listings: Listing;
+    documents: Document;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +91,7 @@ export interface Config {
     estates: EstatesSelect<false> | EstatesSelect<true>;
     townships: TownshipsSelect<false> | TownshipsSelect<true>;
     listings: ListingsSelect<false> | ListingsSelect<true>;
+    documents: DocumentsSelect<false> | DocumentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -384,6 +386,56 @@ export interface Listing {
   createdAt: string;
 }
 /**
+ * Documents attached to listings (titles, contracts, etc.)
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents".
+ */
+export interface Document {
+  id: number;
+  /**
+   * Type of document
+   */
+  type:
+    | 'title'
+    | 'tax_declaration'
+    | 'contract'
+    | 'floor_plan'
+    | 'site_plan'
+    | 'photo_id'
+    | 'proof_of_billing'
+    | 'other';
+  /**
+   * The document file
+   */
+  file: number | Media;
+  /**
+   * The listing this document belongs to
+   */
+  listing: number | Listing;
+  notes?: string | null;
+  /**
+   * Who can see this document
+   */
+  visibility: 'private' | 'internal';
+  /**
+   * Automatically set to current user
+   */
+  uploadedBy?: (number | null) | User;
+  uploadedAt?: string | null;
+  /**
+   * Mark document as verified
+   */
+  verified?: boolean | null;
+  /**
+   * User who verified this document
+   */
+  verifiedBy?: (number | null) | User;
+  verifiedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -438,6 +490,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'listings';
         value: number | Listing;
+      } | null)
+    | ({
+        relationTo: 'documents';
+        value: number | Document;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -614,6 +670,24 @@ export interface ListingsSelect<T extends boolean = true> {
   development?: T;
   fullAddress?: T;
   images?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents_select".
+ */
+export interface DocumentsSelect<T extends boolean = true> {
+  type?: T;
+  file?: T;
+  listing?: T;
+  notes?: T;
+  visibility?: T;
+  uploadedBy?: T;
+  uploadedAt?: T;
+  verified?: T;
+  verifiedBy?: T;
+  verifiedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
