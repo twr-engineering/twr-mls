@@ -69,6 +69,11 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    cities: City;
+    barangays: Barangay;
+    developments: Development;
+    estates: Estate;
+    townships: Township;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +83,11 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    cities: CitiesSelect<false> | CitiesSelect<true>;
+    barangays: BarangaysSelect<false> | BarangaysSelect<true>;
+    developments: DevelopmentsSelect<false> | DevelopmentsSelect<true>;
+    estates: EstatesSelect<false> | EstatesSelect<true>;
+    townships: TownshipsSelect<false> | TownshipsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -122,6 +132,17 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * User role determines access permissions
+   */
+  role: 'agent' | 'approver' | 'admin';
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  /**
+   * Inactive users cannot log in
+   */
+  isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -160,6 +181,126 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Cities are the top level of the location hierarchy
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities".
+ */
+export interface City {
+  id: number;
+  name: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Inactive cities will not appear in dropdowns
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Barangays belong to a City
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "barangays".
+ */
+export interface Barangay {
+  id: number;
+  name: string;
+  /**
+   * The city this barangay belongs to
+   */
+  city: number | City;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Inactive barangays will not appear in dropdowns
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Developments (subdivisions) belong to a Barangay
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "developments".
+ */
+export interface Development {
+  id: number;
+  name: string;
+  /**
+   * The barangay this development is located in
+   */
+  barangay: number | Barangay;
+  /**
+   * Optional: Primary estate for admin clarity only (does NOT affect search logic)
+   */
+  primaryEstate?: (number | null) | Estate;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Inactive developments will not appear in dropdowns
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Estates are branded groupings of multiple Developments
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "estates".
+ */
+export interface Estate {
+  id: number;
+  name: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Developments that belong to this estate (source of truth for estate membership)
+   */
+  includedDevelopments: (number | Development)[];
+  /**
+   * Inactive estates will not appear in search filters
+   */
+  isActive: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Townships are market-recognized geographic areas spanning multiple barangays
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "townships".
+ */
+export interface Township {
+  id: number;
+  name: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Barangays covered by this township (source of truth for township membership)
+   */
+  coveredBarangays: (number | Barangay)[];
+  /**
+   * Inactive townships will not appear in search filters
+   */
+  isActive: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -190,6 +331,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'cities';
+        value: number | City;
+      } | null)
+    | ({
+        relationTo: 'barangays';
+        value: number | Barangay;
+      } | null)
+    | ({
+        relationTo: 'developments';
+        value: number | Development;
+      } | null)
+    | ({
+        relationTo: 'estates';
+        value: number | Estate;
+      } | null)
+    | ({
+        relationTo: 'townships';
+        value: number | Township;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -238,6 +399,11 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
+  firstName?: T;
+  lastName?: T;
+  phone?: T;
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -272,6 +438,66 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities_select".
+ */
+export interface CitiesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "barangays_select".
+ */
+export interface BarangaysSelect<T extends boolean = true> {
+  name?: T;
+  city?: T;
+  slug?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "developments_select".
+ */
+export interface DevelopmentsSelect<T extends boolean = true> {
+  name?: T;
+  barangay?: T;
+  primaryEstate?: T;
+  slug?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "estates_select".
+ */
+export interface EstatesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  includedDevelopments?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "townships_select".
+ */
+export interface TownshipsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  coveredBarangays?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
