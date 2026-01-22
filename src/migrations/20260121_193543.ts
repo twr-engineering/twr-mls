@@ -312,7 +312,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "media_updated_at_idx" ON "media" USING btree ("updated_at");
   CREATE INDEX "media_created_at_idx" ON "media" USING btree ("created_at");
   CREATE UNIQUE INDEX "media_filename_idx" ON "media" USING btree ("filename");
-  CREATE UNIQUE INDEX "cities_name_idx" ON "cities" USING btree ("name");
   CREATE UNIQUE INDEX "cities_slug_idx" ON "cities" USING btree ("slug");
   CREATE INDEX "cities_updated_at_idx" ON "cities" USING btree ("updated_at");
   CREATE INDEX "cities_created_at_idx" ON "cities" USING btree ("created_at");
