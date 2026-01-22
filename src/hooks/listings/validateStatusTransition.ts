@@ -38,7 +38,12 @@ export const validateStatusTransition: CollectionBeforeChangeHook<Listing> = asy
   // Admin can bypass transition rules
   if (req.user?.role === 'admin') return data
 
-  const allowedTransitions = VALID_TRANSITIONS[oldStatus] || []
+  const allowedTransitions = VALID_TRANSITIONS[oldStatus]
+
+  // If no valid transitions defined for this status, reject the transition
+  if (!allowedTransitions || !Array.isArray(allowedTransitions)) {
+    throw new Error(`Invalid status transition: ${oldStatus} → ${newStatus}`)
+  }
 
   if (!allowedTransitions.includes(newStatus)) {
     throw new Error(`Invalid status transition: ${oldStatus} → ${newStatus}`)

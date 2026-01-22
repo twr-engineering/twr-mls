@@ -351,7 +351,7 @@ export interface Listing {
   /**
    * Automatically set to the current user
    */
-  createdBy: number | User;
+  createdBy?: (number | null) | User;
   status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
   transactionType: 'sale' | 'rent';
   price: number;
@@ -387,6 +387,14 @@ export interface Listing {
    * Filtered by selected barangay (optional)
    */
   development?: (number | null) | Development;
+  /**
+   * Auto-populated based on Barangay
+   */
+  township?: (number | null) | Township;
+  /**
+   * Auto-populated based on Development
+   */
+  estate?: (number | null) | Estate;
   /**
    * Complete address for internal reference
    */
@@ -800,6 +808,8 @@ export interface ListingsSelect<T extends boolean = true> {
   city?: T;
   barangay?: T;
   development?: T;
+  township?: T;
+  estate?: T;
   fullAddress?: T;
   images?: T;
   modelName?: T;

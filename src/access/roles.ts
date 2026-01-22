@@ -17,7 +17,8 @@ type AccessArgs = {
  * Check if user has one of the specified roles
  */
 export const hasRole = (user: User | null | undefined, roles: UserRole[]): boolean => {
-  if (!user) return false
+  if (!user || !user.role) return false
+  if (!roles || !Array.isArray(roles)) return false
   return roles.includes(user.role as UserRole)
 }
 

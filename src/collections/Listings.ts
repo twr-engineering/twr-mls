@@ -2,6 +2,8 @@ import type { CollectionConfig, Access, FieldAccess, Where } from 'payload'
 import { authenticated } from '@/access'
 import { validateStatusTransition } from '@/hooks/listings/validateStatusTransition'
 import { notifyStatusChange } from '@/hooks/listings/notifyStatusChange'
+import { populateLocationRelations } from '@/hooks/listings/populateLocationRelations'
+
 
 /**
  * Listings Collection
@@ -152,6 +154,7 @@ export const Listings: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
+      populateLocationRelations,
       // Auto-set createdBy on create
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user) {
@@ -253,7 +256,6 @@ export const Listings: CollectionConfig = {
       name: 'createdBy',
       type: 'relationship',
       relationTo: 'users',
-      required: true,
       hasMany: false,
       admin: {
         position: 'sidebar',
@@ -513,6 +515,33 @@ export const Listings: CollectionConfig = {
           admin: {
             width: '33%',
             description: 'Filtered by selected barangay (optional)',
+          },
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'township',
+          type: 'relationship',
+          relationTo: 'townships',
+          hasMany: false,
+          admin: {
+            readOnly: true,
+            width: '50%',
+            description: 'Auto-populated based on Barangay',
+          },
+        },
+        {
+          name: 'estate',
+          type: 'relationship',
+          relationTo: 'estates',
+          hasMany: false,
+          admin: {
+            readOnly: true,
+            width: '50%',
+            description: 'Auto-populated based on Development',
           },
         },
       ],

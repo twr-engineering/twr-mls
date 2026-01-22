@@ -13,6 +13,8 @@ import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
 
+import { LogoutButton } from './components/LogoutButton'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -21,6 +23,9 @@ export default buildConfig({
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    components: {
+      afterNavLinks: [LogoutButton as any],
     },
   },
   collections: [

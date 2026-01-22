@@ -26,10 +26,10 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
   if (oldStatus === newStatus) return doc
 
   const title = doc.title
-  const ownerId = typeof doc.createdBy === 'object' ? doc.createdBy.id : doc.createdBy
+  const ownerId = doc.createdBy && typeof doc.createdBy === 'object' ? doc.createdBy.id : doc.createdBy
 
   // Notify owner on status changes that affect them
-  if (['published', 'needs_revision', 'rejected'].includes(newStatus)) {
+  if (newStatus && ['published', 'needs_revision', 'rejected'].includes(newStatus) && ownerId) {
     const messages: Record<string, string> = {
       published: `Your listing "${title}" has been published`,
       needs_revision: `Your listing "${title}" needs revision`,
@@ -49,6 +49,7 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
         read: false,
       },
       req, // Maintain transaction context
+      overrideAccess: true, // Bypass access control for system-generated notifications
     })
   }
 
@@ -78,6 +79,7 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
           read: false,
         },
         req, // Maintain transaction context
+        overrideAccess: true, // Bypass access control for system-generated notifications
       })
     }
   }
