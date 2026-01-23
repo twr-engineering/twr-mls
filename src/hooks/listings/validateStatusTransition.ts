@@ -5,10 +5,22 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   draft: ['submitted'],
   submitted: ['published', 'needs_revision', 'rejected'],
   needs_revision: ['submitted'],
-  published: ['draft'], 
-  rejected: ['draft'], 
+  published: ['draft'],
+  rejected: ['draft'],
 }
 
+/**
+ * Payload BeforeChange Hook: Validates status transitions and enforces role-based rules.
+ *
+ * Rules:
+ * - Administrators can perform any transition.
+ * - Agents can only submit listings (cannot publish or reject).
+ * - Status transitions must follow the defined flow (e.g., draft -> submitted -> published).
+ * - Prevents agents from changing status to anything other than 'submitted'.
+ *
+ * @param args - The hook arguments containing data, originalDoc, req, and operation
+ * @returns The data if valid, throws an error if invalid
+ */
 export const validateStatusTransition: CollectionBeforeChangeHook<Listing> = async ({
   data,
   originalDoc,

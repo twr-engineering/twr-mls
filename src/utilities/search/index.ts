@@ -3,6 +3,12 @@ import type { ListingSearchFilters, SearchResponse } from './types'
 
 export * from './types'
 
+/**
+ * Expands a township ID into an array of its covered barangay IDs.
+ * @param payload - Payload instance for database queries
+ * @param townshipId - The ID of the township to expand
+ * @returns Array of barangay IDs covered by the township
+ */
 export async function expandTownshipToBarangays(
   payload: Payload,
   townshipId: number,
@@ -18,6 +24,12 @@ export async function expandTownshipToBarangays(
   return township.coveredBarangays.map((b) => (typeof b === 'object' ? b.id : b))
 }
 
+/**
+ * Expands an estate ID into an array of its included development IDs.
+ * @param payload - Payload instance for database queries
+ * @param estateId - The ID of the estate to expand
+ * @returns Array of development IDs included in the estate
+ */
 export async function expandEstateToDevelopments(
   payload: Payload,
   estateId: number,
@@ -33,6 +45,12 @@ export async function expandEstateToDevelopments(
   return estate.includedDevelopments.map((d) => (typeof d === 'object' ? d.id : d))
 }
 
+/**
+ * Builds a Payload 'Where' query based on listing search filters.
+ * @param payload - Payload instance for location expansion
+ * @param filters - Search filters to apply
+ * @returns Payload 'Where' clause object
+ */
 export async function buildSearchQuery(
   payload: Payload,
   filters: ListingSearchFilters,
@@ -116,6 +134,12 @@ export async function buildSearchQuery(
   return { and: conditions }
 }
 
+/**
+ * Searches for listings based on provided filters.
+ * @param payload - Payload instance for database queries
+ * @param filters - Search criteria Including pagination
+ * @returns Paginated search response
+ */
 export async function searchListings(
   payload: Payload,
   filters: ListingSearchFilters,
@@ -123,15 +147,15 @@ export async function searchListings(
   const where = await buildSearchQuery(payload, filters)
 
   const page = filters.page || 1
-  const limit = Math.min(filters.limit || 20, 100) 
+  const limit = Math.min(filters.limit || 20, 100)
 
   const result = await payload.find({
     collection: 'listings',
     where,
     page,
     limit,
-    depth: 2, 
-    sort: '-createdAt', 
+    depth: 2,
+    sort: '-createdAt',
   })
 
   return {
@@ -147,6 +171,11 @@ export async function searchListings(
   }
 }
 
+/**
+ * Parses URL search parameters into a ListingSearchFilters object.
+ * @param searchParams - URLSearchParams object from the request
+ * @returns Structured filters object
+ */
 export function parseSearchParams(searchParams: URLSearchParams): ListingSearchFilters {
   const filters: ListingSearchFilters = {}
 

@@ -1,5 +1,15 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
+/**
+ * Payload BeforeChange Hook: Auto-populates township and estate relations.
+ *
+ * - Sets 'township' based on the selected 'barangay'
+ * - Sets 'estate' based on the selected 'development'
+ * - Clears these fields if the parent relation is removed
+ *
+ * @param args - The hook arguments containing data, req, and operation
+ * @returns The modified data object with populated relations
+ */
 export const populateLocationRelations: CollectionBeforeChangeHook = async ({
     data,
     req,

@@ -1,6 +1,18 @@
 import type { CollectionAfterChangeHook } from 'payload'
 import type { Listing } from '@/payload-types'
 
+/**
+ * Payload AfterChange Hook: Sends notifications when a listing status changes.
+ *
+ * Triggers on:
+ * - 'published': Notifies the creator
+ * - 'needs_revision': Notifies the creator
+ * - 'rejected': Notifies the creator
+ * - 'submitted': Notifies all admins and approvers
+ *
+ * @param args - The hook arguments containing doc, previousDoc, and operation
+ * @returns The original document without modification
+ */
 export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
   doc,
   previousDoc,
@@ -37,8 +49,8 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
         message: messages[newStatus],
         read: false,
       },
-      req, 
-      overrideAccess: true, 
+      req,
+      overrideAccess: true,
     })
   }
 
@@ -49,7 +61,7 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
         role: { in: ['approver', 'admin'] },
         isActive: { equals: true },
       },
-      req, 
+      req,
     })
 
     for (const approver of approvers.docs) {
@@ -65,8 +77,8 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
           message: `New listing "${title}" submitted for review`,
           read: false,
         },
-        req, 
-        overrideAccess: true, 
+        req,
+        overrideAccess: true,
       })
     }
   }
