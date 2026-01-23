@@ -20,7 +20,6 @@ export const Cities: CollectionConfig = {
       name: 'name',
       type: 'text',
       required: true,
-      unique: true,
       admin: {
         placeholder: 'e.g., Cagayan de Oro',
       },

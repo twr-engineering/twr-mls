@@ -2,15 +2,8 @@ import type { CollectionConfig, Access, FieldAccess, Where } from 'payload'
 import { authenticated } from '@/access'
 import { validateStatusTransition } from '@/hooks/listings/validateStatusTransition'
 import { notifyStatusChange } from '@/hooks/listings/notifyStatusChange'
+import { populateLocationRelations } from '@/hooks/listings/populateLocationRelations'
 
-/**
- * Listings Collection
- *
- * Core business entity for the MLS system.
- * Reference: core-collection.md
- */
-
-// Listing status values
 export const ListingStatuses = [
   'draft',
   'submitted',
@@ -20,44 +13,31 @@ export const ListingStatuses = [
 ] as const
 export type ListingStatus = (typeof ListingStatuses)[number]
 
-// Listing type values
 export const ListingTypes = ['resale', 'preselling'] as const
 export type ListingType = (typeof ListingTypes)[number]
 
-// Transaction type values
 export const TransactionTypes = ['sale', 'rent'] as const
 export type TransactionType = (typeof TransactionTypes)[number]
 
-// Furnishing options
 export const FurnishingOptions = ['unfurnished', 'semi_furnished', 'fully_furnished'] as const
 export type FurnishingOption = (typeof FurnishingOptions)[number]
 
-// Tenure options
 export const TenureOptions = ['freehold', 'leasehold'] as const
 export type TenureOption = (typeof TenureOptions)[number]
 
-// Title status options
 export const TitleStatusOptions = ['clean', 'mortgaged'] as const
 export type TitleStatusOption = (typeof TitleStatusOptions)[number]
 
-// Payment terms options
 export const PaymentTermsOptions = ['cash', 'bank', 'pagibig', 'deferred'] as const
 export type PaymentTermsOption = (typeof PaymentTermsOptions)[number]
 
-/**
- * Access Control Functions
- */
-
-// Read: Agents see own + published, Approvers/Admin see all
 const canReadListing: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin and Approvers can see all listings
   if (user.role === 'admin' || user.role === 'approver') {
     return true
   }
 
-  // Agents can see their own listings OR published listings
   const query: Where = {
     or: [
       { createdBy: { equals: user.id } },
@@ -67,29 +47,23 @@ const canReadListing: Access = ({ req: { user } }) => {
   return query
 }
 
-// Create: All authenticated users can create (listingType restriction handled in field access)
 const canCreateListing: Access = authenticated
 
-// Update: Agents can update own RESALE draft/needs_revision, Approvers/Admin can update all
 const canUpdateListing: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can update all
   if (user.role === 'admin') {
     return true
   }
 
-  // Approvers can update all (for status changes)
   if (user.role === 'approver') {
     return true
   }
 
-  // Agents can only update their own RESALE listings that are draft or needs_revision
-  // Preselling listings are read-only for agents (per core-collection.md)
   const query: Where = {
     and: [
       { createdBy: { equals: user.id } },
-      { listingType: { equals: 'resale' } }, // Agents cannot update preselling
+      { listingType: { equals: 'resale' } }, 
       {
         or: [
           { status: { equals: 'draft' } },
@@ -101,16 +75,13 @@ const canUpdateListing: Access = ({ req: { user } }) => {
   return query
 }
 
-// Delete: Agents can delete own drafts, Admin can delete any
 const canDeleteListing: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can delete all
   if (user.role === 'admin') {
     return true
   }
 
-  // Agents can only delete their own draft listings
   if (user.role === 'agent') {
     const query: Where = {
       and: [
@@ -124,15 +95,11 @@ const canDeleteListing: Access = ({ req: { user } }) => {
   return false
 }
 
-// Field access: listingType - Agents cannot modify (enforced in hooks)
 const listingTypeFieldAccess: FieldAccess = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can always set listingType
   if (user.role === 'admin') return true
 
-  // Agents cannot modify listingType (enforced via beforeChange hook on create)
-  // On update, they won't have access to modify based on update access control
   return false
 }
 
@@ -152,31 +119,32 @@ export const Listings: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      // Auto-set createdBy on create
+      populateLocationRelations,
+
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user) {
           data.createdBy = req.user.id
         }
         return data
       },
-      // Enforce listingType restriction for agents
+
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user?.role === 'agent') {
-          // Force resale for agents
+
           data.listingType = 'resale'
         }
         return data
       },
-      // Validate location hierarchy
+
       async ({ data, req, operation }) => {
         if (operation === 'create' || operation === 'update') {
-          // Validate barangay belongs to city
+
           if (data.city && data.barangay) {
             const barangay = await req.payload.findByID({
               collection: 'barangays',
               id: data.barangay,
               depth: 0,
-              req, // Pass req for transaction safety
+              req, 
             })
 
             if (barangay && barangay.city !== data.city) {
@@ -184,13 +152,12 @@ export const Listings: CollectionConfig = {
             }
           }
 
-          // Validate development belongs to barangay
           if (data.barangay && data.development) {
             const development = await req.payload.findByID({
               collection: 'developments',
               id: data.development,
               depth: 0,
-              req, // Pass req for transaction safety
+              req, 
             })
 
             if (development && development.barangay !== data.barangay) {
@@ -200,18 +167,16 @@ export const Listings: CollectionConfig = {
         }
         return data
       },
-      // Validate status transitions
+
       validateStatusTransition,
     ],
     afterChange: [
-      // Send notifications on status changes
+
       notifyStatusChange,
     ],
   },
   fields: [
-    // ==========================================
-    // A. Core Details
-    // ==========================================
+
     {
       name: 'title',
       type: 'text',
@@ -229,9 +194,6 @@ export const Listings: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // B. Listing Type & Governance
-    // ==========================================
     {
       name: 'listingType',
       type: 'select',
@@ -253,7 +215,6 @@ export const Listings: CollectionConfig = {
       name: 'createdBy',
       type: 'relationship',
       relationTo: 'users',
-      required: true,
       hasMany: false,
       admin: {
         position: 'sidebar',
@@ -278,9 +239,6 @@ export const Listings: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // C. Transaction & Pricing
-    // ==========================================
     {
       type: 'row',
       fields: [
@@ -319,9 +277,6 @@ export const Listings: CollectionConfig = {
       ],
     },
 
-    // ==========================================
-    // D. Area & Specifications
-    // ==========================================
     {
       type: 'row',
       fields: [
@@ -380,9 +335,6 @@ export const Listings: CollectionConfig = {
       ],
     },
 
-    // ==========================================
-    // E. Attributes
-    // ==========================================
     {
       type: 'row',
       fields: [
@@ -422,9 +374,6 @@ export const Listings: CollectionConfig = {
       ],
     },
 
-    // ==========================================
-    // F. Legal & Payment
-    // ==========================================
     {
       type: 'row',
       fields: [
@@ -456,9 +405,6 @@ export const Listings: CollectionConfig = {
       ],
     },
 
-    // ==========================================
-    // G. Address & Location (CRITICAL)
-    // ==========================================
     {
       type: 'row',
       fields: [
@@ -518,6 +464,33 @@ export const Listings: CollectionConfig = {
       ],
     },
     {
+      type: 'row',
+      fields: [
+        {
+          name: 'township',
+          type: 'relationship',
+          relationTo: 'townships',
+          hasMany: false,
+          admin: {
+            readOnly: true,
+            width: '50%',
+            description: 'Auto-populated based on Barangay',
+          },
+        },
+        {
+          name: 'estate',
+          type: 'relationship',
+          relationTo: 'estates',
+          hasMany: false,
+          admin: {
+            readOnly: true,
+            width: '50%',
+            description: 'Auto-populated based on Development',
+          },
+        },
+      ],
+    },
+    {
       name: 'fullAddress',
       type: 'text',
       required: true,
@@ -527,9 +500,6 @@ export const Listings: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Images (relationship to Media)
-    // ==========================================
     {
       name: 'images',
       type: 'relationship',
@@ -540,9 +510,6 @@ export const Listings: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Preselling-Specific Fields (Admin Only)
-    // ==========================================
     {
       type: 'collapsible',
       label: 'Preselling Details',
@@ -650,7 +617,7 @@ export const Listings: CollectionConfig = {
     {
       fields: ['createdBy'],
     },
-    // Compound index for MLS search (published listings by type)
+
     {
       fields: ['status', 'listingType'],
     },

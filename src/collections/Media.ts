@@ -8,18 +8,18 @@ export const Media: CollectionConfig = {
     description: 'Uploaded media files (images, documents)',
   },
   access: {
-    // Read: Authenticated users only (no public access)
+
     read: authenticated,
-    // Create: Authenticated users can upload
+
     create: authenticated,
-    // Update: Admin only
+
     update: adminOnly,
-    // Delete: Admin only
+
     delete: adminOnly,
   },
   hooks: {
     beforeChange: [
-      // Auto-set uploadedBy on create
+
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user) {
           data.uploadedBy = req.user.id

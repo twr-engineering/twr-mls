@@ -2,42 +2,24 @@ import type { CollectionConfig, Access, Where } from 'payload'
 import { authenticated, adminOnly } from '@/access'
 import { generateSecureToken } from '@/utilities/generateToken'
 
-/**
- * ExternalShareLinks Collection
- *
- * Enables agents to share published listings with external clients
- * via secure, token-based URLs. Links can be revoked or set to expire.
- */
-
-/**
- * Access Control Functions
- */
-
-// Read: Own share links + Admin
 const canReadShareLink: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can see all
   if (user.role === 'admin') return true
 
-  // Users can only see their own share links
   const query: Where = {
     createdBy: { equals: user.id },
   }
   return query
 }
 
-// Create: Authenticated users can create share links
 const canCreateShareLink: Access = authenticated
 
-// Update: Own share links (for revoking) + Admin
 const canUpdateShareLink: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can update all
   if (user.role === 'admin') return true
 
-  // Users can only update their own share links
   const query: Where = {
     createdBy: { equals: user.id },
   }
@@ -60,20 +42,19 @@ export const ExternalShareLinks: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      // Auto-generate token and set createdBy on create
+
       async ({ data, req, operation }) => {
         if (operation === 'create') {
-          // Generate secure token
+
           data.token = generateSecureToken()
 
-          // Set createdBy
           if (req.user) {
             data.createdBy = req.user.id
           }
         }
         return data
       },
-      // Validate that listing is published
+
       async ({ data, req, operation }) => {
         if ((operation === 'create' || operation === 'update') && data.listing) {
           const listing = await req.payload.findByID({
@@ -92,9 +73,7 @@ export const ExternalShareLinks: CollectionConfig = {
     ],
   },
   fields: [
-    // ==========================================
-    // Token & Link Details
-    // ==========================================
+
     {
       name: 'token',
       type: 'text',
@@ -132,9 +111,6 @@ export const ExternalShareLinks: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Expiry & Status
-    // ==========================================
     {
       name: 'expiresAt',
       type: 'date',
@@ -156,9 +132,6 @@ export const ExternalShareLinks: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Analytics
-    // ==========================================
     {
       name: 'viewCount',
       type: 'number',

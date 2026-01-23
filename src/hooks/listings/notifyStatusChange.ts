@@ -2,13 +2,16 @@ import type { CollectionAfterChangeHook } from 'payload'
 import type { Listing } from '@/payload-types'
 
 /**
- * Notification hook for listing status changes
+ * Payload AfterChange Hook: Sends notifications when a listing status changes.
  *
- * Triggers:
- * - → published: Notify listing owner
- * - → needs_revision: Notify listing owner
- * - → rejected: Notify listing owner
- * - → submitted: Notify all approvers
+ * Triggers on:
+ * - 'published': Notifies the creator
+ * - 'needs_revision': Notifies the creator
+ * - 'rejected': Notifies the creator
+ * - 'submitted': Notifies all admins and approvers
+ *
+ * @param args - The hook arguments containing doc, previousDoc, and operation
+ * @returns The original document without modification
  */
 export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
   doc,
@@ -16,20 +19,18 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
   req,
   operation,
 }) => {
-  // Only trigger on updates with a previous document
+
   if (operation !== 'update' || !previousDoc) return doc
 
   const oldStatus = previousDoc.status
   const newStatus = doc.status
 
-  // No status change, nothing to do
   if (oldStatus === newStatus) return doc
 
   const title = doc.title
-  const ownerId = typeof doc.createdBy === 'object' ? doc.createdBy.id : doc.createdBy
+  const ownerId = doc.createdBy && typeof doc.createdBy === 'object' ? doc.createdBy.id : doc.createdBy
 
-  // Notify owner on status changes that affect them
-  if (['published', 'needs_revision', 'rejected'].includes(newStatus)) {
+  if (newStatus && ['published', 'needs_revision', 'rejected'].includes(newStatus) && ownerId) {
     const messages: Record<string, string> = {
       published: `Your listing "${title}" has been published`,
       needs_revision: `Your listing "${title}" needs revision`,
@@ -48,11 +49,11 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
         message: messages[newStatus],
         read: false,
       },
-      req, // Maintain transaction context
+      req,
+      overrideAccess: true,
     })
   }
 
-  // Notify approvers when listing is submitted for review
   if (newStatus === 'submitted') {
     const approvers = await req.payload.find({
       collection: 'users',
@@ -60,12 +61,11 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
         role: { in: ['approver', 'admin'] },
         isActive: { equals: true },
       },
-      req, // Maintain transaction context
+      req,
     })
 
-    // Create notification for each approver
     for (const approver of approvers.docs) {
-      // Don't notify the submitter if they happen to be an approver/admin
+
       if (approver.id === req.user?.id) continue
 
       await req.payload.create({
@@ -77,7 +77,8 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
           message: `New listing "${title}" submitted for review`,
           read: false,
         },
-        req, // Maintain transaction context
+        req,
+        overrideAccess: true,
       })
     }
   }
