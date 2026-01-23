@@ -14,7 +14,7 @@ export default async function HomePage() {
 
   return (
     <div className="home">
-      {}
+      { }
       <section className="hero">
         <div className="logo-container">
           <Image
@@ -31,10 +31,10 @@ export default async function HomePage() {
         </div>
 
         <div className="hero-text">
-          <h1 className="hero-title">Internal Listing Management</h1>
+          <h1 className="hero-title">Truly Wealthy Realty</h1>
           <p className="hero-subtitle">
-            A centralized platform for managing property listings, tracking inventory,
-            and coordinating sales across the organization.
+            The centralized command center for property listings, inventory tracking,
+            and sales coordination.
           </p>
         </div>
 
@@ -46,7 +46,7 @@ export default async function HomePage() {
         </a>
       </section>
 
-      {}
+      { }
       <section className="features">
         <div className="features-grid">
           <div className="feature-card">
@@ -73,7 +73,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {}
+      { }
       <footer className="footer">
         <p>&copy; {new Date().getFullYear()} Truly Wealthy Realty. Internal System.</p>
       </footer>
