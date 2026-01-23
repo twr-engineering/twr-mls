@@ -1,14 +1,6 @@
 import type { CollectionConfig, Access, FieldAccess, Where } from 'payload'
 import { authenticated } from '@/access'
 
-/**
- * Documents Collection
- *
- * Stores documents related to listings (title, tax declarations, etc.)
- * with visibility controls and verification workflow.
- */
-
-// Document type options
 export const DocumentTypes = [
   'title',
   'tax_declaration',
@@ -21,33 +13,21 @@ export const DocumentTypes = [
 ] as const
 export type DocumentType = (typeof DocumentTypes)[number]
 
-// Visibility options
 export const VisibilityOptions = ['private', 'internal'] as const
 export type VisibilityOption = (typeof VisibilityOptions)[number]
 
-/**
- * Access Control Functions
- */
-
-// Read access: Based on visibility
-// - private: Only listing owner + Approvers/Admin
-// - internal: All authenticated users
 const canReadDocument: Access = async ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin and Approvers can see all documents
   if (user.role === 'admin' || user.role === 'approver') {
     return true
   }
 
-  // Agents can see:
-  // 1. Internal documents (any)
-  // 2. Private documents only if they own the listing
   const query: Where = {
     or: [
-      // Internal documents - visible to all authenticated
+
       { visibility: { equals: 'internal' } },
-      // Private documents - only if user owns the listing
+
       {
         and: [
           { visibility: { equals: 'private' } },
@@ -59,32 +39,26 @@ const canReadDocument: Access = async ({ req: { user } }) => {
   return query
 }
 
-// Create: All authenticated users can upload documents to their own listings
 const canCreateDocument: Access = authenticated
 
-// Update: Only listing owner (for own listing docs) + Approvers/Admin
 const canUpdateDocument: Access = async ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin and Approvers can update all documents
   if (user.role === 'admin' || user.role === 'approver') {
     return true
   }
 
-  // Agents can only update documents for their own listings
   const query: Where = {
     'listing.createdBy': { equals: user.id },
   }
   return query
 }
 
-// Delete: Only Admin can delete documents
 const canDeleteDocument: Access = ({ req: { user } }) => {
   if (!user) return false
   return user.role === 'admin'
 }
 
-// Field access for verification fields - only Approvers/Admin
 const verificationFieldAccess: FieldAccess = ({ req: { user } }) => {
   if (!user) return false
   return user.role === 'admin' || user.role === 'approver'
@@ -106,7 +80,7 @@ export const Documents: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      // Auto-set uploadedBy on create
+
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user) {
           data.uploadedBy = req.user.id
@@ -114,14 +88,14 @@ export const Documents: CollectionConfig = {
         }
         return data
       },
-      // Validate that user owns the listing (for agents)
+
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user?.role === 'agent' && data.listing) {
           const listing = await req.payload.findByID({
             collection: 'listings',
             id: data.listing,
             depth: 0,
-            req, // Pass req for transaction safety
+            req, 
           })
 
           if (listing && listing.createdBy !== req.user.id) {
@@ -130,7 +104,7 @@ export const Documents: CollectionConfig = {
         }
         return data
       },
-      // Auto-set verifiedBy and verifiedAt when verified changes to true
+
       async ({ data, req, operation, originalDoc }) => {
         if (
           (operation === 'create' || operation === 'update') &&
@@ -141,7 +115,7 @@ export const Documents: CollectionConfig = {
           data.verifiedBy = req.user.id
           data.verifiedAt = new Date().toISOString()
         }
-        // Clear verification fields if verified is set to false
+
         if (data.verified === false && originalDoc?.verified === true) {
           data.verifiedBy = null
           data.verifiedAt = null
@@ -151,9 +125,7 @@ export const Documents: CollectionConfig = {
     ],
   },
   fields: [
-    // ==========================================
-    // Document Information
-    // ==========================================
+
     {
       name: 'type',
       type: 'select',
@@ -199,9 +171,6 @@ export const Documents: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Visibility
-    // ==========================================
     {
       name: 'visibility',
       type: 'select',
@@ -217,9 +186,6 @@ export const Documents: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Upload Tracking
-    // ==========================================
     {
       name: 'uploadedBy',
       type: 'relationship',
@@ -243,9 +209,6 @@ export const Documents: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Verification (Approvers/Admin only)
-    // ==========================================
     {
       name: 'verified',
       type: 'checkbox',

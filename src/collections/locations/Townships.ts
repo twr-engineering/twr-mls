@@ -1,16 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { authenticated, adminOnly } from '@/access'
 
-/**
- * Townships Collection
- *
- * A Township is a market-recognized geographic area spanning multiple barangays.
- * Examples: Uptown CDO, Bonifacio Global City
- *
- * Rule (from core-collection.md):
- * listing belongs to township IF listing.barangay ∈ township.coveredBarangays
- * Listings are NEVER manually tagged to Townships.
- */
 export const Townships: CollectionConfig = {
   slug: 'townships',
   admin: {

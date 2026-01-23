@@ -6,9 +6,9 @@ export const populateLocationRelations: CollectionBeforeChangeHook = async ({
     operation,
 }) => {
     if (operation === 'create' || operation === 'update') {
-        // 1. Populate Township from Barangay
+
         if (data.barangay) {
-            // Find a township that covers this barangay
+
             const townshipQuery = await req.payload.find({
                 collection: 'townships',
                 where: {
@@ -23,16 +23,15 @@ export const populateLocationRelations: CollectionBeforeChangeHook = async ({
             if (townshipQuery.totalDocs > 0) {
                 data.township = townshipQuery.docs[0].id
             } else {
-                // If no township found (or barangay changed to one without township), clear it
+
                 data.township = null
             }
         } else {
             data.township = null
         }
 
-        // 2. Populate Estate from Development
         if (data.development) {
-            // Find an estate that includes this development
+
             const estateQuery = await req.payload.find({
                 collection: 'estates',
                 where: {

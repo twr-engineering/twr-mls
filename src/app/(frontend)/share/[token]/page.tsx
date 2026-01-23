@@ -13,13 +13,12 @@ export default async function SharePage({ params }: Props) {
   const { token } = await params
   const payload = await getPayload({ config: configPromise })
 
-  // Find share link by token
   const shareLinks = await payload.find({
     collection: 'external-share-links',
     where: {
       token: { equals: token },
     },
-    depth: 2, // Get listing with related data
+    depth: 2, 
   })
 
   if (shareLinks.docs.length === 0) {
@@ -28,7 +27,6 @@ export default async function SharePage({ params }: Props) {
 
   const shareLink = shareLinks.docs[0]
 
-  // Check if link is active
   if (!shareLink.isActive) {
     return (
       <div className="share-container">
@@ -40,7 +38,6 @@ export default async function SharePage({ params }: Props) {
     )
   }
 
-  // Check if link has expired
   if (shareLink.expiresAt) {
     const expiryDate = new Date(shareLink.expiresAt)
     if (expiryDate < new Date()) {
@@ -55,7 +52,6 @@ export default async function SharePage({ params }: Props) {
     }
   }
 
-  // Update view count and last viewed timestamp
   await payload.update({
     collection: 'external-share-links',
     id: shareLink.id,
@@ -65,18 +61,15 @@ export default async function SharePage({ params }: Props) {
     },
   })
 
-  // Get listing data
   const listing = shareLink.listing as Listing
   if (!listing || typeof listing === 'number') {
     notFound()
   }
 
-  // Extract location data
   const city = listing.city as City | null
   const barangay = listing.barangay as Barangay | null
   const development = listing.development as Development | null
 
-  // Format price
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
@@ -85,7 +78,6 @@ export default async function SharePage({ params }: Props) {
     }).format(price)
   }
 
-  // Get images
   const images = (listing.images || []) as Media[]
 
   return (
@@ -102,7 +94,7 @@ export default async function SharePage({ params }: Props) {
       <main className="share-content">
         <h1 className="listing-title">{listing.title}</h1>
 
-        {/* Price Section */}
+        {}
         <div className="price-section">
           <span className="price">{formatPrice(listing.price)}</span>
           {listing.pricePerSqm && (
@@ -112,7 +104,7 @@ export default async function SharePage({ params }: Props) {
           )}
         </div>
 
-        {/* Location */}
+        {}
         <div className="location-section">
           <p className="location">
             {development && typeof development === 'object' && development.name && `${development.name}, `}
@@ -124,7 +116,7 @@ export default async function SharePage({ params }: Props) {
           )}
         </div>
 
-        {/* Images */}
+        {}
         {images.length > 0 && (
           <div className="images-section">
             {images.slice(0, 5).map((image, index) => (
@@ -140,7 +132,7 @@ export default async function SharePage({ params }: Props) {
           </div>
         )}
 
-        {/* Property Specifications */}
+        {}
         <div className="specs-section">
           <h2>Property Details</h2>
           <div className="specs-grid">
@@ -201,12 +193,12 @@ export default async function SharePage({ params }: Props) {
           </div>
         </div>
 
-        {/* Description */}
+        {}
         {listing.description && (
           <div className="description-section">
             <h2>Description</h2>
             <div className="description-content">
-              {/* Rich text content - simplified render */}
+              {}
               <p>Contact the agent for more details about this property.</p>
             </div>
           </div>

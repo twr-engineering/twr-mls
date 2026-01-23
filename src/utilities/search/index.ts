@@ -3,13 +3,6 @@ import type { ListingSearchFilters, SearchResponse } from './types'
 
 export * from './types'
 
-/**
- * Expand a township ID to its covered barangay IDs
- *
- * @param payload - Payload instance
- * @param townshipId - Township ID to expand
- * @returns Array of barangay IDs covered by the township
- */
 export async function expandTownshipToBarangays(
   payload: Payload,
   townshipId: number,
@@ -25,13 +18,6 @@ export async function expandTownshipToBarangays(
   return township.coveredBarangays.map((b) => (typeof b === 'object' ? b.id : b))
 }
 
-/**
- * Expand an estate ID to its included development IDs
- *
- * @param payload - Payload instance
- * @param estateId - Estate ID to expand
- * @returns Array of development IDs included in the estate
- */
 export async function expandEstateToDevelopments(
   payload: Payload,
   estateId: number,
@@ -47,33 +33,22 @@ export async function expandEstateToDevelopments(
   return estate.includedDevelopments.map((d) => (typeof d === 'object' ? d.id : d))
 }
 
-/**
- * Build a Payload Where query from search filters
- *
- * @param payload - Payload instance (needed for township/estate expansion)
- * @param filters - Search filters
- * @returns Payload Where query
- */
 export async function buildSearchQuery(
   payload: Payload,
   filters: ListingSearchFilters,
 ): Promise<Where> {
   const conditions: Where[] = []
 
-  // Always filter to published listings only
   conditions.push({ status: { equals: 'published' } })
 
-  // Listing type filter
   if (filters.listingType) {
     conditions.push({ listingType: { equals: filters.listingType } })
   }
 
-  // Transaction type filter
   if (filters.transactionType) {
     conditions.push({ transactionType: { equals: filters.transactionType } })
   }
 
-  // Direct location filters
   if (filters.cityId) {
     conditions.push({ city: { equals: filters.cityId } })
   }
@@ -86,29 +61,26 @@ export async function buildSearchQuery(
     conditions.push({ development: { equals: filters.developmentId } })
   }
 
-  // Township filter (expands to barangays)
   if (filters.townshipId) {
     const barangayIds = await expandTownshipToBarangays(payload, filters.townshipId)
     if (barangayIds.length > 0) {
       conditions.push({ barangay: { in: barangayIds } })
     } else {
-      // No barangays found, return no results
+
       conditions.push({ id: { equals: -1 } })
     }
   }
 
-  // Estate filter (expands to developments)
   if (filters.estateId) {
     const developmentIds = await expandEstateToDevelopments(payload, filters.estateId)
     if (developmentIds.length > 0) {
       conditions.push({ development: { in: developmentIds } })
     } else {
-      // No developments found, return no results
+
       conditions.push({ id: { equals: -1 } })
     }
   }
 
-  // Price filters
   if (filters.priceMin !== undefined) {
     conditions.push({ price: { greater_than_equal: filters.priceMin } })
   }
@@ -117,7 +89,6 @@ export async function buildSearchQuery(
     conditions.push({ price: { less_than_equal: filters.priceMax } })
   }
 
-  // Spec filters
   if (filters.bedroomsMin !== undefined) {
     conditions.push({ bedrooms: { greater_than_equal: filters.bedroomsMin } })
   }
@@ -134,7 +105,6 @@ export async function buildSearchQuery(
     conditions.push({ lotAreaSqm: { greater_than_equal: filters.lotAreaMin } })
   }
 
-  // Combine all conditions with AND
   if (conditions.length === 0) {
     return { status: { equals: 'published' } }
   }
@@ -146,13 +116,6 @@ export async function buildSearchQuery(
   return { and: conditions }
 }
 
-/**
- * Search listings with filters
- *
- * @param payload - Payload instance
- * @param filters - Search filters
- * @returns Paginated search results
- */
 export async function searchListings(
   payload: Payload,
   filters: ListingSearchFilters,
@@ -160,15 +123,15 @@ export async function searchListings(
   const where = await buildSearchQuery(payload, filters)
 
   const page = filters.page || 1
-  const limit = Math.min(filters.limit || 20, 100) // Max 100 per page
+  const limit = Math.min(filters.limit || 20, 100) 
 
   const result = await payload.find({
     collection: 'listings',
     where,
     page,
     limit,
-    depth: 2, // Populate city, barangay, development
-    sort: '-createdAt', // Newest first
+    depth: 2, 
+    sort: '-createdAt', 
   })
 
   return {
@@ -184,16 +147,9 @@ export async function searchListings(
   }
 }
 
-/**
- * Parse query parameters into search filters
- *
- * @param searchParams - URL search parameters
- * @returns Parsed search filters
- */
 export function parseSearchParams(searchParams: URLSearchParams): ListingSearchFilters {
   const filters: ListingSearchFilters = {}
 
-  // Basic filters
   const listingType = searchParams.get('listingType')
   if (listingType === 'resale' || listingType === 'preselling') {
     filters.listingType = listingType
@@ -204,7 +160,6 @@ export function parseSearchParams(searchParams: URLSearchParams): ListingSearchF
     filters.transactionType = transactionType
   }
 
-  // Location filters
   const cityId = searchParams.get('cityId')
   if (cityId) filters.cityId = parseInt(cityId, 10)
 
@@ -220,14 +175,12 @@ export function parseSearchParams(searchParams: URLSearchParams): ListingSearchF
   const estateId = searchParams.get('estateId')
   if (estateId) filters.estateId = parseInt(estateId, 10)
 
-  // Price filters
   const priceMin = searchParams.get('priceMin')
   if (priceMin) filters.priceMin = parseInt(priceMin, 10)
 
   const priceMax = searchParams.get('priceMax')
   if (priceMax) filters.priceMax = parseInt(priceMax, 10)
 
-  // Spec filters
   const bedroomsMin = searchParams.get('bedroomsMin')
   if (bedroomsMin) filters.bedroomsMin = parseInt(bedroomsMin, 10)
 
@@ -240,7 +193,6 @@ export function parseSearchParams(searchParams: URLSearchParams): ListingSearchF
   const lotAreaMin = searchParams.get('lotAreaMin')
   if (lotAreaMin) filters.lotAreaMin = parseInt(lotAreaMin, 10)
 
-  // Pagination
   const page = searchParams.get('page')
   if (page) filters.page = parseInt(page, 10)
 

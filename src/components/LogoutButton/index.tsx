@@ -13,7 +13,7 @@ export const LogoutButton = (_props: any) => {
                     display: 'flex',
                     alignItems: 'center',
                     padding: '12px 16px',
-                    color: 'var(--theme-error-500)', // Red for logout
+                    color: 'var(--theme-error-500)', 
                     fontWeight: 600,
                     borderTop: '1px solid var(--theme-elevation-150)',
                     textDecoration: 'none',

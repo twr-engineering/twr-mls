@@ -1,16 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { authenticated, adminOnly } from '@/access'
 
-/**
- * Estates Collection
- *
- * An Estate is a branded grouping of multiple Developments.
- * Examples: Xavier Estates, Pueblo de Oro
- *
- * Rule (from core-collection.md):
- * listing belongs to estate IF listing.development ∈ estate.includedDevelopments
- * Listings are NEVER manually tagged to Estates.
- */
 export const Estates: CollectionConfig = {
   slug: 'estates',
   admin: {

@@ -1,14 +1,6 @@
 import type { CollectionConfig, Access, Where } from 'payload'
 import { adminOnly } from '@/access'
 
-/**
- * Notifications Collection
- *
- * Stores in-app notifications for users about listing status changes
- * and other system events.
- */
-
-// Notification type options
 export const NotificationTypes = [
   'listing_published',
   'listing_needs_revision',
@@ -17,41 +9,28 @@ export const NotificationTypes = [
 ] as const
 export type NotificationType = (typeof NotificationTypes)[number]
 
-/**
- * Access Control Functions
- */
-
-// Read: Users can only read their own notifications
 const canReadNotification: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can see all notifications
   if (user.role === 'admin') return true
 
-  // Users can only see their own notifications
   const query: Where = {
     recipient: { equals: user.id },
   }
   return query
 }
 
-// Create: System only (no direct user creation)
-// We'll use overrideAccess in hooks to create notifications
 const canCreateNotification: Access = ({ req: { user } }) => {
-  // Only admin can create directly (for testing purposes)
-  // Normal creation happens via hooks with overrideAccess
+
   if (!user) return false
   return user.role === 'admin'
 }
 
-// Update: Users can only mark their own notifications as read
 const canUpdateNotification: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  // Admin can update all
   if (user.role === 'admin') return true
 
-  // Users can only update their own notifications
   const query: Where = {
     recipient: { equals: user.id },
   }
@@ -74,12 +53,12 @@ export const Notifications: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      // Auto-set readAt when marking as read
+
       async ({ data, originalDoc }) => {
         if (data.read === true && originalDoc?.read !== true) {
           data.readAt = new Date().toISOString()
         }
-        // Clear readAt if marking as unread
+
         if (data.read === false && originalDoc?.read === true) {
           data.readAt = null
         }
@@ -88,9 +67,7 @@ export const Notifications: CollectionConfig = {
     ],
   },
   fields: [
-    // ==========================================
-    // Notification Details
-    // ==========================================
+
     {
       name: 'type',
       type: 'select',
@@ -133,9 +110,6 @@ export const Notifications: CollectionConfig = {
       },
     },
 
-    // ==========================================
-    // Read Status
-    // ==========================================
     {
       name: 'read',
       type: 'checkbox',
