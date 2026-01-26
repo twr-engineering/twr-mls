@@ -1,5 +1,8 @@
 import { requireAuth } from '@/lib/auth/actions'
-import { AgentNav } from '@/components/AgentNav'
+import { AgentSidebar } from '@/components/agent-sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbPage } from '@/components/ui/breadcrumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,12 +12,31 @@ export default async function AgentLayout({
   children: React.ReactNode
 }) {
   // Ensure only agents can access this layout
-  await requireAuth(['agent'])
+  const user = await requireAuth(['agent'])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <AgentNav />
-      <main className="flex-1 container mx-auto p-4">{children}</main>
-    </div>
+    <SidebarProvider>
+      <AgentSidebar
+        user={{
+          name: user.email.split('@')[0],
+          email: user.email,
+          avatar: '/avatars/default.jpg',
+        }}
+      />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage>Agent Portal</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+        <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

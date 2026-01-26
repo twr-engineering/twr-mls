@@ -229,3 +229,240 @@ export async function getUserListingStats() {
     total: draft.totalDocs + submitted.totalDocs + published.totalDocs + needsRevision.totalDocs,
   }
 }
+
+/**
+ * Search published listings (MLS)
+ * IMPORTANT: Always uses overrideAccess: false to enforce access control
+ */
+export async function searchListings(filters?: {
+  listingType?: 'resale' | 'preselling' | 'both'
+  transactionType?: 'sale' | 'rent'
+  cityId?: number
+  barangayId?: number
+  developmentId?: number
+  minPrice?: number
+  maxPrice?: number
+  bedrooms?: number
+  bathrooms?: number
+  limit?: number
+  page?: number
+}) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const where: any = {
+    status: { equals: 'published' },
+  }
+
+  // Listing type filter
+  if (filters?.listingType && filters.listingType !== 'both') {
+    where.listingType = { equals: filters.listingType }
+  }
+
+  // Transaction type filter
+  if (filters?.transactionType) {
+    where.transactionType = { equals: filters.transactionType }
+  }
+
+  // Location filters
+  if (filters?.cityId) {
+    where.city = { equals: filters.cityId }
+  }
+  if (filters?.barangayId) {
+    where.barangay = { equals: filters.barangayId }
+  }
+  if (filters?.developmentId) {
+    where.development = { equals: filters.developmentId }
+  }
+
+  // Price range
+  if (filters?.minPrice !== undefined || filters?.maxPrice !== undefined) {
+    where.price = {}
+    if (filters.minPrice !== undefined) {
+      where.price.greater_than_equal = filters.minPrice
+    }
+    if (filters.maxPrice !== undefined) {
+      where.price.less_than_equal = filters.maxPrice
+    }
+  }
+
+  // Bedrooms
+  if (filters?.bedrooms) {
+    where.bedrooms = { equals: filters.bedrooms }
+  }
+
+  // Bathrooms
+  if (filters?.bathrooms) {
+    where.bathrooms = { equals: filters.bathrooms }
+  }
+
+  const result = await payload.find({
+    collection: 'listings',
+    where,
+    limit: filters?.limit || 20,
+    page: filters?.page || 1,
+    sort: '-createdAt',
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Get all cities for dropdown
+ */
+export async function getCities() {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'cities',
+    limit: 1000,
+    sort: 'name',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Get barangays filtered by city
+ */
+export async function getBarangaysByCity(cityId: number) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'barangays',
+    where: {
+      city: { equals: cityId },
+    },
+    limit: 1000,
+    sort: 'name',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Get developments filtered by barangay
+ */
+export async function getDevelopmentsByBarangay(barangayId: number) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'developments',
+    where: {
+      barangay: { equals: barangayId },
+      isActive: { equals: true },
+    },
+    limit: 1000,
+    sort: 'name',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Create a new external share link for a published listing
+ */
+export async function createShareLink(listingId: string, expiresAt?: Date) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  // Verify listing is published and user has access
+  const listing = await getListingById(listingId)
+  if (!listing || listing.status !== 'published') {
+    throw new Error('Can only create share links for published listings')
+  }
+
+  const result = await payload.create({
+    collection: 'external-share-links',
+    data: {
+      listing: parseInt(listingId),
+      createdBy: user.id,
+      expiresAt: expiresAt ? expiresAt.toISOString() : undefined,
+      isActive: true,
+    } as any,
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Get all share links created by the current user
+ */
+export async function getUserShareLinks() {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'external-share-links',
+    where: {
+      createdBy: { equals: user.id },
+    },
+    limit: 100,
+    sort: '-createdAt',
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Revoke (deactivate) a share link
+ */
+export async function revokeShareLink(id: string) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.update({
+    collection: 'external-share-links',
+    id,
+    data: {
+      isActive: false,
+    },
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
