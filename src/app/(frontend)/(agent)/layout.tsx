@@ -1,6 +1,8 @@
 import { requireAuth } from '@/lib/auth/actions'
 import { AgentNav } from '@/components/AgentNav'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AgentLayout({
   children,
 }: {
