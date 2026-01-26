@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import {
   Select,
   SelectContent,
@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import type { City, Barangay, Development } from '@/payload-types'
+import { ImageUpload } from '@/components/image-upload'
 
 type ListingFormProps = {
   cities: City[]
@@ -38,7 +39,7 @@ type ListingFormProps = {
 
 const listingSchema = z.object({
   title: z.string().min(10, 'Title must be at least 10 characters').max(120),
-  description: z.string().optional(),
+  description: z.any().optional(),
   transactionType: z.enum(['sale', 'rent']),
   price: z.number().min(1, 'Price is required'),
   pricePerSqm: z.number().optional(),
@@ -66,6 +67,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
   const [developments, setDevelopments] = useState<Development[]>([])
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null)
   const [selectedBarangayId, setSelectedBarangayId] = useState<number | null>(null)
+  const [imageIds, setImageIds] = useState<number[]>(initialData?.images || [])
 
   const form = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
@@ -75,7 +77,6 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
     },
   })
 
-  // Fetch barangays when city changes
   useEffect(() => {
     if (selectedCityId) {
       fetch(`/api/barangays?cityId=${selectedCityId}`)
@@ -94,7 +95,6 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
     }
   }, [selectedCityId])
 
-  // Fetch developments when barangay changes
   useEffect(() => {
     if (selectedBarangayId) {
       fetch(`/api/developments?barangayId=${selectedBarangayId}`)
@@ -123,10 +123,10 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          listingType: 'resale', // Always set to resale for agents
           city: data.cityId,
           barangay: data.barangayId,
           development: data.developmentId || null,
+          images: imageIds,
         }),
       })
 
@@ -134,8 +134,6 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
         const error = await response.json()
         throw new Error(error.message || 'Failed to save listing')
       }
-
-      const result = await response.json()
 
       toast.success(listingId ? 'Listing updated successfully!' : 'Listing created successfully!')
       router.push('/listings')
@@ -180,10 +178,10 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
                       placeholder="Detailed description of the property..."
-                      className="min-h-[120px]"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -487,9 +485,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    {!selectedCityId ? 'Select city first' : ''}
-                  </FormDescription>
+                  <FormDescription>{!selectedCityId ? 'Select city first' : ''}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -520,7 +516,9 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    {!selectedBarangayId ? 'Select barangay first' : 'Optional if not in a development'}
+                    {!selectedBarangayId
+                      ? 'Select barangay first'
+                      : 'Optional if not in a development'}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -598,6 +596,17 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
                 )}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Property Images */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Property Images</CardTitle>
+            <CardDescription>Upload photos of the property</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ImageUpload value={imageIds} onChange={setImageIds} maxImages={10} />
           </CardContent>
         </Card>
 

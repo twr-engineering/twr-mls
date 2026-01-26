@@ -12,15 +12,10 @@ export const dynamic = 'force-dynamic'
 
 type SearchParams = Promise<{ status?: string }>
 
-export default async function ListingsPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
+export default async function ListingsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
   const statusFilter = params.status
 
-  // Fetch listings based on status filter
   const allListings = await getUserListings()
   const draftListings = await getUserListings({ status: 'draft' })
   const submittedListings = await getUserListings({ status: 'submitted' })
@@ -42,62 +37,78 @@ export default async function ListingsPage({
     }
   }
 
-  const ListingCard = ({ listing }: { listing: Record<string, any> }) => (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1 flex-1 min-w-0">
-            <CardTitle className="truncate">{listing.title}</CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              <ListingTypeBadge listingType={listing.listingType} className="text-xs" />
-              <Badge variant={getStatusBadgeVariant(listing.status)} className="text-xs">
-                {listing.status.replace('_', ' ')}
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="text-muted-foreground">Price:</span>
-              <p className="font-medium">₱{listing.price.toLocaleString()}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Transaction:</span>
-              <p className="font-medium capitalize">{listing.transactionType}</p>
-            </div>
-            <div className="col-span-2">
-              <span className="text-muted-foreground">Location:</span>
-              <p className="font-medium truncate">
-                {typeof listing.city === 'object' ? listing.city.name : 'N/A'},{' '}
-                {typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'}
-              </p>
-            </div>
-          </div>
+  const ListingCard = ({ listing }: { listing: Record<string, any> }) => {
+    const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
 
-          <div className="flex items-center gap-2 pt-2 border-t">
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/listings/${listing.id}`}>
-                <Eye className="h-4 w-4 mr-2" />
-                View
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/listings/${listing.id}/edit`}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Link>
-            </Button>
-            {listing.status === 'draft' && (
-              <ListingActions listingId={listing.id.toString()} status={listing.status} />
-            )}
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1 flex-1 min-w-0">
+              <CardTitle className="truncate">{listing.title}</CardTitle>
+              <div className="flex items-center gap-2 flex-wrap">
+                <ListingTypeBadge listingType={listing.listingType} className="text-xs" />
+                <Badge variant={getStatusBadgeVariant(listing.status)} className="text-xs">
+                  {listing.status.replace('_', ' ')}
+                </Badge>
+              </div>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">Price:</span>
+                <p className="font-medium">₱{listing.price.toLocaleString()}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Transaction:</span>
+                <p className="font-medium capitalize">{listing.transactionType}</p>
+              </div>
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Location:</span>
+                <p className="font-medium truncate">
+                  {typeof listing.city === 'object' ? listing.city.name : 'N/A'},{' '}
+                  {typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/listings/${listing.id}`}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Link>
+              </Button>
+              {canEdit ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/listings/${listing.id}/edit`}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  title="Only draft and needs revision listings can be edited"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+              {listing.status === 'draft' && (
+                <ListingActions listingId={listing.id.toString()} status={listing.status} />
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -116,21 +127,13 @@ export default async function ListingsPage({
 
       <Tabs defaultValue={statusFilter || 'all'} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="all">
-            All ({allListings.totalDocs})
-          </TabsTrigger>
-          <TabsTrigger value="draft">
-            Drafts ({draftListings.totalDocs})
-          </TabsTrigger>
-          <TabsTrigger value="submitted">
-            Submitted ({submittedListings.totalDocs})
-          </TabsTrigger>
+          <TabsTrigger value="all">All ({allListings.totalDocs})</TabsTrigger>
+          <TabsTrigger value="draft">Drafts ({draftListings.totalDocs})</TabsTrigger>
+          <TabsTrigger value="submitted">Submitted ({submittedListings.totalDocs})</TabsTrigger>
           <TabsTrigger value="needs_revision">
             Needs Revision ({needsRevisionListings.totalDocs})
           </TabsTrigger>
-          <TabsTrigger value="published">
-            Published ({publishedListings.totalDocs})
-          </TabsTrigger>
+          <TabsTrigger value="published">Published ({publishedListings.totalDocs})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
@@ -138,7 +141,9 @@ export default async function ListingsPage({
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">You haven&apos;t created any listings yet</p>
+                  <p className="text-muted-foreground mb-4">
+                    You haven&apos;t created any listings yet
+                  </p>
                   <Button asChild>
                     <Link href="/listings/new">
                       <Plus className="h-4 w-4 mr-2" />
@@ -161,9 +166,7 @@ export default async function ListingsPage({
           {draftListings.docs.length === 0 ? (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  No draft listings
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No draft listings</div>
               </CardContent>
             </Card>
           ) : (
@@ -179,9 +182,7 @@ export default async function ListingsPage({
           {submittedListings.docs.length === 0 ? (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  No submitted listings
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No submitted listings</div>
               </CardContent>
             </Card>
           ) : (
@@ -215,9 +216,7 @@ export default async function ListingsPage({
           {publishedListings.docs.length === 0 ? (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  No published listings
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No published listings</div>
               </CardContent>
             </Card>
           ) : (

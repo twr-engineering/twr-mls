@@ -1,12 +1,16 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   BellIcon,
   CreditCardIcon,
   LogOutIcon,
   MoreVerticalIcon,
   UserCircleIcon,
+  Loader2,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   Avatar,
@@ -39,6 +43,30 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to logout')
+      }
+
+      toast.success('Logged out successfully')
+      router.push('/admin')
+      router.refresh()
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Failed to logout')
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -98,8 +126,12 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOutIcon />
+            <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOutIcon />
+              )}
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

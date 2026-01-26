@@ -30,6 +30,7 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
+
     const listing = await updateListing(id, body)
     return NextResponse.json(listing)
   } catch (error) {

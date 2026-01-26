@@ -39,10 +39,7 @@ const canReadListing: Access = ({ req: { user } }) => {
   }
 
   const query: Where = {
-    or: [
-      { createdBy: { equals: user.id } },
-      { status: { equals: 'published' } },
-    ],
+    or: [{ createdBy: { equals: user.id } }, { status: { equals: 'published' } }],
   }
   return query
 }
@@ -63,12 +60,9 @@ const canUpdateListing: Access = ({ req: { user } }) => {
   const query: Where = {
     and: [
       { createdBy: { equals: user.id } },
-      { listingType: { equals: 'resale' } }, 
+      { listingType: { equals: 'resale' } },
       {
-        or: [
-          { status: { equals: 'draft' } },
-          { status: { equals: 'needs_revision' } },
-        ],
+        or: [{ status: { equals: 'draft' } }, { status: { equals: 'needs_revision' } }],
       },
     ],
   }
@@ -84,10 +78,7 @@ const canDeleteListing: Access = ({ req: { user } }) => {
 
   if (user.role === 'agent') {
     const query: Where = {
-      and: [
-        { createdBy: { equals: user.id } },
-        { status: { equals: 'draft' } },
-      ],
+      and: [{ createdBy: { equals: user.id } }, { status: { equals: 'draft' } }],
     }
     return query
   }
@@ -130,7 +121,6 @@ export const Listings: CollectionConfig = {
 
       async ({ data, req, operation }) => {
         if (operation === 'create' && req.user?.role === 'agent') {
-
           data.listingType = 'resale'
         }
         return data
@@ -138,13 +128,12 @@ export const Listings: CollectionConfig = {
 
       async ({ data, req, operation }) => {
         if (operation === 'create' || operation === 'update') {
-
           if (data.city && data.barangay) {
             const barangay = await req.payload.findByID({
               collection: 'barangays',
               id: data.barangay,
               depth: 0,
-              req, 
+              req,
             })
 
             if (barangay && barangay.city !== data.city) {
@@ -157,7 +146,7 @@ export const Listings: CollectionConfig = {
               collection: 'developments',
               id: data.development,
               depth: 0,
-              req, 
+              req,
             })
 
             if (development && development.barangay !== data.barangay) {
@@ -170,13 +159,9 @@ export const Listings: CollectionConfig = {
 
       validateStatusTransition,
     ],
-    afterChange: [
-
-      notifyStatusChange,
-    ],
+    afterChange: [notifyStatusChange],
   },
   fields: [
-
     {
       name: 'title',
       type: 'text',

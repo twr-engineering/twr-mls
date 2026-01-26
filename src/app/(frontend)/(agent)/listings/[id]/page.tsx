@@ -1,8 +1,9 @@
 import { getListingById } from '@/lib/payload/api'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListingTypeBadge } from '@/components/listing-type-badge'
+import { RichTextRenderer } from '@/components/ui/rich-text-renderer'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Edit, ArrowLeft } from 'lucide-react'
@@ -21,12 +22,12 @@ export default async function ViewListingPage({ params }: PageProps) {
     notFound()
   }
 
+  const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
+
   const cityName = typeof listing.city === 'object' ? listing.city.name : 'N/A'
   const barangayName = typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'
   const developmentName =
-    listing.development && typeof listing.development === 'object'
-      ? listing.development.name
-      : null
+    listing.development && typeof listing.development === 'object' ? listing.development.name : null
 
   const getStatusBadgeVariant = (
     status: string,
@@ -60,12 +61,17 @@ export default async function ViewListingPage({ params }: PageProps) {
             </Badge>
           </div>
         </div>
-        {listing.status !== 'published' && (
+        {canEdit ? (
           <Button asChild>
             <Link href={`/listings/${id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Link>
+          </Button>
+        ) : (
+          <Button disabled title="Only draft and needs revision listings can be edited">
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
           </Button>
         )}
       </div>
@@ -166,10 +172,7 @@ export default async function ViewListingPage({ params }: PageProps) {
             <CardTitle>Description</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="prose max-w-none">
-              {/* Render rich text description if needed */}
-              <p>{JSON.stringify(listing.description)}</p>
-            </div>
+            <RichTextRenderer value={listing.description} />
           </CardContent>
         </Card>
       )}
