@@ -325,6 +325,56 @@ export interface Township {
  */
 export interface Listing {
   id: number;
+  title: string;
+  /**
+   * Detailed description for internal use and client sharing
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Agents can only create Resale listings
+   */
+  listingType: 'resale' | 'preselling';
+  /**
+   * Automatically set to the current user
+   */
+  createdBy?: (number | null) | User;
+  status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
+  transactionType: 'sale' | 'rent';
+  price: number;
+  /**
+   * Required for lot-type properties
+   */
+  pricePerSqm?: number | null;
+  /**
+   * For condos, offices, buildings
+   */
+  floorAreaSqm?: number | null;
+  /**
+   * For lots, house-and-lot
+   */
+  lotAreaSqm?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  parkingSlots?: number | null;
+  furnishing?: ('unfurnished' | 'semi_furnished' | 'fully_furnished') | null;
+  constructionYear?: number | null;
+  tenure?: ('freehold' | 'leasehold') | null;
+  titleStatus?: ('clean' | 'mortgaged') | null;
+  paymentTerms?: ('cash' | 'bank' | 'pagibig' | 'deferred')[] | null;
   /**
    * Select city first
    */
@@ -349,51 +399,10 @@ export interface Listing {
    * Complete address for internal reference
    */
   fullAddress: string;
-  title: string;
   /**
-   * Agents can only create Resale listings
+   * Upload listing photos
    */
-  listingType: 'resale' | 'preselling';
-  transactionType: 'sale' | 'rent';
-  /**
-   * Detailed description for internal use and client sharing
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * For condos, offices, buildings
-   */
-  floorAreaSqm?: number | null;
-  /**
-   * For lots, house-and-lot
-   */
-  lotAreaSqm?: number | null;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  parkingSlots?: number | null;
-  furnishing?: ('unfurnished' | 'semi_furnished' | 'fully_furnished') | null;
-  constructionYear?: number | null;
-  tenure?: ('freehold' | 'leasehold') | null;
-  price: number;
-  /**
-   * Required for lot-type properties
-   */
-  pricePerSqm?: number | null;
-  titleStatus?: ('clean' | 'mortgaged') | null;
-  paymentTerms?: ('cash' | 'bank' | 'pagibig' | 'deferred')[] | null;
+  images?: (number | Media)[] | null;
   /**
    * Unit model or type name
    */
@@ -430,15 +439,6 @@ export interface Listing {
    * Internal notes about this preselling listing
    */
   presellingNotes?: string | null;
-  /**
-   * Upload listing photos
-   */
-  images?: (number | Media)[] | null;
-  status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
-  /**
-   * Automatically set to the current user
-   */
-  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -787,16 +787,14 @@ export interface TownshipsSelect<T extends boolean = true> {
  * via the `definition` "listings_select".
  */
 export interface ListingsSelect<T extends boolean = true> {
-  city?: T;
-  barangay?: T;
-  development?: T;
-  township?: T;
-  estate?: T;
-  fullAddress?: T;
   title?: T;
-  listingType?: T;
-  transactionType?: T;
   description?: T;
+  listingType?: T;
+  createdBy?: T;
+  status?: T;
+  transactionType?: T;
+  price?: T;
+  pricePerSqm?: T;
   floorAreaSqm?: T;
   lotAreaSqm?: T;
   bedrooms?: T;
@@ -805,10 +803,15 @@ export interface ListingsSelect<T extends boolean = true> {
   furnishing?: T;
   constructionYear?: T;
   tenure?: T;
-  price?: T;
-  pricePerSqm?: T;
   titleStatus?: T;
   paymentTerms?: T;
+  city?: T;
+  barangay?: T;
+  development?: T;
+  township?: T;
+  estate?: T;
+  fullAddress?: T;
+  images?: T;
   modelName?: T;
   indicativePriceMin?: T;
   indicativePriceMax?: T;
@@ -816,9 +819,6 @@ export interface ListingsSelect<T extends boolean = true> {
   minFloorArea?: T;
   standardInclusions?: T;
   presellingNotes?: T;
-  images?: T;
-  status?: T;
-  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -13,44 +13,62 @@ import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
 
+import { s3Storage } from '@payloadcms/storage-s3'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export const config: Config = {
-    admin: {
-        user: Users.slug,
-        importMap: {
-            baseDir: path.resolve(dirname),
-        },
-        components: {
-            afterNavLinks: ['/src/components/ListingsNav#ListingsNav', '/src/components/LogoutButton#LogoutButton'],
-        },
+  admin: {
+    user: Users.slug,
+    importMap: {
+      baseDir: path.resolve(dirname),
     },
-    collections: [
-        Users,
-        Media,
-        Cities,
-        Barangays,
-        Developments,
-        Estates,
-        Townships,
-        Listings,
-        Documents,
-        Notifications,
-        ExternalShareLinks,
-    ],
-    editor: lexicalEditor(),
-    secret: process.env.PAYLOAD_SECRET || '',
-    typescript: {
-        outputFile: path.resolve(dirname, 'payload-types.ts'),
+    components: {
+      afterNavLinks: ['/src/components/ListingsNav#ListingsNav', '/src/components/LogoutButton#LogoutButton'],
     },
-    db: postgresAdapter({
-        pool: {
-            connectionString: process.env.DATABASE_URL || '',
+  },
+  collections: [
+    Users,
+    Media,
+    Cities,
+    Barangays,
+    Developments,
+    Estates,
+    Townships,
+    Listings,
+    Documents,
+    Notifications,
+    ExternalShareLinks,
+  ],
+  editor: lexicalEditor(),
+  secret: process.env.PAYLOAD_SECRET || '',
+  typescript: {
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL || '',
+    },
+    migrationDir: path.resolve(dirname, 'migrations'),
+    push: false,
+  }),
+  sharp,
+  plugins: [
+    s3Storage({
+      collections: {
+        media: true,
+      },
+      bucket: process.env.S3_BUCKET!,
+      config: {
+        endpoint: process.env.S3_ENDPOINT!,
+        region: process.env.S3_REGION!,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
         },
-        migrationDir: path.resolve(dirname, 'migrations'),
-        push: false,
+        forcePathStyle: true,
+      },
     }),
-    sharp,
-    plugins: [],
+  ],
 }
