@@ -116,7 +116,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
 
     try {
       const endpoint = listingId ? `/api/listings/${listingId}` : '/api/listings'
-      const method = listingId ? 'PUT' : 'POST'
+      const method = listingId ? 'PATCH' : 'POST'
 
       const response = await fetch(endpoint, {
         method,

@@ -52,7 +52,7 @@ export function ListingActions({ listingId, status }: ListingActionsProps) {
     setIsSubmitting(true)
     try {
       const response = await fetch(`/api/listings/${listingId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'submitted' }),
       })
