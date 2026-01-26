@@ -13,8 +13,6 @@ import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
 
-import { LogoutButton } from './components/LogoutButton'
-
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -25,7 +23,7 @@ export const config: Config = {
             baseDir: path.resolve(dirname),
         },
         components: {
-            afterNavLinks: [LogoutButton as any],
+            afterNavLinks: ['/src/components/ListingsNav#ListingsNav', '/src/components/LogoutButton#LogoutButton'],
         },
     },
     collections: [

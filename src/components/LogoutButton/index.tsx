@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const LogoutButton = (_props: any) => {
     return (
         <div className="nav-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>

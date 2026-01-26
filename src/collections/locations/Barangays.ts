@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import { authenticated, adminOnly, isAgent } from '@/access'
 
 export const Barangays: CollectionConfig = {
   slug: 'barangays',
@@ -8,6 +8,7 @@ export const Barangays: CollectionConfig = {
     defaultColumns: ['name', 'city', 'isActive', 'updatedAt'],
     group: 'Location Master Data',
     description: 'Barangays belong to a City',
+    hidden: ({ user }) => isAgent(user),
   },
   access: {
     read: authenticated,

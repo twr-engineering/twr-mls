@@ -1,30 +1,6 @@
-import type { CollectionConfig, Access, Where } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import type { CollectionConfig } from 'payload'
+import { adminOnly, approverOrAdmin } from '@/access'
 import { generateSecureToken } from '@/utilities/generateToken'
-
-const canReadShareLink: Access = ({ req: { user } }) => {
-  if (!user) return false
-
-  if (user.role === 'admin') return true
-
-  const query: Where = {
-    createdBy: { equals: user.id },
-  }
-  return query
-}
-
-const canCreateShareLink: Access = authenticated
-
-const canUpdateShareLink: Access = ({ req: { user } }) => {
-  if (!user) return false
-
-  if (user.role === 'admin') return true
-
-  const query: Where = {
-    createdBy: { equals: user.id },
-  }
-  return query
-}
 
 export const ExternalShareLinks: CollectionConfig = {
   slug: 'external-share-links',
@@ -35,9 +11,9 @@ export const ExternalShareLinks: CollectionConfig = {
     description: 'Share links for external clients to view published listings',
   },
   access: {
-    read: canReadShareLink,
-    create: canCreateShareLink,
-    update: canUpdateShareLink,
+    read: approverOrAdmin,
+    create: approverOrAdmin,
+    update: approverOrAdmin,
     delete: adminOnly,
   },
   hooks: {

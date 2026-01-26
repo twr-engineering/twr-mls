@@ -1,5 +1,5 @@
-import type { CollectionConfig, Access, FieldAccess, Where } from 'payload'
-import { authenticated } from '@/access'
+import type { CollectionConfig, Access, FieldAccess } from 'payload'
+import { approverOrAdmin } from '@/access'
 
 export const DocumentTypes = [
   'title',
@@ -15,44 +15,6 @@ export type DocumentType = (typeof DocumentTypes)[number]
 
 export const VisibilityOptions = ['private', 'internal'] as const
 export type VisibilityOption = (typeof VisibilityOptions)[number]
-
-const canReadDocument: Access = async ({ req: { user } }) => {
-  if (!user) return false
-
-  if (user.role === 'admin' || user.role === 'approver') {
-    return true
-  }
-
-  const query: Where = {
-    or: [
-
-      { visibility: { equals: 'internal' } },
-
-      {
-        and: [
-          { visibility: { equals: 'private' } },
-          { 'listing.createdBy': { equals: user.id } },
-        ],
-      },
-    ],
-  }
-  return query
-}
-
-const canCreateDocument: Access = authenticated
-
-const canUpdateDocument: Access = async ({ req: { user } }) => {
-  if (!user) return false
-
-  if (user.role === 'admin' || user.role === 'approver') {
-    return true
-  }
-
-  const query: Where = {
-    'listing.createdBy': { equals: user.id },
-  }
-  return query
-}
 
 const canDeleteDocument: Access = ({ req: { user } }) => {
   if (!user) return false
@@ -73,9 +35,9 @@ export const Documents: CollectionConfig = {
     description: 'Documents attached to listings (titles, contracts, etc.)',
   },
   access: {
-    read: canReadDocument,
-    create: canCreateDocument,
-    update: canUpdateDocument,
+    read: approverOrAdmin,
+    create: approverOrAdmin,
+    update: approverOrAdmin,
     delete: canDeleteDocument,
   },
   hooks: {
@@ -95,7 +57,7 @@ export const Documents: CollectionConfig = {
             collection: 'listings',
             id: data.listing,
             depth: 0,
-            req, 
+            req,
           })
 
           if (listing && listing.createdBy !== req.user.id) {

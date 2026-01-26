@@ -63,7 +63,7 @@ const canUpdateListing: Access = ({ req: { user } }) => {
   const query: Where = {
     and: [
       { createdBy: { equals: user.id } },
-      { listingType: { equals: 'resale' } }, 
+      { listingType: { equals: 'resale' } },
       {
         or: [
           { status: { equals: 'draft' } },
@@ -110,6 +110,7 @@ export const Listings: CollectionConfig = {
     defaultColumns: ['title', 'listingType', 'status', 'city', 'price', 'createdBy', 'updatedAt'],
     group: 'Listings',
     description: 'Property listings for the MLS system',
+    hidden: false, // Visible to all authenticated users
   },
   access: {
     read: canReadListing,
@@ -144,7 +145,7 @@ export const Listings: CollectionConfig = {
               collection: 'barangays',
               id: data.barangay,
               depth: 0,
-              req, 
+              req,
             })
 
             if (barangay && barangay.city !== data.city) {
@@ -157,7 +158,7 @@ export const Listings: CollectionConfig = {
               collection: 'developments',
               id: data.development,
               depth: 0,
-              req, 
+              req,
             })
 
             if (development && development.barangay !== data.barangay) {
@@ -176,418 +177,452 @@ export const Listings: CollectionConfig = {
     ],
   },
   fields: [
-
     {
-      name: 'title',
-      type: 'text',
-      required: true,
-      maxLength: 120,
-      admin: {
-        placeholder: 'Enter listing title (max 120 characters)',
-      },
-    },
-    {
-      name: 'description',
-      type: 'richText',
-      admin: {
-        description: 'Detailed description for internal use and client sharing',
-      },
-    },
-
-    {
-      name: 'listingType',
-      type: 'select',
-      required: true,
-      defaultValue: 'resale',
-      options: [
-        { label: 'Resale', value: 'resale' },
-        { label: 'Preselling', value: 'preselling' },
-      ],
-      access: {
-        update: listingTypeFieldAccess,
-      },
-      admin: {
-        position: 'sidebar',
-        description: 'Agents can only create Resale listings',
-      },
-    },
-    {
-      name: 'createdBy',
-      type: 'relationship',
-      relationTo: 'users',
-      hasMany: false,
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-        description: 'Automatically set to the current user',
-      },
-    },
-    {
-      name: 'status',
-      type: 'select',
-      required: true,
-      defaultValue: 'draft',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Submitted', value: 'submitted' },
-        { label: 'Needs Revision', value: 'needs_revision' },
-        { label: 'Published', value: 'published' },
-        { label: 'Rejected', value: 'rejected' },
-      ],
-      admin: {
-        position: 'sidebar',
-      },
-    },
-
-    {
-      type: 'row',
-      fields: [
+      type: 'tabs',
+      tabs: [
         {
-          name: 'transactionType',
-          type: 'select',
-          required: true,
-          options: [
-            { label: 'For Sale', value: 'sale' },
-            { label: 'For Rent', value: 'rent' },
-          ],
-          admin: {
-            width: '33%',
-          },
-        },
-        {
-          name: 'price',
-          type: 'number',
-          required: true,
-          min: 0,
-          admin: {
-            placeholder: 'Base price',
-            width: '33%',
-          },
-        },
-        {
-          name: 'pricePerSqm',
-          type: 'number',
-          min: 0,
-          admin: {
-            placeholder: 'Price per sqm (for lots)',
-            width: '33%',
-            description: 'Required for lot-type properties',
-          },
-        },
-      ],
-    },
-
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'floorAreaSqm',
-          type: 'number',
-          min: 0,
-          admin: {
-            placeholder: 'Floor area (sqm)',
-            width: '50%',
-            description: 'For condos, offices, buildings',
-          },
-        },
-        {
-          name: 'lotAreaSqm',
-          type: 'number',
-          min: 0,
-          admin: {
-            placeholder: 'Lot area (sqm)',
-            width: '50%',
-            description: 'For lots, house-and-lot',
-          },
-        },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'bedrooms',
-          type: 'number',
-          min: 0,
-          admin: {
-            placeholder: 'Bedrooms',
-            width: '33%',
-          },
-        },
-        {
-          name: 'bathrooms',
-          type: 'number',
-          min: 0,
-          admin: {
-            placeholder: 'Bathrooms',
-            width: '33%',
-          },
-        },
-        {
-          name: 'parkingSlots',
-          type: 'number',
-          min: 0,
-          admin: {
-            placeholder: 'Parking slots',
-            width: '33%',
-          },
-        },
-      ],
-    },
-
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'furnishing',
-          type: 'select',
-          options: [
-            { label: 'Unfurnished', value: 'unfurnished' },
-            { label: 'Semi-Furnished', value: 'semi_furnished' },
-            { label: 'Fully Furnished', value: 'fully_furnished' },
-          ],
-          admin: {
-            width: '33%',
-          },
-        },
-        {
-          name: 'constructionYear',
-          type: 'number',
-          min: 1900,
-          max: 2100,
-          admin: {
-            placeholder: 'Year built (e.g., 2020)',
-            width: '33%',
-          },
-        },
-        {
-          name: 'tenure',
-          type: 'select',
-          options: [
-            { label: 'Freehold', value: 'freehold' },
-            { label: 'Leasehold', value: 'leasehold' },
-          ],
-          admin: {
-            width: '33%',
-          },
-        },
-      ],
-    },
-
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'titleStatus',
-          type: 'select',
-          options: [
-            { label: 'Clean Title', value: 'clean' },
-            { label: 'Mortgaged', value: 'mortgaged' },
-          ],
-          admin: {
-            width: '50%',
-          },
-        },
-        {
-          name: 'paymentTerms',
-          type: 'select',
-          hasMany: true,
-          options: [
-            { label: 'Cash', value: 'cash' },
-            { label: 'Bank Financing', value: 'bank' },
-            { label: 'Pag-IBIG', value: 'pagibig' },
-            { label: 'Deferred Payment', value: 'deferred' },
-          ],
-          admin: {
-            width: '50%',
-          },
-        },
-      ],
-    },
-
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'city',
-          type: 'relationship',
-          relationTo: 'cities',
-          required: true,
-          hasMany: false,
-          filterOptions: {
-            isActive: { equals: true },
-          },
-          admin: {
-            width: '33%',
-            description: 'Select city first',
-          },
-        },
-        {
-          name: 'barangay',
-          type: 'relationship',
-          relationTo: 'barangays',
-          required: true,
-          hasMany: false,
-          filterOptions: ({ data }) => {
-            const query: Where = {
-              isActive: { equals: true },
-            }
-            if (data?.city) {
-              query.city = { equals: data.city }
-            }
-            return query
-          },
-          admin: {
-            width: '33%',
-            description: 'Filtered by selected city',
-          },
-        },
-        {
-          name: 'development',
-          type: 'relationship',
-          relationTo: 'developments',
-          hasMany: false,
-          filterOptions: ({ data }) => {
-            const query: Where = {
-              isActive: { equals: true },
-            }
-            if (data?.barangay) {
-              query.barangay = { equals: data.barangay }
-            }
-            return query
-          },
-          admin: {
-            width: '33%',
-            description: 'Filtered by selected barangay (optional)',
-          },
-        },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        {
-          name: 'township',
-          type: 'relationship',
-          relationTo: 'townships',
-          hasMany: false,
-          admin: {
-            readOnly: true,
-            width: '50%',
-            description: 'Auto-populated based on Barangay',
-          },
-        },
-        {
-          name: 'estate',
-          type: 'relationship',
-          relationTo: 'estates',
-          hasMany: false,
-          admin: {
-            readOnly: true,
-            width: '50%',
-            description: 'Auto-populated based on Development',
-          },
-        },
-      ],
-    },
-    {
-      name: 'fullAddress',
-      type: 'text',
-      required: true,
-      admin: {
-        placeholder: 'Full address (street, building, unit number, etc.)',
-        description: 'Complete address for internal reference',
-      },
-    },
-
-    {
-      name: 'images',
-      type: 'relationship',
-      relationTo: 'media',
-      hasMany: true,
-      admin: {
-        description: 'Upload listing photos',
-      },
-    },
-
-    {
-      type: 'collapsible',
-      label: 'Preselling Details',
-      admin: {
-        condition: (data) => data?.listingType === 'preselling',
-        description: 'Additional fields for preselling listings (Admin only)',
-      },
-      fields: [
-        {
-          name: 'modelName',
-          type: 'text',
-          admin: {
-            placeholder: 'e.g., 2BR Unit Type A',
-            description: 'Unit model or type name',
-          },
-        },
-        {
-          type: 'row',
+          label: 'Location',
           fields: [
             {
-              name: 'indicativePriceMin',
-              type: 'number',
-              min: 0,
-              admin: {
-                placeholder: 'Minimum price',
-                width: '50%',
-                description: 'Starting price range',
-              },
+              type: 'row',
+              fields: [
+                {
+                  name: 'city',
+                  type: 'relationship',
+                  relationTo: 'cities',
+                  required: true,
+                  hasMany: false,
+                  filterOptions: {
+                    isActive: { equals: true },
+                  },
+                  admin: {
+                    width: '33%',
+                    description: 'Select city first',
+                  },
+                },
+                {
+                  name: 'barangay',
+                  type: 'relationship',
+                  relationTo: 'barangays',
+                  required: true,
+                  hasMany: false,
+                  filterOptions: ({ data }) => {
+                    const query: Where = {
+                      isActive: { equals: true },
+                    }
+                    if (data?.city) {
+                      query.city = { equals: data.city }
+                    }
+                    return query
+                  },
+                  admin: {
+                    width: '33%',
+                    description: 'Filtered by selected city',
+                  },
+                },
+                {
+                  name: 'development',
+                  type: 'relationship',
+                  relationTo: 'developments',
+                  hasMany: false,
+                  filterOptions: ({ data }) => {
+                    const query: Where = {
+                      isActive: { equals: true },
+                    }
+                    if (data?.barangay) {
+                      query.barangay = { equals: data.barangay }
+                    }
+                    return query
+                  },
+                  admin: {
+                    width: '33%',
+                    description: 'Filtered by selected barangay (optional)',
+                  },
+                },
+              ],
             },
             {
-              name: 'indicativePriceMax',
-              type: 'number',
-              min: 0,
+              type: 'row',
+              fields: [
+                {
+                  name: 'township',
+                  type: 'relationship',
+                  relationTo: 'townships',
+                  hasMany: false,
+                  admin: {
+                    hidden: true,
+                    readOnly: true,
+                    width: '50%',
+                    description: 'Auto-populated based on Barangay',
+                  },
+                },
+                {
+                  name: 'estate',
+                  type: 'relationship',
+                  relationTo: 'estates',
+                  hasMany: false,
+                  admin: {
+                    hidden: true,
+                    readOnly: true,
+                    width: '50%',
+                    description: 'Auto-populated based on Development',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'fullAddress',
+              type: 'text',
+              required: true,
               admin: {
-                placeholder: 'Maximum price',
-                width: '50%',
-                description: 'Upper price range',
+                placeholder: 'Full address (street, building, unit number, etc.)',
+                description: 'Complete address for internal reference',
               },
             },
           ],
         },
         {
-          type: 'row',
+          label: 'Basic Info',
           fields: [
             {
-              name: 'minLotArea',
-              type: 'number',
-              min: 0,
+              name: 'title',
+              type: 'text',
+              required: true,
+              maxLength: 120,
               admin: {
-                placeholder: 'Min lot area (sqm)',
-                width: '50%',
+                placeholder: 'Enter listing title (max 120 characters)',
               },
             },
             {
-              name: 'minFloorArea',
-              type: 'number',
-              min: 0,
+              type: 'row',
+              fields: [
+                {
+                  name: 'listingType',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'resale',
+                  options: [
+                    { label: 'Resale', value: 'resale' },
+                    { label: 'Preselling', value: 'preselling' },
+                  ],
+                  access: {
+                    update: listingTypeFieldAccess,
+                  },
+                  admin: {
+                    width: '50%',
+                    description: 'Agents can only create Resale listings',
+                  },
+                },
+                {
+                  name: 'transactionType',
+                  type: 'select',
+                  required: true,
+                  options: [
+                    { label: 'For Sale', value: 'sale' },
+                    { label: 'For Rent', value: 'rent' },
+                  ],
+                  admin: {
+                    width: '50%',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Property Details',
+          fields: [
+            {
+              name: 'description',
+              type: 'richText',
               admin: {
-                placeholder: 'Min floor area (sqm)',
-                width: '50%',
+                description: 'Detailed description for internal use and client sharing',
+              },
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'floorAreaSqm',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Floor area (sqm)',
+                    width: '50%',
+                    description: 'For condos, offices, buildings',
+                  },
+                },
+                {
+                  name: 'lotAreaSqm',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Lot area (sqm)',
+                    width: '50%',
+                    description: 'For lots, house-and-lot',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'bedrooms',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Bedrooms',
+                    width: '33%',
+                  },
+                },
+                {
+                  name: 'bathrooms',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Bathrooms',
+                    width: '33%',
+                  },
+                },
+                {
+                  name: 'parkingSlots',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Parking slots',
+                    width: '33%',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'furnishing',
+                  type: 'select',
+                  options: [
+                    { label: 'Unfurnished', value: 'unfurnished' },
+                    { label: 'Semi-Furnished', value: 'semi_furnished' },
+                    { label: 'Fully Furnished', value: 'fully_furnished' },
+                  ],
+                  admin: {
+                    width: '33%',
+                  },
+                },
+                {
+                  name: 'constructionYear',
+                  type: 'number',
+                  min: 1900,
+                  max: 2100,
+                  admin: {
+                    placeholder: 'Year built (e.g., 2020)',
+                    width: '33%',
+                  },
+                },
+                {
+                  name: 'tenure',
+                  type: 'select',
+                  options: [
+                    { label: 'Freehold', value: 'freehold' },
+                    { label: 'Leasehold', value: 'leasehold' },
+                  ],
+                  admin: {
+                    width: '33%',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Pricing & Terms',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'price',
+                  type: 'number',
+                  required: true,
+                  min: 0,
+                  admin: {
+                    placeholder: 'Base price',
+                    width: '50%',
+                  },
+                },
+                {
+                  name: 'pricePerSqm',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Price per sqm (for lots)',
+                    width: '50%',
+                    description: 'Required for lot-type properties',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'titleStatus',
+                  type: 'select',
+                  options: [
+                    { label: 'Clean Title', value: 'clean' },
+                    { label: 'Mortgaged', value: 'mortgaged' },
+                  ],
+                  admin: {
+                    width: '50%',
+                  },
+                },
+                {
+                  name: 'paymentTerms',
+                  type: 'select',
+                  hasMany: true,
+                  options: [
+                    { label: 'Cash', value: 'cash' },
+                    { label: 'Bank Financing', value: 'bank' },
+                    { label: 'Pag-IBIG', value: 'pagibig' },
+                    { label: 'Deferred Payment', value: 'deferred' },
+                  ],
+                  admin: {
+                    width: '50%',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Preselling Details',
+              admin: {
+                condition: (data) => data?.listingType === 'preselling',
+                description: 'Additional fields for preselling listings (Admin only)',
+              },
+              fields: [
+                {
+                  name: 'modelName',
+                  type: 'text',
+                  admin: {
+                    placeholder: 'e.g., 2BR Unit Type A',
+                    description: 'Unit model or type name',
+                  },
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'indicativePriceMin',
+                      type: 'number',
+                      min: 0,
+                      admin: {
+                        placeholder: 'Minimum price',
+                        width: '50%',
+                        description: 'Starting price range',
+                      },
+                    },
+                    {
+                      name: 'indicativePriceMax',
+                      type: 'number',
+                      min: 0,
+                      admin: {
+                        placeholder: 'Maximum price',
+                        width: '50%',
+                        description: 'Upper price range',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'minLotArea',
+                      type: 'number',
+                      min: 0,
+                      admin: {
+                        placeholder: 'Min lot area (sqm)',
+                        width: '50%',
+                      },
+                    },
+                    {
+                      name: 'minFloorArea',
+                      type: 'number',
+                      min: 0,
+                      admin: {
+                        placeholder: 'Min floor area (sqm)',
+                        width: '50%',
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: 'standardInclusions',
+                  type: 'richText',
+                  admin: {
+                    description: 'Standard inclusions and features',
+                  },
+                },
+                {
+                  name: 'presellingNotes',
+                  type: 'textarea',
+                  admin: {
+                    placeholder: 'Additional notes, disclaimers, or special conditions',
+                    description: 'Internal notes about this preselling listing',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Media',
+          fields: [
+            {
+              name: 'images',
+              type: 'relationship',
+              relationTo: 'media',
+              hasMany: true,
+              admin: {
+                description: 'Upload listing photos',
               },
             },
           ],
         },
         {
-          name: 'standardInclusions',
-          type: 'richText',
-          admin: {
-            description: 'Standard inclusions and features',
-          },
-        },
-        {
-          name: 'presellingNotes',
-          type: 'textarea',
-          admin: {
-            placeholder: 'Additional notes, disclaimers, or special conditions',
-            description: 'Internal notes about this preselling listing',
-          },
+          label: 'Admin / Status',
+          fields: [
+            {
+              name: 'status',
+              type: 'select',
+              required: true,
+              defaultValue: 'draft',
+              options: [
+                { label: 'Draft', value: 'draft' },
+                { label: 'Submitted', value: 'submitted' },
+                { label: 'Needs Revision', value: 'needs_revision' },
+                { label: 'Published', value: 'published' },
+                { label: 'Rejected', value: 'rejected' },
+              ],
+              admin: {
+                components: {
+                  Field: '/src/components/StatusField#StatusField',
+                },
+              },
+            },
+            {
+              name: 'createdBy',
+              type: 'relationship',
+              relationTo: 'users',
+              hasMany: false,
+              admin: {
+                readOnly: true,
+                description: 'Automatically set to the current user',
+              },
+            },
+          ],
         },
       ],
     },

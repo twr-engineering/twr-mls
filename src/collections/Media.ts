@@ -1,11 +1,12 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import { authenticated, adminOnly, isAgent } from '@/access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
     group: 'System',
     description: 'Uploaded media files (images, documents)',
+    hidden: ({ user }) => isAgent(user),
   },
   access: {
 

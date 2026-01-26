@@ -2,8 +2,8 @@ import type { Access, FieldAccess } from 'payload'
 import type { UserRole } from '@/collections/Users'
 
 type User = {
-  id: number
-  email: string
+  id: number | string
+  email?: string
   role?: UserRole
 }
 

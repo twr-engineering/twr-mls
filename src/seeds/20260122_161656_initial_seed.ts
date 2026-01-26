@@ -99,8 +99,9 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
                     })
                     cityID = newCity.id
                 }
-            } catch (e: any) {
-                console.warn(`City creation failed for ${cityData.munCityName} (${slug}):`, e.message)
+            } catch (e: unknown) {
+                const error = e as { message?: string }
+                console.warn(`City creation failed for ${cityData.munCityName} (${slug}):`, error.message || 'Unknown error')
                 return
             }
 
@@ -120,7 +121,8 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
                                 isActive: true
                             }
                         })
-                    } catch (err) {
+                    } catch {
+                        // Ignore duplicate barangay creation errors
                     }
                 }))
             }

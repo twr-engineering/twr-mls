@@ -5,11 +5,11 @@
   --color-surface: #141414;
   --color-text: #e0e0e0;
   --color-text-muted: #a0a0a0;
-  --color-accent: #d4af37;
-  /* Metallic Gold */
+  --color-accent: #ffffff;
+  /* Monochrome White */
   --color-white: #ffffff;
   --color-black: #000000;
-  --font-serif: 'Playfair Display', serif;
+  --font-serif: 'Inter', sans-serif;
   --font-sans: 'Inter', sans-serif;
 }
 
@@ -52,27 +52,28 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
-  opacity: 0.3;
+  background: linear-gradient(90deg, transparent, var(--color-text-muted), transparent);
+  opacity: 0.2;
 }
 
 .logo-container {
-  margin-bottom: 3rem;
-  max-width: 400px;
+  margin-bottom: 0.5rem;
+  max-width: 250px;
   width: 100%;
 }
 
 .hero-text {
   max-width: 600px;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .hero-title {
-  font-family: var(--font-serif);
-  font-size: 3rem;
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 500;
   color: var(--color-white);
-  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
 }
 
@@ -100,12 +101,12 @@ body {
 .feature-card {
   text-align: left;
   padding: 2rem;
-  border-left: 1px solid rgba(212, 175, 55, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   transition: border-color 0.3s ease;
 }
 
 .feature-card:hover {
-  border-left-color: var(--color-accent);
+  border-left-color: var(--color-white);
 }
 
 .feature-title {
@@ -135,7 +136,7 @@ body {
   display: inline-block;
   padding: 16px 40px;
   background-color: transparent;
-  color: var(--color-accent);
+  color: var(--color-white);
   text-decoration: none;
   font-family: var(--font-sans);
   font-size: 13px;
@@ -143,12 +144,12 @@ body {
   letter-spacing: 2px;
   text-transform: uppercase;
   transition: all 0.3s ease;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--color-white);
 }
 
 .cta-button:hover {
-  background-color: var(--color-accent);
+  background-color: var(--color-white);
   color: var(--color-black);
   cursor: pointer;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
