@@ -62,6 +62,31 @@ Alternatively, you can use [Docker](https://www.docker.com) to spin up this temp
 
 That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
 
+## Deployment
+
+This project uses automated CI/CD with GitHub Actions and Vercel:
+
+- **Preview/Staging**: Auto-deploys when commits are pushed to `main`
+- **Production**: Deploys when version tags are created (e.g., `v1.0.0`)
+
+### Quick Deploy Commands
+
+```bash
+# Deploy to preview (push to main)
+git push origin main
+
+# Deploy to production (create release)
+pnpm release:patch   # v1.0.x
+pnpm release:minor   # v1.x.0
+pnpm release:major   # vx.0.0
+```
+
+### Setup & Documentation
+
+- **Setup Guide**: See `.github/SETUP_CHECKLIST.md` for initial setup
+- **Deployment Guide**: See `DEPLOYMENT.md` for detailed deployment instructions
+- **Quick Reference**: See `CI_CD_SETUP.md` for common commands and workflows
+
 ## Questions
 
 If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).

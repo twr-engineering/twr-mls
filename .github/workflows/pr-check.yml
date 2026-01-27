@@ -1,0 +1,55 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  quality-check:
+    name: Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run integration tests
+        run: pnpm test:int
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          PAYLOAD_SECRET: ${{ secrets.TEST_PAYLOAD_SECRET }}
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          PAYLOAD_SECRET: ${{ secrets.TEST_PAYLOAD_SECRET }}
+
+      - name: Check for build errors
+        run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          PAYLOAD_SECRET: ${{ secrets.TEST_PAYLOAD_SECRET }}

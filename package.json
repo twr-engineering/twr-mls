@@ -24,7 +24,12 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
+    "typecheck": "tsc --noEmit",
+    "ci:check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "release:major": "bash scripts/create-release.sh major",
+    "release:minor": "bash scripts/create-release.sh minor",
+    "release:patch": "bash scripts/create-release.sh patch"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
