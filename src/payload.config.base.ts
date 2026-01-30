@@ -12,6 +12,9 @@ import { Listings } from './collections/Listings'
 import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
+import { PropertyCategories } from './collections/PropertyCategories'
+import { PropertyTypes } from './collections/PropertyTypes'
+import { PropertySubtypes } from './collections/PropertySubtypes'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
@@ -36,6 +39,9 @@ export const config: Config = {
     Developments,
     Estates,
     Townships,
+    PropertyCategories,
+    PropertyTypes,
+    PropertySubtypes,
     Listings,
     Documents,
     Notifications,

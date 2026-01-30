@@ -51,6 +51,11 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                 <Badge variant={getStatusBadgeVariant(listing.status)} className="text-xs">
                   {listing.status.replace('_', ' ')}
                 </Badge>
+                {listing.propertyType && typeof listing.propertyType === 'object' && (
+                  <Badge variant="outline" className="text-xs">
+                    {listing.propertyType.name}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -69,6 +74,9 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
               <div className="col-span-2">
                 <span className="text-muted-foreground">Location:</span>
                 <p className="font-medium truncate">
+                  {listing.township && typeof listing.township === 'object'
+                    ? `${listing.township.name}, `
+                    : ''}
                   {typeof listing.city === 'object' ? listing.city.name : 'N/A'},{' '}
                   {typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'}
                 </p>

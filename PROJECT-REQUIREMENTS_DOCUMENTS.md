@@ -1,5 +1,6 @@
 PROJECT REQUIREMENTS DOCUMENT
 
+## 1. Overview
 
 ### Project Name
 
@@ -49,7 +50,6 @@ Build an **internal-only MLS and listing management system** for a real estate
 - Approval & document validation
 - Internal MLS search
 - Notifications
-
 - Master data management
 - User & role management
 
@@ -61,7 +61,7 @@ Build an **internal-only MLS and listing management system** for a real estate
 
 ---
 
-### 2.2 Mobile PWA (Mobile-first)
+### 2.2 Mobile PWA (Mobile-first) - If Time Permits
 
 **Used by:** Agents
 
@@ -145,8 +145,8 @@ This field controls:
 ### Admin
 
 - Can create and edit:
-    - Resale listings
-    - Preselling listings
+  - Resale listings
+  - Preselling listings
 
 ---
 
@@ -170,9 +170,9 @@ Examples:
 ### Rules
 
 - Preselling listings:
-    - Are centrally created by Admin
-    - Are read-only for agents
-    - Are not duplicated per agent
+  - Are centrally created by Admin
+  - Are read-only for agents
+  - Are not duplicated per agent
 - A Development can have **multiple Preselling listings**
 
 ---
@@ -245,24 +245,24 @@ A **Resale listing** represents an individually owned property.
 ### Attributes
 
 - Furnishing:
-    - Unfurnished
-    - Semi-Furnished
-    - Fully Furnished
+  - Unfurnished
+  - Semi-Furnished
+  - Fully Furnished
 - Construction Year
 - Tenure:
-    - Freehold
-    - Leasehold
+  - Freehold
+  - Leasehold
 
 ### Legal & Payment
 
 - Title Status:
-    - Clean
-    - Mortgaged
+  - Clean
+  - Mortgaged
 - Payment Terms (multi-select):
-    - Cash
-    - Bank
-    - Pag-IBIG
-    - Deferred
+  - Cash
+  - Bank
+  - Pag-IBIG
+  - Deferred
 
 ---
 
@@ -276,10 +276,8 @@ A **Resale listing** represents an individually owned property.
 4. **Full Address** (required)
 
 > Canonical term: Development
-> 
-> 
+>
 > UI label may show: *Development / Subdivision*
-> 
 
 ### Enforcement
 
@@ -310,10 +308,8 @@ Examples:
 - isActive
 
 > primaryEstate is for admin clarity only
-> 
-> 
+>
 > It does NOT drive search logic
-> 
 
 ---
 
@@ -385,12 +381,12 @@ listing.barangay ∈ township.coveredBarangays
 
 ### Search Types & Inclusion Logic
 
-| Search Term | Inclusion Rule |
-| --- | --- |
-| Township | Barangay ∈ Township |
-| Estate | Development ∈ Estate |
-| Development | Listing linked |
-| Barangay | Listing in barangay |
+| Search Term | Inclusion Rule       |
+| ----------- | -------------------- |
+| Township    | Barangay ∈ Township  |
+| Estate      | Development ∈ Estate |
+| Development | Listing linked       |
+| Barangay    | Listing in barangay  |
 
 ---
 
@@ -436,8 +432,8 @@ Displayed in:
 - VerifiedBy
 - VerifiedAt
 - Visibility:
-    - Private
-    - Internal
+  - Private
+  - Internal
 
 ### Visibility Rules
 
@@ -516,4 +512,4 @@ This PRD is:
 - **Search-accurate**
 - **Agent-proof**
 
-[Internal MLS & Listing Management System Draft ](https://www.notion.so/Internal-MLS-Listing-Management-System-Draft-2ed5f94a3690806db81fedcce313230b?pvs=21)
+[FIELD SCHEMA - LISTINGS](https://www.notion.so/FIELD-SCHEMA-LISTINGS-2ef5f94a36908004add5fef5cc10294f?pvs=21)

@@ -20,6 +20,7 @@
     "seed:run": "cross-env PAYLOAD_CONFIG_PATH=src/payload.seed.config.ts NODE_OPTIONS=--no-deprecation payload migrate",
     "seed:revert": "cross-env PAYLOAD_CONFIG_PATH=src/payload.seed.config.ts NODE_OPTIONS=--no-deprecation payload migrate:down",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "seed:property-classification": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env src/scripts/seed-property-classification.ts",
     "prepare": "husky",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",

@@ -94,6 +94,20 @@ const listingTypeFieldAccess: FieldAccess = ({ req: { user } }) => {
   return false
 }
 
+const propertyOwnerFieldAccess: FieldAccess = ({ req: { user }, doc }) => {
+  if (!user) return false
+
+  if (user.role === 'admin' || user.role === 'approver') {
+    return true
+  }
+
+  if (user.role === 'agent' && doc?.createdBy === user.id) {
+    return true
+  }
+
+  return false
+}
+
 export const Listings: CollectionConfig = {
   slug: 'listings',
   admin: {
@@ -126,8 +140,9 @@ export const Listings: CollectionConfig = {
         return data
       },
 
-      async ({ data, req, operation }) => {
+      async ({ data, req, operation, originalDoc }) => {
         if (operation === 'create' || operation === 'update') {
+          // Validate location hierarchy
           if (data.city && data.barangay) {
             const barangay = await req.payload.findByID({
               collection: 'barangays',
@@ -151,6 +166,17 @@ export const Listings: CollectionConfig = {
 
             if (development && development.barangay !== data.barangay) {
               throw new Error('Selected development does not belong to the selected barangay')
+            }
+          }
+
+          // Reset property type and subtype when category changes
+          if (operation === 'update' && originalDoc) {
+            if (data.propertyCategory && originalDoc.propertyCategory !== data.propertyCategory) {
+              data.propertyType = null
+              data.propertySubtype = null
+            }
+            if (data.propertyType && originalDoc.propertyType !== data.propertyType) {
+              data.propertySubtype = null
             }
           }
         }
@@ -177,6 +203,107 @@ export const Listings: CollectionConfig = {
       admin: {
         description: 'Detailed description for internal use and client sharing',
       },
+    },
+
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'propertyCategory',
+          type: 'relationship',
+          relationTo: 'property-categories',
+          required: true,
+          hasMany: false,
+          filterOptions: {
+            isActive: { equals: true },
+          },
+          admin: {
+            width: '33%',
+            description: 'Select category first (e.g., Residential)',
+          },
+        },
+        {
+          name: 'propertyType',
+          type: 'relationship',
+          relationTo: 'property-types',
+          required: true,
+          hasMany: false,
+          filterOptions: ({ data }) => {
+            const query: Where = {
+              isActive: { equals: true },
+            }
+            if (data?.propertyCategory) {
+              query.category = { equals: data.propertyCategory }
+            }
+            return query
+          },
+          admin: {
+            width: '33%',
+            description: 'Filtered by category (e.g., House & Lot)',
+          },
+        },
+        {
+          name: 'propertySubtype',
+          type: 'relationship',
+          relationTo: 'property-subtypes',
+          hasMany: false,
+          filterOptions: ({ data }) => {
+            const query: Where = {
+              isActive: { equals: true },
+            }
+            if (data?.propertyType) {
+              query.propertyType = { equals: data.propertyType }
+            }
+            return query
+          },
+          admin: {
+            width: '33%',
+            description: 'Filtered by type (optional)',
+          },
+        },
+      ],
+    },
+
+    {
+      type: 'collapsible',
+      label: 'Property Owner Information',
+      admin: {
+        description: 'Sensitive information - visible only to listing owner, approvers, and admin',
+        condition: (data) => data?.listingType === 'resale',
+      },
+      fields: [
+        {
+          name: 'propertyOwnerName',
+          type: 'text',
+          access: {
+            read: propertyOwnerFieldAccess,
+          },
+          admin: {
+            placeholder: 'Full name of property owner',
+          },
+        },
+        {
+          name: 'propertyOwnerContact',
+          type: 'text',
+          access: {
+            read: propertyOwnerFieldAccess,
+          },
+          admin: {
+            placeholder: 'Contact number or email',
+          },
+        },
+        {
+          name: 'propertyOwnerNotes',
+          type: 'textarea',
+          access: {
+            read: propertyOwnerFieldAccess,
+          },
+          admin: {
+            placeholder: 'Internal notes about the property owner',
+            description: 'For agent reference only',
+          },
+        },
+      ],
     },
 
     {
@@ -602,7 +729,12 @@ export const Listings: CollectionConfig = {
     {
       fields: ['createdBy'],
     },
-
+    {
+      fields: ['propertyCategory'],
+    },
+    {
+      fields: ['propertyType'],
+    },
     {
       fields: ['status', 'listingType'],
     },

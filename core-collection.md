@@ -1,155 +1,310 @@
-# 🧱 FIELD SCHEMA — LISTINGS (Core Collection)
+# 🧱 LISTINGS & MASTER DATA SCHEMA
 
-## Collection: `Listings`
-
----
-
-## A. Core Details
-
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `title` | text | ✅ | Max length recommended: 120 |
-| `description` | richText | ❌ | Used internally + for client sharing |
+**(FINAL CONSOLIDATED • AUTHORITATIVE)**
 
 ---
 
-## B. Listing Type & Governance
+# 1️⃣ CORE COLLECTION: `Listings`
 
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `listingType` | select | ✅ | Values: `resale`, `preselling` |
-| `createdBy` | relationship (Users) | ✅ | Agent or Admin |
-| `status` | select | ✅ | draft / submitted / needs_revision / published / rejected |
-
-🔒 **Access Rules**
-
-- Agents: `listingType` locked to `resale`
-- Admin: can select both
+> Single collection.
+>
+> Resale and Preselling are differentiated **only** by `listingType`.
 
 ---
 
-## C. Transaction & Pricing
+## A. Governance & Identity (ALL Listings)
 
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `transactionType` | select | ✅ | `sale`, `rent` |
-| `price` | number | ✅ | Base price |
-| `pricePerSqm` | number | ❌ | **Required if Lot** (see rules below) |
+| Field         | Type                 | Required | Notes                                                     |
+| ------------- | -------------------- | -------- | --------------------------------------------------------- |
+| `listingType` | select               | ✅       | `resale`, `preselling`                                    |
+| `status`      | select               | ✅       | draft / submitted / needs_revision / published / rejected |
+| `createdBy`   | relationship → Users | ✅       | Agent or Admin                                            |
 
-### Conditional Rule
+### Rules
 
-- If `propertyType` is any **Lot** type → `pricePerSqm` required
-
----
-
-## D. Area & Specifications
-
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `floorAreaSqm` | number | ❌ | Required for condos, offices, buildings |
-| `lotAreaSqm` | number | ❌ | Required for lots & house-and-lot |
-| `bedrooms` | number | ❌ | Required for residential units (except lots) |
-| `bathrooms` | number | ❌ | Same as above |
-| `parkingSlots` | number | ❌ | Optional |
+- Agents: `listingType = resale` (locked)
+- Admin: may select `resale` or `preselling`
+- `both` is **search-only**, never stored
 
 ---
 
-## E. Attributes
+## B. Core Presentation Fields (ALL Listings)
 
-### Furnishing
+| Field         | Type     | Required | Semantics              |
+| ------------- | -------- | -------- | ---------------------- |
+| `title`       | text     | ✅       | Marketing-facing title |
+| `description` | richText | ❌       | Context, positioning   |
 
-| Field Name | Type | Required | Options |
-| --- | --- | --- | --- |
-| `furnishing` | select | ❌ | `unfurnished`, `semi_furnished`, `fully_furnished` |
+**Preselling clarification**
 
----
-
-### Construction & Tenure
-
-| Field Name | Type | Required | Options |
-| --- | --- | --- | --- |
-| `constructionYear` | number (YYYY) | ❌ | e.g. 2018 |
-| `tenure` | select | ❌ | `freehold`, `leasehold` |
+- `modelName` = canonical identifier
+- `title` = marketing-facing
+- `description` = narrative / explanation
 
 ---
 
-## F. Legal & Payment
+## C. Property Classification (CRITICAL – ALL Listings)
 
-### Title Status
+| Field              | Type                              | Required |
+| ------------------ | --------------------------------- | -------- |
+| `propertyCategory` | relationship → PropertyCategories | ✅       |
+| `propertyType`     | relationship → PropertyTypes      | ✅       |
+| `propertySubtype`  | relationship → PropertySubtypes   | ❌       |
+|                    |                                   |          |
 
-| Field Name | Type | Required | Options |
-| --- | --- | --- | --- |
-| `titleStatus` | select | ❌ | `clean`, `mortgaged` |
+### Hierarchy Enforcement (MANDATORY)
+
+1. PropertyType ∈ PropertyCategory
+2. PropertySubtype ∈ PropertyType
+3. Changing Category resets Type & Subtype
+4. Changing Type resets Subtype
+5. Backend must reject invalid combinations
+
+---
+
+## D. Transaction & Payment (ALL Listings)
+
+### Transaction Type
+
+| Field             | Type   | Required |
+| ----------------- | ------ | -------- |
+| `transactionType` | select | ✅       |
+
+Values: `sale`, `rent`
+
+`both` exists **only in search filters**
 
 ---
 
 ### Payment Terms
 
-| Field Name | Type | Required | Options |
-| --- | --- | --- | --- |
-| `paymentTerms` | select (multi) | ❌ | `cash`, `bank`, `pagibig`, `deferred` |
+| Field          | Type           | Required | Semantics                                  |
+| -------------- | -------------- | -------- | ------------------------------------------ |
+| `paymentTerms` | select (multi) | ❌       | Accepted (resale) / Supported (preselling) |
+
+p
+
+Options:
+
+- cash
+- bank
+- pagibig
+- deferred
 
 ---
 
-## G. Address & Location (CRITICAL)
+## E. Address & Location (ALL Listings)
 
-### Address Relationships
+| Field         | Type                        | Required | Semantics                                 |
+| ------------- | --------------------------- | -------- | ----------------------------------------- |
+| `city`        | relationship → Cities       | ✅       | Official                                  |
+| `barangay`    | relationship → Barangays    | ✅       | Filtered by City                          |
+| `development` | relationship → Developments | ❌ / ✅  | Required for Preselling                   |
+| `fullAddress` | text                        | ✅       | Exact (resale) / Approximate (preselling) |
 
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `city` | relationship (Cities) | ✅ | Official |
-| `barangay` | relationship (Barangays) | ✅ | Filtered by City |
-| `development` | relationship (Developments) | ❌ | Filtered by Barangay |
-| `fullAddress` | text | ✅ | Free text |
+### Enforcement Rules (NON-NEGOTIABLE)
 
----
-
-### Address Enforcement Rules (Non-Negotiable)
-
-- Selecting **City** filters Barangays
-- Selecting **Barangay** filters Developments
+- City → filters Barangay
+- Barangay → filters Development
 - Changing City resets Barangay & Development
 - Changing Barangay resets Development
-- Backend validation must reject invalid combinations
+- Invalid combinations rejected server-side
 
 ---
 
-# 🧩 MASTER DATA COLLECTIONS (Admin Only)
+# 2️⃣ RESALE LISTING FIELDS
+
+_(Applied when `listingType = resale`)_
+
+## A. Pricing (ACTUAL)
+
+| Field         | Type              | Required |
+| ------------- | ----------------- | -------- |
+| `price`       | number            | ✅       |
+| `pricePerSqm` | number (computed) | ❌       |
+
+### Rules
+
+- Applies only to **Lot** property types
+- Computation: `price / lotAreaSqm`
+- Read-only
+- Save blocked if lot resale lacks `lotAreaSqm`
 
 ---
 
-## Collection: `Developments`
+## B. Area & Specs (ACTUAL)
 
-> Canonical term: Development
-> 
-> 
-> UI may display “Development / Subdivision”
-> 
-
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `name` | text | ✅ |  |
-| `barangay` | relationship (Barangays) | ✅ |  |
-| `primaryEstate` | relationship (Estates) | ❌ | Informational only |
-| `isActive` | boolean | ✅ | Soft deactivate |
-
-🔎 `primaryEstate`
-
-- Admin clarity only
-- Does NOT affect search or inference logic
+| Field          | Type   | Required |
+| -------------- | ------ | -------- |
+| `floorAreaSqm` | number | ❌       |
+| `lotAreaSqm`   | number | ❌       |
+| `bedrooms`     | number | ❌       |
+| `bathrooms`    | number | ❌       |
+| `parkingSlots` | number | ❌       |
 
 ---
 
-## Collection: `Estates`
+## C. Attributes (ACTUAL)
 
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `name` | text | ✅ |  |
-| `slug` | text | ✅ | URL-safe |
-| `includedDevelopments` | relationship (Developments, multi) | ✅ | Source of truth |
-| `isActive` | boolean | ✅ |  |
+| Field              | Type                             |
+| ------------------ | -------------------------------- |
+| `furnishing`       | select                           |
+| `constructionYear` | number (YYYY)                    |
+| `tenure`           | select (`freehold`, `leasehold`) |
 
-### Estate Rule (Strict)
+---
+
+## D. Legal (ACTUAL)
+
+| Field         | Type                          |
+| ------------- | ----------------------------- |
+| `titleStatus` | select (`clean`, `mortgaged`) |
+
+---
+
+### 🔐 Resale Validation Rules
+
+- MUST have `price`
+- Lot resale MUST have `lotAreaSqm`
+- MUST NOT have preselling-only fields
+
+---
+
+# 3️⃣ PRESELLING LISTING FIELDS
+
+_(Applied when `listingType = preselling`)_
+
+> Represents a sellable model / variant, not a unit
+
+---
+
+## A. Preselling Identity
+
+| Field       | Type | Required |
+| ----------- | ---- | -------- |
+| `modelName` | text | ✅       |
+
+---
+
+## B. Indicative Pricing (INFORMATIONAL)
+
+| Field                | Type   | Required |
+| -------------------- | ------ | -------- |
+| `indicativePrice`    | number | ❌       |
+| `indicativePriceMin` | number | ❌       |
+| `indicativePriceMax` | number | ❌       |
+
+### Validation
+
+- Must provide:
+  - `indicativePrice`
+  - OR (`indicativePriceMin` AND `indicativePriceMax`)
+
+---
+
+## C. Model Specs (SEARCHABLE, NOT GUARANTEED)
+
+| Field          | Type   | Semantics            |
+| -------------- | ------ | -------------------- |
+| `bedrooms`     | number | Typical model layout |
+| `bathrooms`    | number | Typical model layout |
+| `parkingSlots` | number | Typical allocation   |
+
+---
+
+## D. Minimum Size (MODEL-LEVEL)
+
+| Field             | Type   | Required |
+| ----------------- | ------ | -------- |
+| `minLotAreaSqm`   | number | ❌       |
+| `minFloorAreaSqm` | number | ❌       |
+
+At least one required.
+
+---
+
+## E. Tenure (PROJECT-LEVEL)
+
+| Field    | Type   | Semantics            |
+| -------- | ------ | -------------------- |
+| `tenure` | select | Project-level tenure |
+
+Values:
+
+- freehold
+- leasehold
+
+---
+
+## F. Indicative Turnover
+
+| Field                | Type          | Notes              |
+| -------------------- | ------------- | ------------------ |
+| `indicativeTurnover` | text / number | Informational only |
+
+Auto-display disclaimer:
+
+> “Indicative only. Subject to change.”
+
+---
+
+## G. Preselling Content
+
+| Field                | Type     |
+| -------------------- | -------- |
+| `standardInclusions` | richText |
+| `presellingNotes`    | richText |
+
+---
+
+### 🔐 Preselling Validation Rules
+
+- MUST have:
+  - `modelName`
+  - Development
+  - Indicative pricing
+  - Minimum size
+- MAY have:
+  - Bedrooms / Bathrooms / Parking
+  - Tenure
+  - Payment terms
+  - Indicative turnover
+- MUST NOT have:
+  - `price`, `pricePerSqm`
+  - `lotAreaSqm`, `floorAreaSqm`
+  - Furnishing, constructionYear, titleStatus
+  - Owner-specific data
+
+---
+
+# 4️⃣ MASTER DATA COLLECTIONS (ADMIN ONLY)
+
+## 4.1 `Developments`
+
+| Field           | Type                     | Required | Notes              |
+| --------------- | ------------------------ | -------- | ------------------ |
+| `name`          | text                     | ✅       |                    |
+| `barangay`      | relationship → Barangays | ✅       |                    |
+| `primaryEstate` | relationship → Estates   | ❌       | Informational only |
+| `isActive`      | boolean                  | ✅       | Soft deactivate    |
+
+**Important**
+
+- `primaryEstate` is **NOT** used for inference
+- Never infer Estate from this field
+
+---
+
+## 4.2 `Estates`
+
+| Field                  | Type                                | Required |
+| ---------------------- | ----------------------------------- | -------- |
+| `name`                 | text                                | ✅       |
+| `slug`                 | text                                | ✅       |
+| `includedDevelopments` | relationship → Developments (multi) | ✅       |
+| `isActive`             | boolean                             | ✅       |
+
+### Estate Rule (STRICT)
 
 ```
 listing belongsto estate
@@ -161,16 +316,16 @@ Listings are **never manually tagged** to Estates.
 
 ---
 
-## Collection: `Townships`
+## 4.3 `Townships`
 
-| Field Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `name` | text | ✅ |  |
-| `slug` | text | ✅ |  |
-| `coveredBarangays` | relationship (Barangays, multi) | ✅ |  |
-| `isActive` | boolean | ✅ |  |
+| Field              | Type                             | Required |
+| ------------------ | -------------------------------- | -------- |
+| `name`             | text                             | ✅       |
+| `slug`             | text                             | ✅       |
+| `coveredBarangays` | relationship → Barangays (multi) | ✅       |
+| `isActive`         | boolean                          | ✅       |
 
-### Township Rule (Strict)
+### Township Rule (STRICT)
 
 ```
 listing belongsto township
@@ -182,27 +337,62 @@ Listings are **never manually tagged** to Townships.
 
 ---
 
-# 🧠 Inference Summary (For Developers)
+# 5️⃣ INFERENCE SUMMARY (MANDATORY FOR DEVS)
 
-| Entity | Explicit on Listing? | How it’s Derived |
-| --- | --- | --- |
-| City | ✅ | Selected |
-| Barangay | ✅ | Selected |
-| Development | ❌ | Optional selection |
-| Estate | ❌ | Via Development ∈ Estate |
-| Township | ❌ | Via Barangay ∈ Township |
+| Entity      | Stored on Listing? | How Derived          |
+| ----------- | ------------------ | -------------------- |
+| City        | ✅                 | Explicit             |
+| Barangay    | ✅                 | Explicit             |
+| Development | ❌ (optional)      | Explicit             |
+| Estate      | ❌                 | Development ∈ Estate |
+| Township    | ❌                 | Barangay ∈ Township  |
 
 ---
 
-# 🔐 Validation & Integrity Rules (Backend)
+# 🧾 ONE-GLANCE FIELD APPLICABILITY MATRIX
 
-- Invalid City–Barangay–Development combinations rejected
-- Agents cannot:
-    - Create Preselling listings
-    - Modify listingType
-- Preselling listings:
-    - Editable only by Admin
-- ListingType affects:
-    - Search filters
-    - UI badges
-    - Edit permissions
+**(For Fast Dev Decisions)**
+
+| Field / Group            | Resale        | Preselling         |
+| ------------------------ | ------------- | ------------------ |
+| Title                    | ✅            | ✅                 |
+| Description              | ✅            | ✅                 |
+| Model Name               | ❌            | ✅                 |
+| Property Category        | ✅            | ✅                 |
+| Property Type            | ✅            | ✅                 |
+| Property Subtype         | ✅            | ✅                 |
+| Transaction Type         | ✅            | ✅                 |
+| Price                    | ✅            | ❌                 |
+| Price per sqm            | ✅ (computed) | ❌                 |
+| Indicative Price / Range | ❌            | ✅                 |
+| Bedrooms                 | ✅            | ✅ (model-level)   |
+| Bathrooms                | ✅            | ✅ (model-level)   |
+| Parking Slots            | ✅            | ✅ (model-level)   |
+| Floor Area (Actual)      | ✅            | ❌                 |
+| Lot Area (Actual)        | ✅            | ❌                 |
+| Minimum Floor Area       | ❌            | ✅                 |
+| Minimum Lot Area         | ❌            | ✅                 |
+| Tenure                   | ✅            | ✅ (project-level) |
+| Indicative Turnover      | ❌            | ✅                 |
+| Furnishing               | ✅            | ❌                 |
+| Construction Year        | ✅            | ❌                 |
+| Title Status             | ✅            | ❌                 |
+| Payment Terms            | ✅            | ✅                 |
+| Standard Inclusions      | ❌            | ✅                 |
+| Preselling Notes         | ❌            | ✅                 |
+| City                     | ✅            | ✅                 |
+| Barangay                 | ✅            | ✅                 |
+| Development              | Optional      | Required           |
+| Full Address             | ✅            | ✅                 |
+| Estate (Derived)         | ❌            | ❌                 |
+| Township (Derived)       | ❌            | ❌                 |
+
+---
+
+# 6️⃣ NON-NEGOTIABLE DEV RULES
+
+- Single `Listings` collection
+- Conditional fields via backend validation (not UI only)
+- Estate & Township are **derived only**
+- ListingType & TransactionType are **single-select**
+- “Both” exists **only in search queries**

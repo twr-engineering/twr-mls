@@ -74,6 +74,9 @@ export interface Config {
     developments: Development;
     estates: Estate;
     townships: Township;
+    'property-categories': PropertyCategory;
+    'property-types': PropertyType;
+    'property-subtypes': PropertySubtype;
     listings: Listing;
     documents: Document;
     notifications: Notification;
@@ -92,6 +95,9 @@ export interface Config {
     developments: DevelopmentsSelect<false> | DevelopmentsSelect<true>;
     estates: EstatesSelect<false> | EstatesSelect<true>;
     townships: TownshipsSelect<false> | TownshipsSelect<true>;
+    'property-categories': PropertyCategoriesSelect<false> | PropertyCategoriesSelect<true>;
+    'property-types': PropertyTypesSelect<false> | PropertyTypesSelect<true>;
+    'property-subtypes': PropertySubtypesSelect<false> | PropertySubtypesSelect<true>;
     listings: ListingsSelect<false> | ListingsSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
@@ -318,6 +324,95 @@ export interface Township {
   createdAt: string;
 }
 /**
+ * Property categories (e.g., Residential, Commercial)
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "property-categories".
+ */
+export interface PropertyCategory {
+  id: number;
+  /**
+   * Category name (e.g., Residential, Commercial)
+   */
+  name: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Optional description of this category
+   */
+  description?: string | null;
+  /**
+   * Inactive categories are hidden from selection
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Property types within categories (e.g., House, Condo)
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "property-types".
+ */
+export interface PropertyType {
+  id: number;
+  /**
+   * Type name (e.g., House & Lot, Condominium)
+   */
+  name: string;
+  /**
+   * Parent category this type belongs to
+   */
+  category: number | PropertyCategory;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Optional description of this type
+   */
+  description?: string | null;
+  /**
+   * Inactive types are hidden from selection
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Property subtypes (e.g., Studio, 2BR)
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "property-subtypes".
+ */
+export interface PropertySubtype {
+  id: number;
+  /**
+   * Subtype name (e.g., Studio, 1BR, 2BR)
+   */
+  name: string;
+  /**
+   * Parent type this subtype belongs to
+   */
+  propertyType: number | PropertyType;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Optional description of this subtype
+   */
+  description?: string | null;
+  /**
+   * Inactive subtypes are hidden from selection
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Property listings for the MLS system
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -344,6 +439,24 @@ export interface Listing {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Select category first (e.g., Residential)
+   */
+  propertyCategory: number | PropertyCategory;
+  /**
+   * Filtered by category (e.g., House & Lot)
+   */
+  propertyType: number | PropertyType;
+  /**
+   * Filtered by type (optional)
+   */
+  propertySubtype?: (number | null) | PropertySubtype;
+  propertyOwnerName?: string | null;
+  propertyOwnerContact?: string | null;
+  /**
+   * For agent reference only
+   */
+  propertyOwnerNotes?: string | null;
   /**
    * Agents can only create Resale listings
    */
@@ -619,6 +732,18 @@ export interface PayloadLockedDocument {
         value: number | Township;
       } | null)
     | ({
+        relationTo: 'property-categories';
+        value: number | PropertyCategory;
+      } | null)
+    | ({
+        relationTo: 'property-types';
+        value: number | PropertyType;
+      } | null)
+    | ({
+        relationTo: 'property-subtypes';
+        value: number | PropertySubtype;
+      } | null)
+    | ({
         relationTo: 'listings';
         value: number | Listing;
       } | null)
@@ -784,11 +909,55 @@ export interface TownshipsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "property-categories_select".
+ */
+export interface PropertyCategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "property-types_select".
+ */
+export interface PropertyTypesSelect<T extends boolean = true> {
+  name?: T;
+  category?: T;
+  slug?: T;
+  description?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "property-subtypes_select".
+ */
+export interface PropertySubtypesSelect<T extends boolean = true> {
+  name?: T;
+  propertyType?: T;
+  slug?: T;
+  description?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "listings_select".
  */
 export interface ListingsSelect<T extends boolean = true> {
   title?: T;
   description?: T;
+  propertyCategory?: T;
+  propertyType?: T;
+  propertySubtype?: T;
+  propertyOwnerName?: T;
+  propertyOwnerContact?: T;
+  propertyOwnerNotes?: T;
   listingType?: T;
   createdBy?: T;
   status?: T;

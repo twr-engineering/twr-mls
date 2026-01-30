@@ -466,3 +466,188 @@ export async function revokeShareLink(id: string) {
 
   return result
 }
+
+/**
+ * Get property categories
+ */
+export async function getPropertyCategories() {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'property-categories',
+    where: {
+      isActive: { equals: true },
+    },
+    limit: 100,
+    sort: 'name',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Get property types filtered by category
+ */
+export async function getPropertyTypesByCategory(categoryId: number) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'property-types',
+    where: {
+      category: { equals: categoryId },
+      isActive: { equals: true },
+    },
+    limit: 100,
+    sort: 'name',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Get property subtypes filtered by type
+ */
+export async function getPropertySubtypesByType(typeId: number) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'property-subtypes',
+    where: {
+      propertyType: { equals: typeId },
+      isActive: { equals: true },
+    },
+    limit: 100,
+    sort: 'name',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Get documents for a listing
+ * Access control enforced: only owner, approvers, and admin see private docs
+ */
+export async function getListingDocuments(listingId: string) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'documents',
+    where: {
+      listing: { equals: listingId },
+    },
+    limit: 100,
+    sort: '-createdAt',
+    overrideAccess: false,
+    user,
+  })
+
+  return result.docs
+}
+
+/**
+ * Upload a document to a listing
+ */
+export async function uploadDocument(data: {
+  listingId: string
+  type: string
+  fileId: string
+  notes?: string
+  visibility?: 'private' | 'internal'
+}) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.create({
+    collection: 'documents',
+    data: {
+      type: data.type,
+      file: data.fileId,
+      listing: parseInt(data.listingId),
+      notes: data.notes,
+      visibility: data.visibility || 'private',
+      uploadedBy: user.id,
+    } as any,
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Update document visibility (only by owner)
+ */
+export async function updateDocumentVisibility(
+  documentId: string,
+  visibility: 'private' | 'internal',
+) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.update({
+    collection: 'documents',
+    id: documentId,
+    data: {
+      visibility,
+    },
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Delete a document
+ */
+export async function deleteDocument(documentId: string) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.delete({
+    collection: 'documents',
+    id: documentId,
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
