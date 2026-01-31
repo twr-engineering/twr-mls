@@ -51,7 +51,7 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
   // Fetch barangays when city changes
   useEffect(() => {
     if (cityId) {
-      fetch(`/api/barangays?cityId=${cityId}`)
+      fetch(`/api/psgc/barangays?cityId=${cityId}`)
         .then((res) => res.json())
         .then((data) => setBarangays(data))
         .catch((err) => console.error('Error fetching barangays:', err))
@@ -63,7 +63,7 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
   // Fetch developments when barangay changes
   useEffect(() => {
     if (barangayId) {
-      fetch(`/api/developments?barangayId=${barangayId}`)
+      fetch(`/api/psgc/developments?barangayId=${barangayId}`)
         .then((res) => res.json())
         .then((data) => setDevelopments(data))
         .catch((err) => console.error('Error fetching developments:', err))

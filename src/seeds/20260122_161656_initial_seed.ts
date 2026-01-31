@@ -1,5 +1,5 @@
 import { MigrateUpArgs, MigrateDownArgs } from '@payloadcms/db-postgres'
-import { listMuncities, listBarangays, listProvinces } from '@jobuntux/psgc'
+import { listMuncities, listProvinces } from '@jobuntux/psgc'
 
 const toSlug = (str: string) =>
     str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -31,19 +31,12 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
         console.log('Admin User already exists.')
     }
 
-    console.log('--- Seeding All Philippines Locations ---')
+    console.log('--- Seeding Philippine Cities ---')
     console.log('Preparing data...')
+    console.log('NOTE: Barangays will be fetched on-demand from PSGC Cloud API (not seeded)')
 
     const cities = listMuncities()
-    const barangays = listBarangays()
     const provinces = listProvinces()
-
-    const barangaysByCity = new Map<string, typeof barangays>()
-    for (const brgy of barangays) {
-        const list = barangaysByCity.get(brgy.munCityCode) || []
-        list.push(brgy)
-        barangaysByCity.set(brgy.munCityCode, list)
-    }
 
     const provinceMap = new Map<string, string>()
     for (const prov of provinces) {
@@ -52,7 +45,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
         }
     }
 
-    console.log(`Ready to seed ${cities.length} cities and ${barangays.length} barangays.`)
+    console.log(`Ready to seed ${cities.length} cities (barangays will be fetched via API)`)
 
     const usedSlugs = new Set<string>()
     const BATCH_SIZE = 1
@@ -94,6 +87,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
                         data: {
                             name: cityData.munCityName,
                             slug: slug,
+                            psgcCode: cityData.munCityCode,
                             isActive: true,
                         }
                     })
@@ -104,26 +98,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
                 return
             }
 
-            const cityBarangays = barangaysByCity.get(cityData.munCityCode) || []
-            const BRGY_BATCH = 20
-            for (let j = 0; j < cityBarangays.length; j += BRGY_BATCH) {
-                const brgyBatch = cityBarangays.slice(j, j + BRGY_BATCH)
-                await Promise.all(brgyBatch.map(async (brgy) => {
-                    const brgySlug = toSlug(brgy.brgyName)
-                    try {
-                        await payload.create({
-                            collection: 'barangays',
-                            data: {
-                                name: brgy.brgyName,
-                                slug: brgySlug,
-                                city: cityID,
-                                isActive: true
-                            }
-                        })
-                    } catch (err) {
-                    }
-                }))
-            }
+            // Barangays are no longer seeded - they will be fetched from PSGC Cloud API on-demand
         }))
 
         if ((i + BATCH_SIZE) % 50 === 0 || i + BATCH_SIZE >= cities.length) {
@@ -142,6 +117,7 @@ export async function down({ payload }: MigrateDownArgs): Promise<void> {
         },
     })
 
+    // Delete any barangays (API-cached or otherwise)
     await payload.delete({
         collection: 'barangays',
         where: {

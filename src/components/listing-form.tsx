@@ -126,7 +126,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
 
   useEffect(() => {
     if (selectedCityId) {
-      fetch(`/api/barangays?cityId=${selectedCityId}`)
+      fetch(`/api/psgc/barangays?cityId=${selectedCityId}`)
         .then((res) => res.json())
         .then((data) => {
           setBarangays(data)
@@ -144,7 +144,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
 
   useEffect(() => {
     if (selectedBarangayId) {
-      fetch(`/api/developments?barangayId=${selectedBarangayId}`)
+      fetch(`/api/psgc/developments?barangayId=${selectedBarangayId}`)
         .then((res) => res.json())
         .then((data) => {
           setDevelopments(data)

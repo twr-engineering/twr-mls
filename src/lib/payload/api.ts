@@ -337,27 +337,12 @@ export async function getCities() {
 
 /**
  * Get barangays filtered by city
+ * Now uses PSGC API-based caching service
  */
 export async function getBarangaysByCity(cityId: number) {
-  const payload = await getPayloadInstance()
-  const user = await getAuthUser()
-
-  if (!user) {
-    throw new Error('Not authenticated')
-  }
-
-  const result = await payload.find({
-    collection: 'barangays',
-    where: {
-      city: { equals: cityId },
-    },
-    limit: 1000,
-    sort: 'name',
-    overrideAccess: false,
-    user,
-  })
-
-  return result.docs
+  // Delegate to new PSGC barangay service which handles caching
+  const { getBarangaysByCityId } = await import('@/lib/psgc/barangay-service')
+  return await getBarangaysByCityId(cityId)
 }
 
 /**

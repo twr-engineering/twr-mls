@@ -213,6 +213,10 @@ export interface City {
   id: number;
   name: string;
   /**
+   * PSGC municipality/city code (PPPMM format) for API lookups
+   */
+  psgcCode: string;
+  /**
    * URL-friendly identifier
    */
   slug: string;
@@ -236,6 +240,18 @@ export interface Barangay {
    * The city this barangay belongs to
    */
   city: number | City;
+  /**
+   * PSGC barangay code (10-digit format)
+   */
+  psgcCode?: string | null;
+  /**
+   * How this barangay record was created
+   */
+  sourceType?: ('seeded' | 'api_cached') | null;
+  /**
+   * Last time this record was synced from PSGC API
+   */
+  lastSyncedAt?: string | null;
   /**
    * URL-friendly identifier
    */
@@ -853,6 +869,7 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface CitiesSelect<T extends boolean = true> {
   name?: T;
+  psgcCode?: T;
   slug?: T;
   isActive?: T;
   updatedAt?: T;
@@ -865,6 +882,9 @@ export interface CitiesSelect<T extends boolean = true> {
 export interface BarangaysSelect<T extends boolean = true> {
   name?: T;
   city?: T;
+  psgcCode?: T;
+  sourceType?: T;
+  lastSyncedAt?: T;
   slug?: T;
   isActive?: T;
   updatedAt?: T;

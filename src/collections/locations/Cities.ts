@@ -25,6 +25,17 @@ export const Cities: CollectionConfig = {
       },
     },
     {
+      name: 'psgcCode',
+      type: 'text',
+      required: true,
+      unique: true,
+      admin: {
+        placeholder: 'e.g., 137602',
+        description: 'PSGC municipality/city code (PPPMM format) for API lookups',
+        readOnly: true,
+      },
+    },
+    {
       name: 'slug',
       type: 'text',
       required: true,

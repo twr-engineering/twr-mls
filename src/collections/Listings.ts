@@ -552,6 +552,9 @@ export const Listings: CollectionConfig = {
           admin: {
             width: '33%',
             description: 'Filtered by selected city',
+            components: {
+              Field: 'src/components/BarangaySelect.tsx#BarangaySelect',
+            },
           },
         },
         {
