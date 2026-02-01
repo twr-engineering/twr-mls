@@ -214,7 +214,7 @@ describe('Property Classification Validation', () => {
     // Payload may return populated relationships, so check both ID and object
     const catId = typeof listing.propertyCategory === 'object' ? listing.propertyCategory.id : listing.propertyCategory
     const typeId = typeof listing.propertyType === 'object' ? listing.propertyType.id : listing.propertyType
-    const subtypeId = typeof listing.propertySubtype === 'object' ? listing.propertySubtype.id : listing.propertySubtype
+    const subtypeId = typeof listing.propertySubtype === 'object' ? listing.propertySubtype?.id : listing.propertySubtype
     expect(catId).toBe(category1.id)
     expect(typeId).toBe(typeInCat1.id)
     expect(subtypeId).toBe(subtypeInType1.id)

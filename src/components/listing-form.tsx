@@ -74,8 +74,8 @@ const listingSchema = baseListingSchema
     modelName: z.string().optional(),
     indicativePriceMin: z.number().optional(),
     indicativePriceMax: z.number().optional(),
-    minLotArea: z.number().optional(),
-    minFloorArea: z.number().optional(),
+    minLotAreaSqm: z.number().optional(),
+    minFloorAreaSqm: z.number().optional(),
     standardInclusions: z.any().optional(),
     presellingNotes: z.string().optional(),
   })
@@ -535,7 +535,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="minFloorArea"
+                  name="minFloorAreaSqm"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Min Floor Area (sqm)</FormLabel>
@@ -555,7 +555,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
 
                 <FormField
                   control={form.control}
-                  name="minLotArea"
+                  name="minLotAreaSqm"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Min Lot Area (sqm)</FormLabel>

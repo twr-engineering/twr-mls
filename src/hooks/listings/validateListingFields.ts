@@ -48,9 +48,9 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
       throw new Error('Indicative Price Min cannot be greater than Indicative Price Max')
     }
 
-    // Validate minimum size: must have minLotArea OR minFloorArea
-    const hasMinLotArea = data.minLotArea && data.minLotArea > 0
-    const hasMinFloorArea = data.minFloorArea && data.minFloorArea > 0
+    // Validate minimum size: must have minLotAreaSqm OR minFloorAreaSqm
+    const hasMinLotArea = data.minLotAreaSqm && data.minLotAreaSqm > 0
+    const hasMinFloorArea = data.minFloorAreaSqm && data.minFloorAreaSqm > 0
 
     if (!hasMinLotArea && !hasMinFloorArea) {
       throw new Error(
@@ -121,8 +121,8 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
       'indicativePrice',
       'indicativePriceMin',
       'indicativePriceMax',
-      'minLotArea',
-      'minFloorArea',
+      'minLotAreaSqm',
+      'minFloorAreaSqm',
       'standardInclusions',
       'presellingNotes',
     ]

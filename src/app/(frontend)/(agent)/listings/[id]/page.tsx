@@ -87,10 +87,12 @@ export default async function ViewListingPage({ params }: PageProps) {
             <CardTitle>Pricing</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div>
-              <span className="text-sm text-muted-foreground">Price</span>
-              <p className="text-2xl font-bold">₱{listing.price.toLocaleString()}</p>
-            </div>
+            {listing.price && (
+              <div>
+                <span className="text-sm text-muted-foreground">Price</span>
+                <p className="text-2xl font-bold">₱{listing.price.toLocaleString()}</p>
+              </div>
+            )}
             {listing.pricePerSqm && (
               <div>
                 <span className="text-sm text-muted-foreground">Price per sqm</span>

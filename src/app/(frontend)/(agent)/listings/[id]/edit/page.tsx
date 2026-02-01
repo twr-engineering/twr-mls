@@ -107,8 +107,8 @@ export default async function EditListingPage({ params }: PageProps) {
     modelName: listing.modelName || undefined,
     indicativePriceMin: listing.indicativePriceMin || undefined,
     indicativePriceMax: listing.indicativePriceMax || undefined,
-    minLotArea: listing.minLotArea || undefined,
-    minFloorArea: listing.minFloorArea || undefined,
+    minLotAreaSqm: listing.minLotAreaSqm || undefined,
+    minFloorAreaSqm: listing.minFloorAreaSqm || undefined,
     standardInclusions: listing.standardInclusions || undefined,
     presellingNotes: listing.presellingNotes || undefined,
 

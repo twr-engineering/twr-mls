@@ -592,8 +592,8 @@ export interface Listing {
    * Upper price range
    */
   indicativePriceMax?: number | null;
-  minLotArea?: number | null;
-  minFloorArea?: number | null;
+  minLotAreaSqm?: number | null;
+  minFloorAreaSqm?: number | null;
   /**
    * Standard inclusions and features
    */
@@ -616,6 +616,10 @@ export interface Listing {
    * Internal notes about this preselling listing
    */
   presellingNotes?: string | null;
+  /**
+   * Estimated completion/turnover timeline (informational only)
+   */
+  indicativeTurnover?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1072,10 +1076,11 @@ export interface ListingsSelect<T extends boolean = true> {
   indicativePrice?: T;
   indicativePriceMin?: T;
   indicativePriceMax?: T;
-  minLotArea?: T;
-  minFloorArea?: T;
+  minLotAreaSqm?: T;
+  minFloorAreaSqm?: T;
   standardInclusions?: T;
   presellingNotes?: T;
+  indicativeTurnover?: T;
   updatedAt?: T;
   createdAt?: T;
 }

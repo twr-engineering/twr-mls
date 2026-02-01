@@ -71,7 +71,8 @@ export default async function SharePage({ params }: Props) {
   const barangay = listing.barangay as Barangay | null
   const development = listing.development as Development | null
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price) return null
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
       currency: 'PHP',
@@ -96,14 +97,16 @@ export default async function SharePage({ params }: Props) {
         <h1 className="listing-title">{listing.title}</h1>
 
         {}
-        <div className="price-section">
-          <span className="price">{formatPrice(listing.price)}</span>
-          {listing.pricePerSqm && (
-            <span className="price-per-sqm">
-              ({formatPrice(listing.pricePerSqm)}/sqm)
-            </span>
-          )}
-        </div>
+        {listing.price && (
+          <div className="price-section">
+            <span className="price">{formatPrice(listing.price)}</span>
+            {listing.pricePerSqm && (
+              <span className="price-per-sqm">
+                ({formatPrice(listing.pricePerSqm)}/sqm)
+              </span>
+            )}
+          </div>
+        )}
 
         {}
         <div className="location-section">

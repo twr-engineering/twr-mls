@@ -386,7 +386,7 @@ export const Listings: CollectionConfig = {
             description: 'Required for resale listings',
             condition: (data) => data.listingType === 'resale',
           },
-          validate: (value, { data }) => {
+          validate: (value: number | null | undefined, { data }: { data: any }) => {
             // Only require price for resale listings
             if (data.listingType === 'resale' && (!value || value <= 0)) {
               return 'Price is required for resale listings'
@@ -779,7 +779,7 @@ export const Listings: CollectionConfig = {
           type: 'row',
           fields: [
             {
-              name: 'minLotArea',
+              name: 'minLotAreaSqm',
               type: 'number',
               min: 0,
               admin: {
@@ -788,7 +788,7 @@ export const Listings: CollectionConfig = {
               },
             },
             {
-              name: 'minFloorArea',
+              name: 'minFloorAreaSqm',
               type: 'number',
               min: 0,
               admin: {
@@ -811,6 +811,14 @@ export const Listings: CollectionConfig = {
           admin: {
             placeholder: 'Additional notes, disclaimers, or special conditions',
             description: 'Internal notes about this preselling listing',
+          },
+        },
+        {
+          name: 'indicativeTurnover',
+          type: 'text',
+          admin: {
+            placeholder: 'e.g., Q4 2026, 18-24 months, Ready for Occupancy',
+            description: 'Estimated completion/turnover timeline (informational only)',
           },
         },
       ],

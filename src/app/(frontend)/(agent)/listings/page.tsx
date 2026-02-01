@@ -64,10 +64,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         <CardContent>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Price:</span>
-                <p className="font-medium">₱{listing.price.toLocaleString()}</p>
-              </div>
+              {listing.price && (
+                <div>
+                  <span className="text-muted-foreground">Price:</span>
+                  <p className="font-medium">₱{listing.price.toLocaleString()}</p>
+                </div>
+              )}
               <div>
                 <span className="text-muted-foreground">Transaction:</span>
                 <p className="font-medium capitalize">{listing.transactionType}</p>
