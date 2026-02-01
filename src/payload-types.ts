@@ -520,7 +520,10 @@ export interface Listing {
   createdBy?: (number | null) | User;
   status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
   transactionType: 'sale' | 'rent';
-  price: number;
+  /**
+   * Required for resale listings
+   */
+  price?: number | null;
   /**
    * Required for lot-type properties
    */
@@ -577,6 +580,10 @@ export interface Listing {
    * Unit model or type name
    */
   modelName?: string | null;
+  /**
+   * Use this OR the price range below
+   */
+  indicativePrice?: number | null;
   /**
    * Starting price range
    */
@@ -1062,6 +1069,7 @@ export interface ListingsSelect<T extends boolean = true> {
   fullAddress?: T;
   images?: T;
   modelName?: T;
+  indicativePrice?: T;
   indicativePriceMin?: T;
   indicativePriceMax?: T;
   minLotArea?: T;

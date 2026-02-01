@@ -3,6 +3,8 @@ import { authenticated } from '@/access'
 import { validateStatusTransition } from '@/hooks/listings/validateStatusTransition'
 import { notifyStatusChange } from '@/hooks/listings/notifyStatusChange'
 import { populateLocationRelations } from '@/hooks/listings/populateLocationRelations'
+import { validateListingFields } from '@/hooks/listings/validateListingFields'
+import { validatePropertyClassification } from '@/hooks/listings/validatePropertyClassification'
 
 export const ListingStatuses = [
   'draft',
@@ -183,6 +185,13 @@ export const Listings: CollectionConfig = {
         return data
       },
 
+      // Validate property classification hierarchy
+      validatePropertyClassification,
+
+      // Validate listing fields based on listingType
+      validateListingFields,
+
+      // Validate status transitions
       validateStatusTransition,
     ],
     afterChange: [notifyStatusChange],
@@ -369,11 +378,20 @@ export const Listings: CollectionConfig = {
         {
           name: 'price',
           type: 'number',
-          required: true,
+          required: false,
           min: 0,
           admin: {
             placeholder: 'Base price',
             width: '33%',
+            description: 'Required for resale listings',
+            condition: (data) => data.listingType === 'resale',
+          },
+          validate: (value, { data }) => {
+            // Only require price for resale listings
+            if (data.listingType === 'resale' && (!value || value <= 0)) {
+              return 'Price is required for resale listings'
+            }
+            return true
           },
         },
         {
@@ -721,6 +739,15 @@ export const Listings: CollectionConfig = {
           admin: {
             placeholder: 'e.g., 2BR Unit Type A',
             description: 'Unit model or type name',
+          },
+        },
+        {
+          name: 'indicativePrice',
+          type: 'number',
+          min: 0,
+          admin: {
+            placeholder: 'Indicative price (if single value)',
+            description: 'Use this OR the price range below',
           },
         },
         {

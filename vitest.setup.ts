@@ -2,3 +2,6 @@
 
 // Load .env files
 import 'dotenv/config'
+
+// Set test environment flag
+process.env.VITEST = 'true'

@@ -19,6 +19,10 @@ export const notifyStatusChange: CollectionAfterChangeHook<Listing> = async ({
   req,
   operation,
 }) => {
+  // Skip notifications in test environment
+  if (process.env.VITEST === 'true') {
+    return doc
+  }
 
   if (operation !== 'update' || !previousDoc) return doc
 

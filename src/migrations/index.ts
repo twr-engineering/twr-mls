@@ -5,6 +5,8 @@ import * as migration_20260131_195249 from './20260131_195249';
 import * as migration_20260201_045432 from './20260201_045432';
 import * as migration_20260201_052118 from './20260201_052118';
 import * as migration_20260201_060709 from './20260201_060709';
+import * as migration_20260201_072914_add_indicative_price_field from './20260201_072914_add_indicative_price_field';
+import * as migration_20260201_073938_make_price_field_conditional from './20260201_073938_make_price_field_conditional';
 
 export const migrations = [
   {
@@ -40,6 +42,16 @@ export const migrations = [
   {
     up: migration_20260201_060709.up,
     down: migration_20260201_060709.down,
-    name: '20260201_060709'
+    name: '20260201_060709',
+  },
+  {
+    up: migration_20260201_072914_add_indicative_price_field.up,
+    down: migration_20260201_072914_add_indicative_price_field.down,
+    name: '20260201_072914_add_indicative_price_field',
+  },
+  {
+    up: migration_20260201_073938_make_price_field_conditional.up,
+    down: migration_20260201_073938_make_price_field_conditional.down,
+    name: '20260201_073938_make_price_field_conditional'
   },
 ];
