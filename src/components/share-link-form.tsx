@@ -43,7 +43,7 @@ export function ShareLinkForm({ listingId }: ShareLinkFormProps) {
         throw new Error(error.message || 'Failed to create share link')
       }
 
-      const result = await response.json()
+      const _result = await response.json()
 
       toast.success('Share link created successfully!')
       router.push('/shared-links')

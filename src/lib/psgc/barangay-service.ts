@@ -7,7 +7,7 @@
 
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import type { Barangay, City } from '@/payload-types'
+import type { Barangay } from '@/payload-types'
 import type { GetBarangaysOptions } from './types'
 import { psgcClient } from './client'
 

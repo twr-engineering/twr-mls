@@ -1,6 +1,6 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
-export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload: _payload, req: _req }: MigrateUpArgs): Promise<void> {
   // Add column as nullable first
   await db.execute(sql`
     ALTER TABLE "listings" ADD COLUMN "filter_province_id" integer;
@@ -29,7 +29,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   `)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db, payload: _payload, req: _req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
     ALTER TABLE "listings" DROP CONSTRAINT "listings_filter_province_id_provinces_id_fk";
     DROP INDEX "listings_filter_province_idx";

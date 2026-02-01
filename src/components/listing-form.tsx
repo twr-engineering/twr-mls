@@ -32,9 +32,11 @@ import type { City, Barangay, Development, Province } from '@/payload-types'
 import { ImageUpload } from '@/components/image-upload'
 import { PropertyClassificationSelect } from '@/components/property-classification-select'
 
+type ListingFormData = z.infer<typeof listingSchema>
+
 type ListingFormProps = {
   cities: City[]
-  initialData?: any
+  initialData?: Partial<ListingFormData> & { images?: number[] }
   listingId?: string
 }
 
@@ -101,8 +103,6 @@ const listingSchema = baseListingSchema
       path: ['developmentId'],
     },
   )
-
-type ListingFormData = z.infer<typeof listingSchema>
 
 export function ListingForm({ cities, initialData, listingId }: ListingFormProps) {
   const router = useRouter()

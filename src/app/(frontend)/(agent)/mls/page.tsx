@@ -1,5 +1,5 @@
 import { searchListings, getCities } from '@/lib/payload/api'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListingTypeBadge } from '@/components/listing-type-badge'

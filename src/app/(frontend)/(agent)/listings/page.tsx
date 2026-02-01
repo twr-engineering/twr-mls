@@ -7,6 +7,7 @@ import { ListingTypeBadge } from '@/components/listing-type-badge'
 import Link from 'next/link'
 import { Plus, Eye, Edit } from 'lucide-react'
 import { ListingActions } from '@/components/listing-actions'
+import type { Listing } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
     }
   }
 
-  const ListingCard = ({ listing }: { listing: Record<string, any> }) => {
+  const ListingCard = ({ listing }: { listing: Listing }) => {
     const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
 
     return (

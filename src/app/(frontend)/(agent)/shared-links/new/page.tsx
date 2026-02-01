@@ -1,5 +1,5 @@
 import { getListingById } from '@/lib/payload/api'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ListingTypeBadge } from '@/components/listing-type-badge'
 import { ShareLinkForm } from '@/components/share-link-form'
 import { notFound, redirect } from 'next/navigation'

@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import type { Listing, City, Barangay, Development, Media } from '@/payload-types'
 
 type Props = {
@@ -122,9 +123,13 @@ export default async function SharePage({ params }: Props) {
             {images.slice(0, 5).map((image, index) => (
               image && typeof image === 'object' && image.url && (
                 <div key={image.id || index} className="image-wrapper">
-                  <img
+                  <Image
                     src={image.url}
                     alt={image.alt || `Listing image ${index + 1}`}
+                    width={800}
+                    height={600}
+                    className="listing-image"
+                    priority={index === 0}
                   />
                 </div>
               )

@@ -104,13 +104,13 @@ export default async function EditListingPage({ params }: PageProps) {
     titleStatus: listing.titleStatus || undefined,
 
     // Preselling-specific fields
-    modelName: (listing as any).modelName || undefined,
-    indicativePriceMin: (listing as any).indicativePriceMin || undefined,
-    indicativePriceMax: (listing as any).indicativePriceMax || undefined,
-    minLotArea: (listing as any).minLotArea || undefined,
-    minFloorArea: (listing as any).minFloorArea || undefined,
-    standardInclusions: (listing as any).standardInclusions || undefined,
-    presellingNotes: (listing as any).presellingNotes || undefined,
+    modelName: listing.modelName || undefined,
+    indicativePriceMin: listing.indicativePriceMin || undefined,
+    indicativePriceMax: listing.indicativePriceMax || undefined,
+    minLotArea: listing.minLotArea || undefined,
+    minFloorArea: listing.minFloorArea || undefined,
+    standardInclusions: listing.standardInclusions || undefined,
+    presellingNotes: listing.presellingNotes || undefined,
 
     // Location
     cityId,

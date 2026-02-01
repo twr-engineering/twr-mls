@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { FileText, Download, Eye, EyeOff, Trash2, Shield, ShieldCheck } from 'lucide-react'
+import { FileText, Download, Eye, EyeOff, Trash2, ShieldCheck } from 'lucide-react'
 
 type Document = {
   id: string
@@ -27,16 +27,12 @@ type Document = {
 type ListingDocumentsProps = {
   listingId: string
   isOwner: boolean
-  userRole: 'agent' | 'approver' | 'admin'
+  _userRole: 'agent' | 'approver' | 'admin'
 }
 
-export function ListingDocuments({ listingId, isOwner, userRole }: ListingDocumentsProps) {
+export function ListingDocuments({ listingId, isOwner, _userRole }: ListingDocumentsProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    loadDocuments()
-  }, [listingId])
 
   const loadDocuments = async () => {
     try {
@@ -52,6 +48,33 @@ export function ListingDocuments({ listingId, isOwner, userRole }: ListingDocume
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    let isMounted = true
+
+    const load = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/listings/${listingId}/documents`)
+        if (!response.ok) throw new Error('Failed to load documents')
+        const data = await response.json()
+        if (isMounted) setDocuments(data)
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error loading documents:', error)
+          toast.error('Failed to load documents')
+        }
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    load()
+
+    return () => {
+      isMounted = false
+    }
+  }, [listingId])
 
   const toggleVisibility = async (documentId: string, currentVisibility: string) => {
     const newVisibility = currentVisibility === 'private' ? 'internal' : 'private'

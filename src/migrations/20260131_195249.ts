@@ -1,6 +1,6 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
-export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload: _payload, req: _req }: MigrateUpArgs): Promise<void> {
   // Step 1: Create enum and add columns (psgc_code nullable initially for cities)
   await db.execute(sql`
    CREATE TYPE "public"."enum_barangays_source_type" AS ENUM('seeded', 'api_cached');
@@ -74,7 +74,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   console.log('[Migration] Added unique indexes and constraints')
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db, payload: _payload, req: _req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
    DROP INDEX "cities_psgc_code_idx";
   DROP INDEX "barangays_psgc_code_idx";

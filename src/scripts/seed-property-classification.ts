@@ -53,7 +53,7 @@ async function seed() {
     // 2. Create Property Types - Residential
     console.log('\nCreating residential property types...')
 
-    const houseType = await payload.create({
+    const _houseType = await payload.create({
       collection: 'property-types',
       data: {
         name: 'House & Lot',
@@ -77,7 +77,7 @@ async function seed() {
     })
     console.log('✅ Created: Condominium type')
 
-    const townhouseType = await payload.create({
+    const _townhouseType = await payload.create({
       collection: 'property-types',
       data: {
         name: 'Townhouse',
@@ -89,7 +89,7 @@ async function seed() {
     })
     console.log('✅ Created: Townhouse type')
 
-    const lotType = await payload.create({
+    const _lotType = await payload.create({
       collection: 'property-types',
       data: {
         name: 'Residential Lot',

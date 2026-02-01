@@ -13,5 +13,5 @@ export function ListingDocumentsWrapper({
   isOwner,
   userRole,
 }: ListingDocumentsWrapperProps) {
-  return <ListingDocuments listingId={listingId} isOwner={isOwner} userRole={userRole} />
+  return <ListingDocuments listingId={listingId} isOwner={isOwner} _userRole={userRole} />
 }

@@ -33,7 +33,7 @@ type SearchFiltersProps = {
 
 export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const _searchParams = useSearchParams()
 
   const [listingType, setListingType] = useState(currentFilters.listingType || 'both')
   const [transactionType, setTransactionType] = useState(currentFilters.transactionType || '')
