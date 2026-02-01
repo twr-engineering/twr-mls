@@ -1,13 +1,18 @@
 import type { CollectionConfig } from 'payload'
 import { authenticated, adminOnly } from '@/access'
 
-export const Cities: CollectionConfig = {
-  slug: 'cities',
+/**
+ * Provinces Collection
+ * Administrative divisions containing cities/municipalities
+ * Sourced from PSGC (Philippine Standard Geographic Code) API
+ */
+export const Provinces: CollectionConfig = {
+  slug: 'provinces',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'isActive', 'updatedAt'],
+    defaultColumns: ['name', 'region', 'psgcCode', 'isActive'],
     group: 'Location Master Data',
-    description: 'Cities are the top level of the location hierarchy',
+    description: 'Provinces are administrative divisions containing cities/municipalities',
   },
   access: {
     read: authenticated,
@@ -15,23 +20,17 @@ export const Cities: CollectionConfig = {
     update: adminOnly,
     delete: adminOnly,
   },
+  versions: {
+    drafts: false,
+  },
   fields: [
     {
       name: 'name',
       type: 'text',
       required: true,
+      unique: true,
       admin: {
-        placeholder: 'e.g., Cagayan de Oro',
-      },
-    },
-    {
-      name: 'province',
-      type: 'relationship',
-      relationTo: 'provinces',
-      required: true,
-      admin: {
-        position: 'sidebar',
-        description: 'Province from PSGC API',
+        description: 'Province name from PSGC API',
       },
     },
     {
@@ -40,9 +39,17 @@ export const Cities: CollectionConfig = {
       required: true,
       unique: true,
       admin: {
-        placeholder: 'e.g., 1030500000',
-        description: '10-digit PSGC municipality/city code for API lookups',
+        description: '10-digit PSGC province code',
         readOnly: true,
+        placeholder: 'e.g., 1004300000',
+      },
+    },
+    {
+      name: 'region',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Administrative region (e.g., Region X - Northern Mindanao)',
       },
     },
     {
@@ -51,8 +58,8 @@ export const Cities: CollectionConfig = {
       required: true,
       unique: true,
       admin: {
-        placeholder: 'e.g., cagayan-de-oro',
         description: 'URL-friendly identifier',
+        placeholder: 'e.g., misamis-oriental',
       },
       hooks: {
         beforeValidate: [
@@ -74,7 +81,7 @@ export const Cities: CollectionConfig = {
       defaultValue: true,
       admin: {
         position: 'sidebar',
-        description: 'Inactive cities will not appear in dropdowns',
+        description: 'Inactive provinces will not appear in dropdowns',
       },
     },
   ],

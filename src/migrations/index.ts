@@ -2,6 +2,8 @@ import * as migration_20260121_193543 from './20260121_193543';
 import * as migration_20260122_100145_add_township_estate_to_listings from './20260122_100145_add_township_estate_to_listings';
 import * as migration_20260130_131952_addPropertyCategorization from './20260130_131952_addPropertyCategorization';
 import * as migration_20260131_195249 from './20260131_195249';
+import * as migration_20260201_045432 from './20260201_045432';
+import * as migration_20260201_052118 from './20260201_052118';
 
 export const migrations = [
   {
@@ -22,6 +24,16 @@ export const migrations = [
   {
     up: migration_20260131_195249.up,
     down: migration_20260131_195249.down,
-    name: '20260131_195249'
+    name: '20260131_195249',
+  },
+  {
+    up: migration_20260201_045432.up,
+    down: migration_20260201_045432.down,
+    name: '20260201_045432',
+  },
+  {
+    up: migration_20260201_052118.up,
+    down: migration_20260201_052118.down,
+    name: '20260201_052118'
   },
 ];

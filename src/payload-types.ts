@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    provinces: Province;
     cities: City;
     barangays: Barangay;
     developments: Development;
@@ -90,6 +91,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    provinces: ProvincesSelect<false> | ProvincesSelect<true>;
     cities: CitiesSelect<false> | CitiesSelect<true>;
     barangays: BarangaysSelect<false> | BarangaysSelect<true>;
     developments: DevelopmentsSelect<false> | DevelopmentsSelect<true>;
@@ -204,6 +206,37 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Provinces are administrative divisions containing cities/municipalities
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "provinces".
+ */
+export interface Province {
+  id: number;
+  /**
+   * Province name from PSGC API
+   */
+  name: string;
+  /**
+   * 10-digit PSGC province code
+   */
+  psgcCode: string;
+  /**
+   * Administrative region (e.g., Region X - Northern Mindanao)
+   */
+  region: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Inactive provinces will not appear in dropdowns
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Cities are the top level of the location hierarchy
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -213,7 +246,11 @@ export interface City {
   id: number;
   name: string;
   /**
-   * PSGC municipality/city code (PPPMM format) for API lookups
+   * Province from PSGC API
+   */
+  province: number | Province;
+  /**
+   * 10-digit PSGC municipality/city code for API lookups
    */
   psgcCode: string;
   /**
@@ -728,6 +765,10 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'provinces';
+        value: number | Province;
+      } | null)
+    | ({
         relationTo: 'cities';
         value: number | City;
       } | null)
@@ -865,10 +906,24 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "provinces_select".
+ */
+export interface ProvincesSelect<T extends boolean = true> {
+  name?: T;
+  psgcCode?: T;
+  region?: T;
+  slug?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "cities_select".
  */
 export interface CitiesSelect<T extends boolean = true> {
   name?: T;
+  province?: T;
   psgcCode?: T;
   slug?: T;
   isActive?: T;

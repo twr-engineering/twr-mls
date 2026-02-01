@@ -1,3 +1,4 @@
+export { Provinces } from './Provinces'
 export { Cities } from './Cities'
 export { Barangays } from './Barangays'
 export { Developments } from './Developments'
