@@ -326,8 +326,9 @@ export async function getCities() {
 
   const result = await payload.find({
     collection: 'cities',
-    limit: 1000,
+    limit: 10000,
     sort: 'name',
+    depth: 1, // Populate province relationship
     overrideAccess: false,
     user,
   })

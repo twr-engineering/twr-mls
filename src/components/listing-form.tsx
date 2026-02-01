@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import type { City, Barangay, Development } from '@/payload-types'
+import type { City, Barangay, Development, Province } from '@/payload-types'
 import { ImageUpload } from '@/components/image-upload'
 import { PropertyClassificationSelect } from '@/components/property-classification-select'
 
@@ -107,8 +107,10 @@ type ListingFormData = z.infer<typeof listingSchema>
 export function ListingForm({ cities, initialData, listingId }: ListingFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [provinces, setProvinces] = useState<Province[]>([])
   const [barangays, setBarangays] = useState<Barangay[]>([])
   const [developments, setDevelopments] = useState<Development[]>([])
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null)
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null)
   const [selectedBarangayId, setSelectedBarangayId] = useState<number | null>(null)
   const [imageIds, setImageIds] = useState<number[]>(initialData?.images || [])
@@ -123,6 +125,29 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
   })
 
   const listingType = form.watch('listingType')
+
+  // Fetch provinces on mount
+  useEffect(() => {
+    fetch('/api/provinces')
+      .then((res) => res.json())
+      .then((data) => {
+        setProvinces(data.docs || data)
+      })
+      .catch((err) => {
+        console.error('Error fetching provinces:', err)
+        toast.error('Failed to load provinces')
+      })
+  }, [])
+
+  // Filter cities by selected province
+  const filteredCities = selectedProvinceId
+    ? cities.filter((city) => {
+        if (typeof city.province === 'object' && city.province !== null) {
+          return city.province.id === selectedProvinceId
+        }
+        return city.province === selectedProvinceId
+      })
+    : cities
 
   useEffect(() => {
     if (selectedCityId) {
@@ -662,9 +687,44 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
         <Card>
           <CardHeader>
             <CardTitle>Location</CardTitle>
-            <CardDescription>Property address details</CardDescription>
+            <CardDescription>Province → City → Barangay selection</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Province Selector */}
+            <div>
+              <label className="text-sm font-medium">Province (Optional Filter)</label>
+              <Select
+                onValueChange={(value) => {
+                  const provinceId = value === 'all' ? null : parseInt(value)
+                  setSelectedProvinceId(provinceId)
+                  // Reset city, barangay, development when province changes
+                  form.setValue('cityId', 0)
+                  form.setValue('barangayId', 0)
+                  form.setValue('developmentId', undefined)
+                  setSelectedCityId(null)
+                  setSelectedBarangayId(null)
+                  setBarangays([])
+                  setDevelopments([])
+                }}
+                value={selectedProvinceId?.toString() || 'all'}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Provinces" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Provinces</SelectItem>
+                  {provinces.map((province) => (
+                    <SelectItem key={province.id} value={province.id.toString()}>
+                      {province.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Filter cities by province to find cities with duplicate names
+              </p>
+            </div>
+
             <FormField
               control={form.control}
               name="cityId"
@@ -687,13 +747,25 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {cities.map((city) => (
-                        <SelectItem key={city.id} value={city.id.toString()}>
-                          {city.name}
-                        </SelectItem>
-                      ))}
+                      {filteredCities.map((city) => {
+                        const provinceName =
+                          typeof city.province === 'object' && city.province !== null
+                            ? city.province.name
+                            : ''
+                        return (
+                          <SelectItem key={city.id} value={city.id.toString()}>
+                            {city.name}
+                            {provinceName && <span className="text-muted-foreground"> ({provinceName})</span>}
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
+                  <FormDescription>
+                    {selectedProvinceId
+                      ? `Showing ${filteredCities.length} cities in selected province`
+                      : `${filteredCities.length} cities available`}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

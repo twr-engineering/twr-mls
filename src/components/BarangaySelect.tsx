@@ -7,7 +7,9 @@ import type { RelationshipFieldClientProps } from 'payload'
 /**
  * Custom Barangay Select Component
  * Automatically fetches barangays from PSGC API when city is selected
- * Uses debouncing to prevent rapid successive API calls
+ * Uses debouncing to prevent rapid API calls
+ *
+ * IMPORTANT: Does NOT use readOnly to avoid form submission issues
  */
 export const BarangaySelect: React.FC<RelationshipFieldClientProps> = (props) => {
   const cityField = useFormFields(([fields]) => fields.city)
@@ -16,8 +18,7 @@ export const BarangaySelect: React.FC<RelationshipFieldClientProps> = (props) =>
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Get the selected city ID
-  const cityId = cityField?.value
+  const cityId = cityField?.value as number | undefined
 
   useEffect(() => {
     // Clear any pending fetch
@@ -33,11 +34,9 @@ export const BarangaySelect: React.FC<RelationshipFieldClientProps> = (props) =>
     if (cityId && typeof cityId === 'number') {
       // Debounce the fetch by 500ms
       debounceTimerRef.current = setTimeout(() => {
-        // Fetch barangays for this city to populate the cache
         setIsFetching(true)
         setFetchError(null)
 
-        // Create abort controller for this request
         abortControllerRef.current = new AbortController()
 
         fetch(`/api/psgc/barangays?cityId=${cityId}`, {
@@ -54,19 +53,16 @@ export const BarangaySelect: React.FC<RelationshipFieldClientProps> = (props) =>
             setIsFetching(false)
           })
           .catch((err) => {
-            // Ignore aborted requests
             if (err.name === 'AbortError') {
-              console.log('[Barangay Select] Request aborted')
               return
             }
             console.error('[Barangay Select] Error fetching barangays:', err)
             setFetchError(err.message)
             setIsFetching(false)
           })
-      }, 500) // 500ms debounce
+      }, 500)
     }
 
-    // Cleanup
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
@@ -77,17 +73,17 @@ export const BarangaySelect: React.FC<RelationshipFieldClientProps> = (props) =>
     }
   }, [cityId])
 
-  // Update description based on fetch state
-  let description = props.field.admin?.description || 'Filtered by selected city'
+  // Build description message
+  let description = props.field.admin?.description || 'Filtered by city'
 
   if (!cityId) {
-    description = 'Please select a city first'
+    description = 'Select a city first (dropdown will be empty until city is selected)'
   } else if (isFetching) {
     description = 'Loading barangays from PSGC API...'
   } else if (fetchError) {
-    description = `Error: ${fetchError}. Please try refreshing the page.`
-  } else if (cityId) {
-    description = 'Barangays loaded. Select one from the list.'
+    description = `Error: ${fetchError}. Please try again.`
+  } else {
+    description = 'Barangays loaded from PSGC API'
   }
 
   return (
@@ -98,7 +94,6 @@ export const BarangaySelect: React.FC<RelationshipFieldClientProps> = (props) =>
         admin: {
           ...props.field.admin,
           description,
-          readOnly: isFetching || !cityId,
         },
       }}
     />

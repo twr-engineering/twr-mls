@@ -542,15 +542,19 @@ export interface Listing {
   titleStatus?: ('clean' | 'mortgaged') | null;
   paymentTerms?: ('cash' | 'bank' | 'pagibig' | 'deferred')[] | null;
   /**
-   * Select city first
+   * Select province first
+   */
+  filterProvince: number | Province;
+  /**
+   * Filtered by province (select province first)
    */
   city: number | City;
   /**
-   * Filtered by selected city
+   * Filtered by city
    */
   barangay: number | Barangay;
   /**
-   * Filtered by selected barangay (optional)
+   * Filtered by barangay (optional, select barangay first)
    */
   development?: (number | null) | Development;
   /**
@@ -1049,6 +1053,7 @@ export interface ListingsSelect<T extends boolean = true> {
   tenure?: T;
   titleStatus?: T;
   paymentTerms?: T;
+  filterProvince?: T;
   city?: T;
   barangay?: T;
   development?: T;

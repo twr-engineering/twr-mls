@@ -4,6 +4,7 @@ import * as migration_20260130_131952_addPropertyCategorization from './20260130
 import * as migration_20260131_195249 from './20260131_195249';
 import * as migration_20260201_045432 from './20260201_045432';
 import * as migration_20260201_052118 from './20260201_052118';
+import * as migration_20260201_060709 from './20260201_060709';
 
 export const migrations = [
   {
@@ -34,6 +35,11 @@ export const migrations = [
   {
     up: migration_20260201_052118.up,
     down: migration_20260201_052118.down,
-    name: '20260201_052118'
+    name: '20260201_052118',
+  },
+  {
+    up: migration_20260201_060709.up,
+    down: migration_20260201_060709.down,
+    name: '20260201_060709'
   },
 ];

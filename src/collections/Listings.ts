@@ -521,17 +521,88 @@ export const Listings: CollectionConfig = {
       type: 'row',
       fields: [
         {
-          name: 'city',
+          name: 'filterProvince',
           type: 'relationship',
-          relationTo: 'cities',
-          required: true,
+          relationTo: 'provinces',
           hasMany: false,
+          required: true,
           filterOptions: {
             isActive: { equals: true },
           },
           admin: {
             width: '33%',
-            description: 'Select city first',
+            description: 'Select province first',
+          },
+          hooks: {
+            beforeChange: [
+              // Auto-populate from city if not set (for frontend/API submissions)
+              async ({ value, data, req }) => {
+                // If province already set, check if it should clear dependents
+                if (value) {
+                  return value
+                }
+
+                // Auto-populate from city's province if city is selected
+                if (data?.city && !value) {
+                  const cityId = typeof data.city === 'object' ? data.city.id : data.city
+                  const city = await req.payload.findByID({
+                    collection: 'cities',
+                    id: cityId,
+                    depth: 1,
+                  })
+
+                  if (city && city.province) {
+                    const provinceId = typeof city.province === 'object' ? city.province.id : city.province
+                    return provinceId
+                  }
+                }
+
+                return value
+              },
+              // Clear dependent fields when province changes (only on update, not create)
+              ({ value, previousValue, data, operation }) => {
+                // Only clear on update when value actually changes
+                if (operation === 'update' && previousValue !== undefined && value !== previousValue && data) {
+                  data.city = undefined
+                  data.barangay = undefined
+                  data.development = undefined
+                }
+                return value
+              },
+            ],
+          },
+        },
+        {
+          name: 'city',
+          type: 'relationship',
+          relationTo: 'cities',
+          required: true,
+          hasMany: false,
+          filterOptions: ({ data }) => {
+            const query: Where = {
+              isActive: { equals: true },
+            }
+            if (data?.filterProvince) {
+              query.province = { equals: data.filterProvince }
+            }
+            return query
+          },
+          admin: {
+            width: '33%',
+            description: 'Filtered by province (select province first)',
+          },
+          hooks: {
+            beforeChange: [
+              // Clear dependent fields when city changes (only on update, not create)
+              ({ value, previousValue, data, operation }) => {
+                // Only clear on update when value actually changes
+                if (operation === 'update' && previousValue !== undefined && value !== previousValue && data) {
+                  data.barangay = undefined
+                  data.development = undefined
+                }
+                return value
+              },
+            ],
           },
         },
         {
@@ -551,32 +622,43 @@ export const Listings: CollectionConfig = {
           },
           admin: {
             width: '33%',
-            description: 'Filtered by selected city',
+            description: 'Filtered by city',
             components: {
               Field: 'src/components/BarangaySelect.tsx#BarangaySelect',
             },
           },
-        },
-        {
-          name: 'development',
-          type: 'relationship',
-          relationTo: 'developments',
-          hasMany: false,
-          filterOptions: ({ data }) => {
-            const query: Where = {
-              isActive: { equals: true },
-            }
-            if (data?.barangay) {
-              query.barangay = { equals: data.barangay }
-            }
-            return query
-          },
-          admin: {
-            width: '33%',
-            description: 'Filtered by selected barangay (optional)',
+          hooks: {
+            beforeChange: [
+              // Clear dependent fields when barangay changes (only on update, not create)
+              ({ value, previousValue, data, operation }) => {
+                // Only clear on update when value actually changes
+                if (operation === 'update' && previousValue !== undefined && value !== previousValue && data) {
+                  data.development = undefined
+                }
+                return value
+              },
+            ],
           },
         },
       ],
+    },
+    {
+      name: 'development',
+      type: 'relationship',
+      relationTo: 'developments',
+      hasMany: false,
+      filterOptions: ({ data }) => {
+        const query: Where = {
+          isActive: { equals: true },
+        }
+        if (data?.barangay) {
+          query.barangay = { equals: data.barangay }
+        }
+        return query
+      },
+      admin: {
+        description: 'Filtered by barangay (optional, select barangay first)',
+      },
     },
     {
       type: 'row',
