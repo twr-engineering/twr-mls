@@ -1,14 +1,13 @@
-import { getPayload, Payload } from 'payload'
-import config from '@/payload.config'
-
+import { Payload } from 'payload'
 import { describe, it, beforeAll, expect } from 'vitest'
+import { getTestPayload } from '../helpers/test-db'
 
 let payload: Payload
 
 describe('API', () => {
   beforeAll(async () => {
-    const payloadConfig = await config
-    payload = await getPayload({ config: payloadConfig })
+    // Uses test database configured in test.env
+    payload = await getTestPayload()
   })
 
   it('fetches users', async () => {
