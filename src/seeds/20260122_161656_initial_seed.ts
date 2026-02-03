@@ -1,8 +1,21 @@
 import { MigrateUpArgs, MigrateDownArgs } from '@payloadcms/db-postgres'
-import { listMuncities, listBarangays, listProvinces } from '@jobuntux/psgc'
 
 const toSlug = (str: string) =>
     str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+type PSGCProvince = {
+    code: string
+    name: string
+    region: string
+}
+
+type PSGCCity = {
+    code: string
+    name: string
+    province: string
+    region: string
+    type?: string
+}
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
     console.log('--- Seeding Users ---')
@@ -31,41 +44,104 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
         console.log('Admin User already exists.')
     }
 
-    console.log('--- Seeding All Philippines Locations ---')
-    console.log('Preparing data...')
+    console.log('--- Seeding Philippine Provinces ---')
+    console.log('Fetching provinces from PSGC Cloud API...')
 
-    const cities = listMuncities()
-    const barangays = listBarangays()
-    const provinces = listProvinces()
-
-    const barangaysByCity = new Map<string, typeof barangays>()
-    for (const brgy of barangays) {
-        const list = barangaysByCity.get(brgy.munCityCode) || []
-        list.push(brgy)
-        barangaysByCity.set(brgy.munCityCode, list)
+    const provincesResponse = await fetch('https://psgc.cloud/api/v2/provinces')
+    if (!provincesResponse.ok) {
+        throw new Error(`Failed to fetch provinces: ${provincesResponse.status}`)
     }
 
-    const provinceMap = new Map<string, string>()
-    for (const prov of provinces) {
-        if (prov.provCode) {
-            provinceMap.set(prov.provCode, prov.provName)
+    const provincesJson = await provincesResponse.json()
+    const psgcProvinces: PSGCProvince[] = provincesJson.data || []
+
+    console.log(`Fetched ${psgcProvinces.length} provinces`)
+
+    const provinceIdMap = new Map<string, number>() // provinceName -> provinceId
+
+    for (const prov of psgcProvinces) {
+        const existingProvince = await payload.find({
+            collection: 'provinces',
+            where: { psgcCode: { equals: prov.code } },
+            limit: 1,
+        })
+
+        if (existingProvince.totalDocs === 0) {
+            const created = await payload.create({
+                collection: 'provinces',
+                data: {
+                    name: prov.name,
+                    slug: toSlug(prov.name),
+                    psgcCode: prov.code,
+                    region: prov.region,
+                    isActive: true,
+                },
+                draft: false,
+            })
+            provinceIdMap.set(prov.name.toLowerCase().trim(), created.id)
+            console.log(`  ✓ Created province: ${prov.name}`)
+        } else {
+            provinceIdMap.set(prov.name.toLowerCase().trim(), existingProvince.docs[0].id)
+            console.log(`  ⏭️  Province already exists: ${prov.name}`)
         }
     }
 
-    console.log(`Ready to seed ${cities.length} cities and ${barangays.length} barangays.`)
+    console.log(`\n--- Seeding Philippine Cities ---`)
+    console.log('Fetching cities from PSGC Cloud API...')
+    console.log('NOTE: Barangays will be fetched on-demand from PSGC Cloud API (not seeded)')
+
+    const citiesResponse = await fetch('https://psgc.cloud/api/v2/cities-municipalities')
+    if (!citiesResponse.ok) {
+        throw new Error(`Failed to fetch cities: ${citiesResponse.status}`)
+    }
+
+    const citiesJson = await citiesResponse.json()
+    const psgcCities: PSGCCity[] = citiesJson.data || []
+
+    console.log(`Fetched ${psgcCities.length} cities (with province data included)`)
+    console.log(`Ready to seed cities with province relationships (no additional API calls needed!)`)
 
     const usedSlugs = new Set<string>()
-    const BATCH_SIZE = 1
+    let citiesCreated = 0
+    let citiesSkipped = 0
 
-    for (let i = 0; i < cities.length; i += BATCH_SIZE) {
-        const batch = cities.slice(i, i + BATCH_SIZE)
+    for (let i = 0; i < psgcCities.length; i++) {
+        const cityData = psgcCities[i]
 
-        await Promise.all(batch.map(async (cityData) => {
-            let slug = toSlug(cityData.munCityName)
+        try {
+            // Check if city already exists
+            const existingCity = await payload.find({
+                collection: 'cities',
+                where: { psgcCode: { equals: cityData.code } },
+                limit: 1,
+            })
 
+            if (existingCity.totalDocs > 0) {
+                console.log(`  ⏭️  City already exists: ${cityData.name}`)
+                citiesSkipped++
+                continue
+            }
+
+            // Province name is already in the API response!
+            if (!cityData.province) {
+                console.warn(`  ⚠ No province data for ${cityData.name}`)
+                citiesSkipped++
+                continue
+            }
+
+            const provinceName = cityData.province.toLowerCase().trim()
+            const provinceId = provinceIdMap.get(provinceName)
+
+            if (!provinceId) {
+                console.warn(`  ⚠ Province not found for ${cityData.name}: "${cityData.province}"`)
+                citiesSkipped++
+                continue
+            }
+
+            // Generate unique slug
+            let slug = toSlug(cityData.name)
             if (usedSlugs.has(slug)) {
-                const provName = provinceMap.get(cityData.provCode) || cityData.provCode || 'prov'
-                const provSlug = toSlug(provName)
+                const provSlug = toSlug(cityData.province)
                 slug = `${slug}-${provSlug}`
 
                 let counter = 1
@@ -75,66 +151,46 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
                     counter++
                 }
             }
-
             usedSlugs.add(slug)
 
-            let cityID: string | number
-            try {
-                const existingCity = await payload.find({
-                    collection: 'cities',
-                    where: { slug: { equals: slug } },
-                    limit: 1,
-                })
+            // Create city with province relationship
+            await payload.create({
+                collection: 'cities',
+                data: {
+                    name: cityData.name,
+                    slug: slug,
+                    psgcCode: cityData.code,
+                    province: provinceId,
+                    isActive: true,
+                },
+                draft: false,
+            })
 
-                if (existingCity.totalDocs > 0) {
-                    cityID = existingCity.docs[0].id
-                } else {
-                    const newCity = await payload.create({
-                        collection: 'cities',
-                        data: {
-                            name: cityData.munCityName,
-                            slug: slug,
-                            isActive: true,
-                        }
-                    })
-                    cityID = newCity.id
-                }
-            } catch (e: any) {
-                console.warn(`City creation failed for ${cityData.munCityName} (${slug}):`, e.message)
-                return
-            }
+            citiesCreated++
+            console.log(`  ✓ [${i + 1}/${psgcCities.length}] ${cityData.name} → ${cityData.province}`)
 
-            const cityBarangays = barangaysByCity.get(cityData.munCityCode) || []
-            const BRGY_BATCH = 20
-            for (let j = 0; j < cityBarangays.length; j += BRGY_BATCH) {
-                const brgyBatch = cityBarangays.slice(j, j + BRGY_BATCH)
-                await Promise.all(brgyBatch.map(async (brgy) => {
-                    const brgySlug = toSlug(brgy.brgyName)
-                    try {
-                        await payload.create({
-                            collection: 'barangays',
-                            data: {
-                                name: brgy.brgyName,
-                                slug: brgySlug,
-                                city: cityID,
-                                isActive: true
-                            }
-                        })
-                    } catch (err) {
-                    }
-                }))
-            }
-        }))
+        } catch (error) {
+            console.error(`  ❌ Error creating ${cityData.name}:`, error instanceof Error ? error.message : error)
+            citiesSkipped++
+        }
 
-        if ((i + BATCH_SIZE) % 50 === 0 || i + BATCH_SIZE >= cities.length) {
-            console.log(`Processed ${i + BATCH_SIZE} / ${cities.length} cities...`)
+        // Progress update every 100 cities (faster now!)
+        if ((i + 1) % 100 === 0) {
+            console.log(`  📊 Progress: ${i + 1}/${psgcCities.length} cities processed`)
         }
     }
-    console.log('--- Seeding Locations Complete ---')
+
+    console.log(`\n--- Seeding Summary ---`)
+    console.log(`  ✅ Provinces created: ${provinceIdMap.size}`)
+    console.log(`  ✅ Cities created: ${citiesCreated}`)
+    console.log(`  ⚠️  Cities skipped: ${citiesSkipped}`)
+    console.log(`  📊 Total: ${psgcCities.length} cities`)
+    console.log('--- Seeding Complete ---')
 }
 
 export async function down({ payload }: MigrateDownArgs): Promise<void> {
     console.log('--- Reverting Seeds ---')
+
     await payload.delete({
         collection: 'users',
         where: {
@@ -142,6 +198,8 @@ export async function down({ payload }: MigrateDownArgs): Promise<void> {
         },
     })
 
+    // Delete in reverse order due to foreign key constraints
+    // Delete any barangays (API-cached or otherwise)
     await payload.delete({
         collection: 'barangays',
         where: {
@@ -149,11 +207,21 @@ export async function down({ payload }: MigrateDownArgs): Promise<void> {
         },
     })
 
+    // Delete cities (must be before provinces due to FK constraint)
     await payload.delete({
         collection: 'cities',
         where: {
             id: { exists: true },
         },
     })
+
+    // Delete provinces
+    await payload.delete({
+        collection: 'provinces',
+        where: {
+            id: { exists: true },
+        },
+    })
+
     console.log('--- Revert Complete ---')
 }

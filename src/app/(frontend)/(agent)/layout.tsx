@@ -3,6 +3,7 @@ import { AgentSidebar } from '@/components/agent-sidebar'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbPage } from '@/components/ui/breadcrumb'
+import { NotificationBell } from '@/components/notification-bell'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,6 +35,9 @@ export default async function AgentLayout({
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto">
+            <NotificationBell />
+          </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
       </SidebarInset>

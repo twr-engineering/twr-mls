@@ -25,6 +25,27 @@ export const Cities: CollectionConfig = {
       },
     },
     {
+      name: 'province',
+      type: 'relationship',
+      relationTo: 'provinces',
+      required: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Province from PSGC API',
+      },
+    },
+    {
+      name: 'psgcCode',
+      type: 'text',
+      required: true,
+      unique: true,
+      admin: {
+        placeholder: 'e.g., 1030500000',
+        description: '10-digit PSGC municipality/city code for API lookups',
+        readOnly: true,
+      },
+    },
+    {
       name: 'slug',
       type: 'text',
       required: true,

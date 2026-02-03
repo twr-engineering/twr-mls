@@ -1,9 +1,11 @@
 import { getListingById } from '@/lib/payload/api'
+import { getUser } from '@/lib/auth/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListingTypeBadge } from '@/components/listing-type-badge'
 import { RichTextRenderer } from '@/components/ui/rich-text-renderer'
+import { ListingDocumentsWrapper } from '@/components/listing-documents-wrapper'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Edit, ArrowLeft } from 'lucide-react'
@@ -17,12 +19,15 @@ type PageProps = {
 export default async function ViewListingPage({ params }: PageProps) {
   const { id } = await params
   const listing = await getListingById(id)
+  const user = await getUser()
 
   if (!listing) {
     notFound()
   }
 
   const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
+  const isOwner = !!(user && listing.createdBy === user.id)
+  const userRole = user?.role || 'agent'
 
   const cityName = typeof listing.city === 'object' ? listing.city.name : 'N/A'
   const barangayName = typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'
@@ -82,10 +87,12 @@ export default async function ViewListingPage({ params }: PageProps) {
             <CardTitle>Pricing</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div>
-              <span className="text-sm text-muted-foreground">Price</span>
-              <p className="text-2xl font-bold">₱{listing.price.toLocaleString()}</p>
-            </div>
+            {listing.price && (
+              <div>
+                <span className="text-sm text-muted-foreground">Price</span>
+                <p className="text-2xl font-bold">₱{listing.price.toLocaleString()}</p>
+              </div>
+            )}
             {listing.pricePerSqm && (
               <div>
                 <span className="text-sm text-muted-foreground">Price per sqm</span>
@@ -208,6 +215,12 @@ export default async function ViewListingPage({ params }: PageProps) {
           )}
         </CardContent>
       </Card>
+
+      <ListingDocumentsWrapper
+        listingId={id}
+        isOwner={isOwner}
+        userRole={userRole as 'agent' | 'approver' | 'admin'}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { ListingTypeBadge } from '@/components/listing-type-badge'
 import Link from 'next/link'
 import { Plus, Eye, Edit } from 'lucide-react'
 import { ListingActions } from '@/components/listing-actions'
+import type { Listing } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
     }
   }
 
-  const ListingCard = ({ listing }: { listing: Record<string, any> }) => {
+  const ListingCard = ({ listing }: { listing: Listing }) => {
     const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
 
     return (
@@ -51,6 +52,11 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
                 <Badge variant={getStatusBadgeVariant(listing.status)} className="text-xs">
                   {listing.status.replace('_', ' ')}
                 </Badge>
+                {listing.propertyType && typeof listing.propertyType === 'object' && (
+                  <Badge variant="outline" className="text-xs">
+                    {listing.propertyType.name}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -58,10 +64,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         <CardContent>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Price:</span>
-                <p className="font-medium">₱{listing.price.toLocaleString()}</p>
-              </div>
+              {listing.price && (
+                <div>
+                  <span className="text-muted-foreground">Price:</span>
+                  <p className="font-medium">₱{listing.price.toLocaleString()}</p>
+                </div>
+              )}
               <div>
                 <span className="text-muted-foreground">Transaction:</span>
                 <p className="font-medium capitalize">{listing.transactionType}</p>
@@ -69,6 +77,9 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
               <div className="col-span-2">
                 <span className="text-muted-foreground">Location:</span>
                 <p className="font-medium truncate">
+                  {listing.township && typeof listing.township === 'object'
+                    ? `${listing.township.name}, `
+                    : ''}
                   {typeof listing.city === 'object' ? listing.city.name : 'N/A'},{' '}
                   {typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'}
                 </p>

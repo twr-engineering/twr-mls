@@ -1,5 +1,5 @@
 import { getListingById } from '@/lib/payload/api'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ListingTypeBadge } from '@/components/listing-type-badge'
 import { ShareLinkForm } from '@/components/share-link-form'
 import { notFound, redirect } from 'next/navigation'
@@ -46,10 +46,12 @@ export default async function NewShareLinkPage({
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          <div>
-            <span className="text-sm text-muted-foreground">Price</span>
-            <p className="text-xl font-bold">₱{listing.price.toLocaleString()}</p>
-          </div>
+          {listing.price && (
+            <div>
+              <span className="text-sm text-muted-foreground">Price</span>
+              <p className="text-xl font-bold">₱{listing.price.toLocaleString()}</p>
+            </div>
+          )}
           <div>
             <span className="text-sm text-muted-foreground">Location</span>
             <p className="text-sm font-medium">

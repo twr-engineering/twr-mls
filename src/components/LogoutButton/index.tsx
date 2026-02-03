@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 
-export const LogoutButton = (_props: any) => {
+export const LogoutButton = (_props: Record<string, never>) => {
   return (
     <div className="nav-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
       <Link

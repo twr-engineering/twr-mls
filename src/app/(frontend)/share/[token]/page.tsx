@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import type { Listing, City, Barangay, Development, Media } from '@/payload-types'
 
 type Props = {
@@ -70,7 +71,8 @@ export default async function SharePage({ params }: Props) {
   const barangay = listing.barangay as Barangay | null
   const development = listing.development as Development | null
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price) return null
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
       currency: 'PHP',
@@ -95,14 +97,16 @@ export default async function SharePage({ params }: Props) {
         <h1 className="listing-title">{listing.title}</h1>
 
         {}
-        <div className="price-section">
-          <span className="price">{formatPrice(listing.price)}</span>
-          {listing.pricePerSqm && (
-            <span className="price-per-sqm">
-              ({formatPrice(listing.pricePerSqm)}/sqm)
-            </span>
-          )}
-        </div>
+        {listing.price && (
+          <div className="price-section">
+            <span className="price">{formatPrice(listing.price)}</span>
+            {listing.pricePerSqm && (
+              <span className="price-per-sqm">
+                ({formatPrice(listing.pricePerSqm)}/sqm)
+              </span>
+            )}
+          </div>
+        )}
 
         {}
         <div className="location-section">
@@ -122,9 +126,13 @@ export default async function SharePage({ params }: Props) {
             {images.slice(0, 5).map((image, index) => (
               image && typeof image === 'object' && image.url && (
                 <div key={image.id || index} className="image-wrapper">
-                  <img
+                  <Image
                     src={image.url}
                     alt={image.alt || `Listing image ${index + 1}`}
+                    width={800}
+                    height={600}
+                    className="listing-image"
+                    priority={index === 0}
                   />
                 </div>
               )

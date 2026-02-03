@@ -38,6 +38,40 @@ export const Barangays: CollectionConfig = {
       },
     },
     {
+      name: 'psgcCode',
+      type: 'text',
+      unique: true,
+      admin: {
+        placeholder: 'e.g., 1376020001',
+        description: 'PSGC barangay code (10-digit format)',
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'sourceType',
+      type: 'select',
+      options: [
+        { label: 'Seeded', value: 'seeded' },
+        { label: 'API Cached', value: 'api_cached' },
+      ],
+      defaultValue: 'seeded',
+      admin: {
+        description: 'How this barangay record was created',
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'lastSyncedAt',
+      type: 'date',
+      admin: {
+        description: 'Last time this record was synced from PSGC API',
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'slug',
       type: 'text',
       required: true,

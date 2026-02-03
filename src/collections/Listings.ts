@@ -3,6 +3,8 @@ import { authenticated } from '@/access'
 import { validateStatusTransition } from '@/hooks/listings/validateStatusTransition'
 import { notifyStatusChange } from '@/hooks/listings/notifyStatusChange'
 import { populateLocationRelations } from '@/hooks/listings/populateLocationRelations'
+import { validateListingFields } from '@/hooks/listings/validateListingFields'
+import { validatePropertyClassification } from '@/hooks/listings/validatePropertyClassification'
 
 export const ListingStatuses = [
   'draft',
@@ -94,6 +96,20 @@ const listingTypeFieldAccess: FieldAccess = ({ req: { user } }) => {
   return false
 }
 
+const propertyOwnerFieldAccess: FieldAccess = ({ req: { user }, doc }) => {
+  if (!user) return false
+
+  if (user.role === 'admin' || user.role === 'approver') {
+    return true
+  }
+
+  if (user.role === 'agent' && doc?.createdBy === user.id) {
+    return true
+  }
+
+  return false
+}
+
 export const Listings: CollectionConfig = {
   slug: 'listings',
   admin: {
@@ -126,8 +142,9 @@ export const Listings: CollectionConfig = {
         return data
       },
 
-      async ({ data, req, operation }) => {
+      async ({ data, req, operation, originalDoc }) => {
         if (operation === 'create' || operation === 'update') {
+          // Validate location hierarchy
           if (data.city && data.barangay) {
             const barangay = await req.payload.findByID({
               collection: 'barangays',
@@ -153,10 +170,28 @@ export const Listings: CollectionConfig = {
               throw new Error('Selected development does not belong to the selected barangay')
             }
           }
+
+          // Reset property type and subtype when category changes
+          if (operation === 'update' && originalDoc) {
+            if (data.propertyCategory && originalDoc.propertyCategory !== data.propertyCategory) {
+              data.propertyType = null
+              data.propertySubtype = null
+            }
+            if (data.propertyType && originalDoc.propertyType !== data.propertyType) {
+              data.propertySubtype = null
+            }
+          }
         }
         return data
       },
 
+      // Validate property classification hierarchy
+      validatePropertyClassification,
+
+      // Validate listing fields based on listingType
+      validateListingFields,
+
+      // Validate status transitions
       validateStatusTransition,
     ],
     afterChange: [notifyStatusChange],
@@ -177,6 +212,107 @@ export const Listings: CollectionConfig = {
       admin: {
         description: 'Detailed description for internal use and client sharing',
       },
+    },
+
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'propertyCategory',
+          type: 'relationship',
+          relationTo: 'property-categories',
+          required: true,
+          hasMany: false,
+          filterOptions: {
+            isActive: { equals: true },
+          },
+          admin: {
+            width: '33%',
+            description: 'Select category first (e.g., Residential)',
+          },
+        },
+        {
+          name: 'propertyType',
+          type: 'relationship',
+          relationTo: 'property-types',
+          required: true,
+          hasMany: false,
+          filterOptions: ({ data }) => {
+            const query: Where = {
+              isActive: { equals: true },
+            }
+            if (data?.propertyCategory) {
+              query.category = { equals: data.propertyCategory }
+            }
+            return query
+          },
+          admin: {
+            width: '33%',
+            description: 'Filtered by category (e.g., House & Lot)',
+          },
+        },
+        {
+          name: 'propertySubtype',
+          type: 'relationship',
+          relationTo: 'property-subtypes',
+          hasMany: false,
+          filterOptions: ({ data }) => {
+            const query: Where = {
+              isActive: { equals: true },
+            }
+            if (data?.propertyType) {
+              query.propertyType = { equals: data.propertyType }
+            }
+            return query
+          },
+          admin: {
+            width: '33%',
+            description: 'Filtered by type (optional)',
+          },
+        },
+      ],
+    },
+
+    {
+      type: 'collapsible',
+      label: 'Property Owner Information',
+      admin: {
+        description: 'Sensitive information - visible only to listing owner, approvers, and admin',
+        condition: (data) => data?.listingType === 'resale',
+      },
+      fields: [
+        {
+          name: 'propertyOwnerName',
+          type: 'text',
+          access: {
+            read: propertyOwnerFieldAccess,
+          },
+          admin: {
+            placeholder: 'Full name of property owner',
+          },
+        },
+        {
+          name: 'propertyOwnerContact',
+          type: 'text',
+          access: {
+            read: propertyOwnerFieldAccess,
+          },
+          admin: {
+            placeholder: 'Contact number or email',
+          },
+        },
+        {
+          name: 'propertyOwnerNotes',
+          type: 'textarea',
+          access: {
+            read: propertyOwnerFieldAccess,
+          },
+          admin: {
+            placeholder: 'Internal notes about the property owner',
+            description: 'For agent reference only',
+          },
+        },
+      ],
     },
 
     {
@@ -242,11 +378,20 @@ export const Listings: CollectionConfig = {
         {
           name: 'price',
           type: 'number',
-          required: true,
+          required: false,
           min: 0,
           admin: {
             placeholder: 'Base price',
             width: '33%',
+            description: 'Required for resale listings',
+            condition: (data) => data.listingType === 'resale',
+          },
+          validate: (value: number | null | undefined, { data }: { data: any }) => {
+            // Only require price for resale listings
+            if (data.listingType === 'resale' && (!value || value <= 0)) {
+              return 'Price is required for resale listings'
+            }
+            return true
           },
         },
         {
@@ -394,17 +539,88 @@ export const Listings: CollectionConfig = {
       type: 'row',
       fields: [
         {
-          name: 'city',
+          name: 'filterProvince',
           type: 'relationship',
-          relationTo: 'cities',
-          required: true,
+          relationTo: 'provinces',
           hasMany: false,
+          required: true,
           filterOptions: {
             isActive: { equals: true },
           },
           admin: {
             width: '33%',
-            description: 'Select city first',
+            description: 'Select province first',
+          },
+          hooks: {
+            beforeChange: [
+              // Auto-populate from city if not set (for frontend/API submissions)
+              async ({ value, data, req }) => {
+                // If province already set, check if it should clear dependents
+                if (value) {
+                  return value
+                }
+
+                // Auto-populate from city's province if city is selected
+                if (data?.city && !value) {
+                  const cityId = typeof data.city === 'object' ? data.city.id : data.city
+                  const city = await req.payload.findByID({
+                    collection: 'cities',
+                    id: cityId,
+                    depth: 1,
+                  })
+
+                  if (city && city.province) {
+                    const provinceId = typeof city.province === 'object' ? city.province.id : city.province
+                    return provinceId
+                  }
+                }
+
+                return value
+              },
+              // Clear dependent fields when province changes (only on update, not create)
+              ({ value, previousValue, data, operation }) => {
+                // Only clear on update when value actually changes
+                if (operation === 'update' && previousValue !== undefined && value !== previousValue && data) {
+                  data.city = undefined
+                  data.barangay = undefined
+                  data.development = undefined
+                }
+                return value
+              },
+            ],
+          },
+        },
+        {
+          name: 'city',
+          type: 'relationship',
+          relationTo: 'cities',
+          required: true,
+          hasMany: false,
+          filterOptions: ({ data }) => {
+            const query: Where = {
+              isActive: { equals: true },
+            }
+            if (data?.filterProvince) {
+              query.province = { equals: data.filterProvince }
+            }
+            return query
+          },
+          admin: {
+            width: '33%',
+            description: 'Filtered by province (select province first)',
+          },
+          hooks: {
+            beforeChange: [
+              // Clear dependent fields when city changes (only on update, not create)
+              ({ value, previousValue, data, operation }) => {
+                // Only clear on update when value actually changes
+                if (operation === 'update' && previousValue !== undefined && value !== previousValue && data) {
+                  data.barangay = undefined
+                  data.development = undefined
+                }
+                return value
+              },
+            ],
           },
         },
         {
@@ -424,29 +640,43 @@ export const Listings: CollectionConfig = {
           },
           admin: {
             width: '33%',
-            description: 'Filtered by selected city',
+            description: 'Filtered by city',
+            components: {
+              Field: 'src/components/BarangaySelect.tsx#BarangaySelect',
+            },
           },
-        },
-        {
-          name: 'development',
-          type: 'relationship',
-          relationTo: 'developments',
-          hasMany: false,
-          filterOptions: ({ data }) => {
-            const query: Where = {
-              isActive: { equals: true },
-            }
-            if (data?.barangay) {
-              query.barangay = { equals: data.barangay }
-            }
-            return query
-          },
-          admin: {
-            width: '33%',
-            description: 'Filtered by selected barangay (optional)',
+          hooks: {
+            beforeChange: [
+              // Clear dependent fields when barangay changes (only on update, not create)
+              ({ value, previousValue, data, operation }) => {
+                // Only clear on update when value actually changes
+                if (operation === 'update' && previousValue !== undefined && value !== previousValue && data) {
+                  data.development = undefined
+                }
+                return value
+              },
+            ],
           },
         },
       ],
+    },
+    {
+      name: 'development',
+      type: 'relationship',
+      relationTo: 'developments',
+      hasMany: false,
+      filterOptions: ({ data }) => {
+        const query: Where = {
+          isActive: { equals: true },
+        }
+        if (data?.barangay) {
+          query.barangay = { equals: data.barangay }
+        }
+        return query
+      },
+      admin: {
+        description: 'Filtered by barangay (optional, select barangay first)',
+      },
     },
     {
       type: 'row',
@@ -512,6 +742,15 @@ export const Listings: CollectionConfig = {
           },
         },
         {
+          name: 'indicativePrice',
+          type: 'number',
+          min: 0,
+          admin: {
+            placeholder: 'Indicative price (if single value)',
+            description: 'Use this OR the price range below',
+          },
+        },
+        {
           type: 'row',
           fields: [
             {
@@ -540,7 +779,7 @@ export const Listings: CollectionConfig = {
           type: 'row',
           fields: [
             {
-              name: 'minLotArea',
+              name: 'minLotAreaSqm',
               type: 'number',
               min: 0,
               admin: {
@@ -549,7 +788,7 @@ export const Listings: CollectionConfig = {
               },
             },
             {
-              name: 'minFloorArea',
+              name: 'minFloorAreaSqm',
               type: 'number',
               min: 0,
               admin: {
@@ -572,6 +811,14 @@ export const Listings: CollectionConfig = {
           admin: {
             placeholder: 'Additional notes, disclaimers, or special conditions',
             description: 'Internal notes about this preselling listing',
+          },
+        },
+        {
+          name: 'indicativeTurnover',
+          type: 'text',
+          admin: {
+            placeholder: 'e.g., Q4 2026, 18-24 months, Ready for Occupancy',
+            description: 'Estimated completion/turnover timeline (informational only)',
           },
         },
       ],
@@ -602,7 +849,12 @@ export const Listings: CollectionConfig = {
     {
       fields: ['createdBy'],
     },
-
+    {
+      fields: ['propertyCategory'],
+    },
+    {
+      fields: ['propertyType'],
+    },
     {
       fields: ['status', 'listingType'],
     },

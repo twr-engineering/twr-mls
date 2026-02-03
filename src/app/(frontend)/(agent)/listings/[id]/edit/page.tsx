@@ -58,29 +58,67 @@ export default async function EditListingPage({ params }: PageProps) {
   const developmentId =
     typeof listing.development === 'object' ? listing.development?.id : listing.development
 
+  // Extract property classification IDs
+  const propertyCategoryId =
+    typeof listing.propertyCategory === 'object'
+      ? listing.propertyCategory.id
+      : listing.propertyCategory
+  const propertyTypeId =
+    typeof listing.propertyType === 'object' ? listing.propertyType.id : listing.propertyType
+  const propertySubtypeId =
+    listing.propertySubtype && typeof listing.propertySubtype === 'object'
+      ? listing.propertySubtype.id
+      : listing.propertySubtype
+
   const imageIds = Array.isArray(listing.images)
     ? listing.images.map((img) => (typeof img === 'object' ? img.id : img)).filter(Boolean)
     : []
 
   const initialData = {
+    // Basic fields
     title: listing.title,
     description: listing.description || undefined,
+    listingType: listing.listingType as 'resale' | 'preselling',
+
+    // Property classification
+    propertyCategoryId: propertyCategoryId || 0,
+    propertyTypeId: propertyTypeId || 0,
+    propertySubtypeId: propertySubtypeId || undefined,
+
+    // Transaction
     transactionType: listing.transactionType,
-    price: listing.price,
-    pricePerSqm: listing.pricePerSqm || undefined,
-    floorAreaSqm: listing.floorAreaSqm || undefined,
-    lotAreaSqm: listing.lotAreaSqm || undefined,
+
+    // Common fields
     bedrooms: listing.bedrooms || undefined,
     bathrooms: listing.bathrooms || undefined,
     parkingSlots: listing.parkingSlots || undefined,
+
+    // Resale-specific fields
+    price: listing.price || undefined,
+    pricePerSqm: listing.pricePerSqm || undefined,
+    floorAreaSqm: listing.floorAreaSqm || undefined,
+    lotAreaSqm: listing.lotAreaSqm || undefined,
     furnishing: listing.furnishing || undefined,
     constructionYear: listing.constructionYear || undefined,
     tenure: listing.tenure || undefined,
     titleStatus: listing.titleStatus || undefined,
+
+    // Preselling-specific fields
+    modelName: listing.modelName || undefined,
+    indicativePriceMin: listing.indicativePriceMin || undefined,
+    indicativePriceMax: listing.indicativePriceMax || undefined,
+    minLotAreaSqm: listing.minLotAreaSqm || undefined,
+    minFloorAreaSqm: listing.minFloorAreaSqm || undefined,
+    standardInclusions: listing.standardInclusions || undefined,
+    presellingNotes: listing.presellingNotes || undefined,
+
+    // Location
     cityId,
     barangayId,
     developmentId: developmentId || undefined,
     fullAddress: listing.fullAddress,
+
+    // Images
     images: imageIds,
   }
 

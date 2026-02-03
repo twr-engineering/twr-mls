@@ -7,11 +7,21 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
-import { Cities, Barangays, Developments, Estates, Townships } from './collections/locations'
+import {
+  Provinces,
+  Cities,
+  Barangays,
+  Developments,
+  Estates,
+  Townships,
+} from './collections/locations'
 import { Listings } from './collections/Listings'
 import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
+import { PropertyCategories } from './collections/PropertyCategories'
+import { PropertyTypes } from './collections/PropertyTypes'
+import { PropertySubtypes } from './collections/PropertySubtypes'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
@@ -31,11 +41,15 @@ export const config: Config = {
   collections: [
     Users,
     Media,
+    Provinces,
     Cities,
     Barangays,
     Developments,
     Estates,
     Townships,
+    PropertyCategories,
+    PropertyTypes,
+    PropertySubtypes,
     Listings,
     Documents,
     Notifications,
