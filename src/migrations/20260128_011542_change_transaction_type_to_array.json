@@ -1,0 +1,6 @@
+{
+  "id": "20260128_011542_change_transaction_type_to_array",
+  "batch": 5,
+  "up": true,
+  "down": true
+}
