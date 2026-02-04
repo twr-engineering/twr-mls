@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import { authenticated, adminOnly, isAdmin, isApproverOrAdmin } from '@/access'
 
 /**
  * Provinces Collection
@@ -13,6 +13,7 @@ export const Provinces: CollectionConfig = {
     defaultColumns: ['name', 'region', 'psgcCode', 'isActive'],
     group: 'Location Master Data',
     description: 'Provinces are administrative divisions containing cities/municipalities',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
   },
   access: {
     read: authenticated,

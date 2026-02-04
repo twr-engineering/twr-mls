@@ -14,15 +14,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Filter, X } from 'lucide-react'
-import type { City, Barangay, Development } from '@/payload-types'
+import type { City, Barangay as PayloadBarangay, Development } from '@/payload-types'
+
+type Barangay = PayloadBarangay & { psgcCode: string }
+
 
 type SearchFiltersProps = {
   cities: City[]
   currentFilters: {
     listingType?: string
     transactionType?: string
-    cityId?: number
-    barangayId?: number
+    cityId?: string
+    barangayId?: string
     developmentId?: number
     minPrice?: number
     maxPrice?: number
@@ -110,142 +113,141 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label>Listing Type</Label>
-          <Select value={listingType} onValueChange={setListingType}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="both">All Types</SelectItem>
-              <SelectItem value="resale">Resale Only</SelectItem>
-              <SelectItem value="preselling">Preselling Only</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label>Listing Type</Label>
+            <Select value={listingType} onValueChange={setListingType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="both">All Types</SelectItem>
+                <SelectItem value="resale">Resale Only</SelectItem>
+                <SelectItem value="preselling">Preselling Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-2">
-          <Label>Transaction Type</Label>
-          <Select value={transactionType} onValueChange={setTransactionType}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Transaction Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sale">For Sale</SelectItem>
-              <SelectItem value="rent">For Rent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-2">
+            <Label>Transaction Type</Label>
+            <Select value={transactionType} onValueChange={setTransactionType}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Transaction Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sale">For Sale</SelectItem>
+                <SelectItem value="rent">For Rent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-2">
-          <Label>City</Label>
-          <Select value={cityId} onValueChange={(value) => {
-            setCityId(value)
-            setBarangayId('')
-            setDevelopmentId('')
-          }}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Cities" />
-            </SelectTrigger>
-            <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={city.id} value={city.id.toString()}>
-                  {city.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Barangay</Label>
-          <Select
-            value={barangayId}
-            onValueChange={(value) => {
-              setBarangayId(value)
+          <div className="space-y-2">
+            <Label>City</Label>
+            <Select value={cityId} onValueChange={(value) => {
+              setCityId(value)
+              setBarangayId('')
               setDevelopmentId('')
-            }}
-            disabled={!cityId || barangays.length === 0}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All Barangays" />
-            </SelectTrigger>
-            <SelectContent>
-              {barangays.map((barangay) => (
-                <SelectItem key={barangay.id} value={barangay.id.toString()}>
-                  {barangay.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Development</Label>
-          <Select
-            value={developmentId}
-            onValueChange={setDevelopmentId}
-            disabled={!barangayId || developments.length === 0}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All Developments" />
-            </SelectTrigger>
-            <SelectContent>
-              {developments.map((dev) => (
-                <SelectItem key={dev.id} value={dev.id.toString()}>
-                  {dev.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Price Range (₱)</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              placeholder="Min"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Max"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-            />
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Cities" />
+              </SelectTrigger>
+              <SelectContent>
+                {cities.map((city) => (
+                  <SelectItem key={city.id} value={city.psgcCode}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-2">
-            <Label>Bedrooms</Label>
-            <Input
-              type="number"
-              placeholder="Any"
-              value={bedrooms}
-              onChange={(e) => setBedrooms(e.target.value)}
-            />
+            <Label>Barangay</Label>
+            <Select
+              value={barangayId}
+              onValueChange={(value) => {
+                setBarangayId(value)
+                setDevelopmentId('')
+              }}
+              disabled={!cityId || barangays.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Barangays" />
+              </SelectTrigger>
+              <SelectContent>
+                {barangays.map((barangay) => (
+                  <SelectItem key={barangay.id} value={barangay.psgcCode}>
+                    {barangay.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Bathrooms</Label>
-            <Input
-              type="number"
-              placeholder="Any"
-              value={bathrooms}
-              onChange={(e) => setBathrooms(e.target.value)}
-            />
-          </div>
-        </div>
 
-        <div className="flex gap-2 pt-4">
-          <Button onClick={handleApplyFilters} className="flex-1">
-            Apply Filters
-          </Button>
-          <Button onClick={handleClearFilters} variant="outline" size="icon">
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="space-y-2">
+            <Label>Development</Label>
+            <Select
+              value={developmentId}
+              onValueChange={setDevelopmentId}
+              disabled={!barangayId || developments.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Developments" />
+              </SelectTrigger>
+              <SelectContent>
+                {developments.map((dev) => (
+                  <SelectItem key={dev.id} value={dev.id.toString()}>
+                    {dev.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Price Range (₱)</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Bedrooms / Bathrooms</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                placeholder="Bed"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Bath"
+                value={bathrooms}
+                onChange={(e) => setBathrooms(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Button onClick={handleApplyFilters} className="flex-1">
+              Apply
+            </Button>
+            <Button onClick={handleClearFilters} variant="outline" size="icon">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

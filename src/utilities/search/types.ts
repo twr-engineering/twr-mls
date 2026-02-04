@@ -1,16 +1,16 @@
-import type { Listing, City, Barangay, Development } from '@/payload-types'
+import type { Listing, Development } from '@/payload-types'
 
 export type ListingSearchFilters = {
 
   listingType?: 'resale' | 'preselling'
   transactionType?: 'sale' | 'rent'
 
-  cityId?: number
-  barangayId?: number
+  cityId?: string
+  barangayId?: string
   developmentId?: number
 
-  townshipId?: number 
-  estateId?: number 
+  townshipId?: number
+  estateId?: number
 
   priceMin?: number
   priceMax?: number
@@ -25,8 +25,8 @@ export type ListingSearchFilters = {
 }
 
 export type ListingSearchResult = Listing & {
-  city: City
-  barangay: Barangay
+  city: string
+  barangay: string
   development?: Development | null
 }
 

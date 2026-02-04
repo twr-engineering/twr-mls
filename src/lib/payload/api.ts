@@ -33,6 +33,7 @@ export async function getUserListings(filters?: {
   status?: string
   listingType?: string
   limit?: number
+  search?: string
 }) {
   const payload = await getPayloadInstance()
   const user = await getAuthUser()
@@ -41,13 +42,22 @@ export async function getUserListings(filters?: {
     throw new Error('Not authenticated')
   }
 
+  const where: Where = {
+    createdBy: { equals: user.id },
+    ...(filters?.status && filters.status !== 'all' && { status: { equals: filters.status } }),
+    ...(filters?.listingType && { listingType: { equals: filters.listingType } }),
+  }
+
+  if (filters?.search) {
+    where.or = [
+      { title: { like: filters.search } },
+      { fullAddress: { like: filters.search } },
+    ]
+  }
+
   const result = await payload.find({
     collection: 'listings',
-    where: {
-      createdBy: { equals: user.id },
-      ...(filters?.status && { status: { equals: filters.status } }),
-      ...(filters?.listingType && { listingType: { equals: filters.listingType } }),
-    },
+    where,
     limit: filters?.limit || 50,
     sort: '-createdAt',
     overrideAccess: false,
@@ -238,8 +248,8 @@ export async function getUserListingStats() {
 export async function searchListings(filters?: {
   listingType?: 'resale' | 'preselling' | 'both'
   transactionType?: 'sale' | 'rent'
-  cityId?: number
-  barangayId?: number
+  cityId?: string
+  barangayId?: string
   developmentId?: number
   minPrice?: number
   maxPrice?: number
@@ -271,10 +281,10 @@ export async function searchListings(filters?: {
 
   // Location filters
   if (filters?.cityId) {
-    where.city = { equals: filters.cityId }
+    where.city = { equals: filters.cityId.toString() }
   }
   if (filters?.barangayId) {
-    where.barangay = { equals: filters.barangayId }
+    where.barangay = { equals: filters.barangayId.toString() }
   }
   if (filters?.developmentId) {
     where.development = { equals: filters.developmentId }

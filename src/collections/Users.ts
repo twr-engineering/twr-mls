@@ -1,5 +1,5 @@
 import type { CollectionConfig, Access, Where } from 'payload'
-import { adminOnly, adminOnlyField } from '@/access'
+import { adminOnly, adminOnlyField, isAdmin } from '@/access'
 
 export const UserRoles = ['agent', 'approver', 'admin'] as const
 export type UserRole = (typeof UserRoles)[number]
@@ -38,6 +38,7 @@ export const Users: CollectionConfig = {
     useAsTitle: 'email',
     defaultColumns: ['email', 'role', 'createdAt'],
     group: 'System',
+    hidden: ({ user }) => !isAdmin(user),
   },
   auth: true,
   access: {

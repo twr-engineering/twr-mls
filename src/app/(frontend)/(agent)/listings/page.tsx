@@ -1,244 +1,151 @@
-import { getUserListings } from '@/lib/payload/api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getUserListings, getUserListingStats } from '@/lib/payload/api'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ListingTypeBadge } from '@/components/listing-type-badge'
 import Link from 'next/link'
-import { Plus, Eye, Edit } from 'lucide-react'
-import { ListingActions } from '@/components/listing-actions'
-import type { Listing } from '@/payload-types'
+import { Plus } from 'lucide-react'
+
+import { ListingSearch } from '@/components/listing-search'
+import { Badge } from '@/components/ui/badge'
+import { ListingGridCard } from '@/components/listing-grid-card'
 
 export const dynamic = 'force-dynamic'
 
-type SearchParams = Promise<{ status?: string }>
+type SearchParams = Promise<{ status?: string; q?: string }>
 
 export default async function ListingsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
-  const statusFilter = params.status
+  const statusFilter = params.status || 'all'
+  const searchQuery = params.q || ''
 
-  const allListings = await getUserListings()
-  const draftListings = await getUserListings({ status: 'draft' })
-  const submittedListings = await getUserListings({ status: 'submitted' })
-  const publishedListings = await getUserListings({ status: 'published' })
-  const needsRevisionListings = await getUserListings({ status: 'needs_revision' })
+  // Parallel fetch: Stats + Filtered Listings
+  const [stats, listingsData] = await Promise.all([
+    getUserListingStats(),
+    getUserListings({
+      status: statusFilter,
+      search: searchQuery,
+      limit: 50,
+    }),
+  ])
 
-  const getStatusBadgeVariant = (
-    status: string,
-  ): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (status) {
-      case 'published':
-        return 'default'
-      case 'submitted':
-        return 'secondary'
-      case 'needs_revision':
-        return 'destructive'
-      default:
-        return 'outline'
-    }
-  }
+  const listings = listingsData.docs
 
-  const ListingCard = ({ listing }: { listing: Listing }) => {
-    const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
+  // Helper for status colors
 
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 flex-1 min-w-0">
-              <CardTitle className="truncate">{listing.title}</CardTitle>
-              <div className="flex items-center gap-2 flex-wrap">
-                <ListingTypeBadge listingType={listing.listingType} className="text-xs" />
-                <Badge variant={getStatusBadgeVariant(listing.status)} className="text-xs">
-                  {listing.status.replace('_', ' ')}
-                </Badge>
-                {listing.propertyType && typeof listing.propertyType === 'object' && (
-                  <Badge variant="outline" className="text-xs">
-                    {listing.propertyType.name}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {listing.price && (
-                <div>
-                  <span className="text-muted-foreground">Price:</span>
-                  <p className="font-medium">₱{listing.price.toLocaleString()}</p>
-                </div>
-              )}
-              <div>
-                <span className="text-muted-foreground">Transaction:</span>
-                <p className="font-medium capitalize">{listing.transactionType}</p>
-              </div>
-              <div className="col-span-2">
-                <span className="text-muted-foreground">Location:</span>
-                <p className="font-medium truncate">
-                  {listing.township && typeof listing.township === 'object'
-                    ? `${listing.township.name}, `
-                    : ''}
-                  {typeof listing.city === 'object' ? listing.city.name : 'N/A'},{' '}
-                  {typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 border-t">
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/listings/${listing.id}`}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
-                </Link>
-              </Button>
-              {canEdit ? (
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/listings/${listing.id}/edit`}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  title="Only draft and needs revision listings can be edited"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              )}
-              {listing.status === 'draft' && (
-                <ListingActions listingId={listing.id.toString()} status={listing.status} />
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Listings</h1>
-          <p className="text-muted-foreground">Manage your property listings</p>
+          <h1 className="text-3xl font-bold tracking-tight">My Listings</h1>
+          <p className="text-muted-foreground">
+            Manage and monitor the status of your property entries.
+          </p>
         </div>
-        <Button asChild>
-          <Link href="/listings/new">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Listing
-          </Link>
-        </Button>
+        <div className="flex items-center gap-4">
+          <ListingSearch />
+          {/* Avatar is handled in layout, but screenshot shows it here? We will trust layout for now or add if needed. */}
+        </div>
       </div>
 
-      <Tabs defaultValue={statusFilter || 'all'} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">All ({allListings.totalDocs})</TabsTrigger>
-          <TabsTrigger value="draft">Drafts ({draftListings.totalDocs})</TabsTrigger>
-          <TabsTrigger value="submitted">Submitted ({submittedListings.totalDocs})</TabsTrigger>
-          <TabsTrigger value="needs_revision">
-            Needs Revision ({needsRevisionListings.totalDocs})
-          </TabsTrigger>
-          <TabsTrigger value="published">Published ({publishedListings.totalDocs})</TabsTrigger>
-        </TabsList>
+      {/* Status Filter Cards */}
+      <div className="flex flex-wrap gap-4">
+        <FilterCard
+          label="ALL"
+          count={stats.total}
+          active={statusFilter === 'all'}
+          href="/listings"
+        />
+        <FilterCard
+          label="DRAFT"
+          count={stats.draft}
+          active={statusFilter === 'draft'}
+          href="/listings?status=draft"
+        />
+        <FilterCard
+          label="SUBMITTED"
+          count={stats.submitted}
+          active={statusFilter === 'submitted'}
+          href="/listings?status=submitted"
+        />
+        <FilterCard
+          label="NEEDS REVISION"
+          count={stats.needsRevision}
+          active={statusFilter === 'needs_revision'}
+          href="/listings?status=needs_revision"
+        />
+        <FilterCard
+          label="PUBLISHED"
+          count={stats.published}
+          active={statusFilter === 'published'}
+          href="/listings?status=published"
+        />
+      </div>
 
-        <TabsContent value="all" className="space-y-4">
-          {allListings.docs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    You haven&apos;t created any listings yet
-                  </p>
-                  <Button asChild>
-                    <Link href="/listings/new">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Listing
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {allListings.docs.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
+      {/* Listings Grid */}
+      {listings.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No listings found matching your criteria.</p>
+              {statusFilter === 'all' && !searchQuery && (
+                <Button asChild>
+                  <Link href="/listings/new">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New Listing
+                  </Link>
+                </Button>
+              )}
             </div>
-          )}
-        </TabsContent>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {listings.map((listing) => (
+            <ListingGridCard key={listing.id} listing={listing} />
+          ))}
+        </div>
+      )}
 
-        <TabsContent value="draft" className="space-y-4">
-          {draftListings.docs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">No draft listings</div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {draftListings.docs.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="submitted" className="space-y-4">
-          {submittedListings.docs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">No submitted listings</div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {submittedListings.docs.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="needs_revision" className="space-y-4">
-          {needsRevisionListings.docs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  No listings needing revision
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {needsRevisionListings.docs.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="published" className="space-y-4">
-          {publishedListings.docs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">No published listings</div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {publishedListings.docs.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Floating Create Button (if specific design needed, or rely on Header action? Screenshot shows button at bottom left of SIDEBAR likely).
+           But we can add one here if needed. Layout has sidebar button? No.
+       */}
     </div>
   )
 }
+
+function FilterCard({
+  label,
+  count,
+  active,
+  href,
+}: {
+  label: string
+  count: number
+  active: boolean
+  href: string
+}) {
+  return (
+    <Link href={href} className="flex-1 min-w-[140px]">
+      <Card
+        className={`h-full transition-colors hover:bg-muted/50 ${active ? 'border-primary ring-1 ring-primary' : ''
+          }`}
+      >
+        <CardContent className="p-4 flex flex-col justify-between h-full gap-2">
+          <div className="flex justify-between items-start">
+            <span className={`text-xs font-bold tracking-wider ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+              {label}
+            </span>
+            <Badge variant={active ? 'default' : 'secondary'} className="text-xs">
+              {count}
+            </Badge>
+          </div>
+          {/* Optional: Add subtitle text like "Not published" based on label if needed matching screenshot */}
+        </CardContent>
+      </Card>
+    </Link>
+  )
+}
+
+// Inline ListingGridCard removed. Using imported component.
+

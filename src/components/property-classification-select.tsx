@@ -79,7 +79,7 @@ export function PropertyClassificationSelect({
     if (categoryValue) {
       setIsLoadingTypes(true)
       fetch(
-        `/api/property-types?where[category][equals]=${categoryValue}&where[isActive][equals]=true&limit=100`,
+        `/api/property-types?where[propertyCategory][equals]=${categoryValue}&where[isActive][equals]=true&limit=100`,
       )
         .then((res) => res.json())
         .then((data) => {

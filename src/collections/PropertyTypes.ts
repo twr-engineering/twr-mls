@@ -1,28 +1,20 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated } from '@/access'
+import { authenticated, adminOnly, isAgent, isAdmin, isApproverOrAdmin } from '@/access'
 
 export const PropertyTypes: CollectionConfig = {
   slug: 'property-types',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'category', 'isActive'],
-    group: 'Master Data',
-    description: 'Property types within categories (e.g., House, Condo)',
+    defaultColumns: ['name', 'propertyCategory', 'slug', 'isActive', 'updatedAt'],
+    group: 'Listing Master Data',
+    description: 'Property types that belong to a category (e.g., Condo, House & Lot)',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
   },
   access: {
     read: authenticated,
-    create: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
-    update: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
-    delete: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   fields: [
     {
@@ -30,27 +22,29 @@ export const PropertyTypes: CollectionConfig = {
       type: 'text',
       required: true,
       admin: {
-        description: 'Type name (e.g., House & Lot, Condominium)',
+        placeholder: 'e.g., Condo',
       },
     },
     {
-      name: 'category',
+      name: 'propertyCategory',
       type: 'relationship',
       relationTo: 'property-categories',
       required: true,
       hasMany: false,
+      admin: {
+        description: 'Category this type belongs to',
+      },
       filterOptions: {
         isActive: { equals: true },
-      },
-      admin: {
-        description: 'Parent category this type belongs to',
       },
     },
     {
       name: 'slug',
       type: 'text',
       required: true,
+      unique: true,
       admin: {
+        placeholder: 'e.g., condo',
         description: 'URL-friendly identifier',
       },
       hooks: {
@@ -60,7 +54,7 @@ export const PropertyTypes: CollectionConfig = {
               return data.name
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '')
+                .replace(/(^-|-$)/g, '')
             }
             return value
           },
@@ -79,13 +73,15 @@ export const PropertyTypes: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'Inactive types are hidden from selection',
+        position: 'sidebar',
+        description: 'Inactive types will not appear in dropdowns',
       },
     },
   ],
   indexes: [
     {
-      fields: ['category'],
+      fields: ['propertyCategory', 'name'],
+      unique: true,
     },
   ],
 }

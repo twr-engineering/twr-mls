@@ -1,28 +1,20 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated } from '@/access'
+import { authenticated, adminOnly, isAgent, isAdmin, isApproverOrAdmin } from '@/access'
 
 export const PropertyCategories: CollectionConfig = {
   slug: 'property-categories',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'isActive'],
-    group: 'Master Data',
-    description: 'Property categories (e.g., Residential, Commercial)',
+    defaultColumns: ['name', 'slug', 'isActive', 'updatedAt'],
+    group: 'Listing Master Data',
+    description: 'Top-level property categories (e.g., Residential, Commercial)',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
   },
   access: {
     read: authenticated,
-    create: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
-    update: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
-    delete: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   fields: [
     {
@@ -31,7 +23,7 @@ export const PropertyCategories: CollectionConfig = {
       required: true,
       unique: true,
       admin: {
-        description: 'Category name (e.g., Residential, Commercial)',
+        placeholder: 'e.g., Residential',
       },
     },
     {
@@ -40,6 +32,7 @@ export const PropertyCategories: CollectionConfig = {
       required: true,
       unique: true,
       admin: {
+        placeholder: 'e.g., residential',
         description: 'URL-friendly identifier',
       },
       hooks: {
@@ -49,7 +42,7 @@ export const PropertyCategories: CollectionConfig = {
               return data.name
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '')
+                .replace(/(^-|-$)/g, '')
             }
             return value
           },
@@ -68,8 +61,10 @@ export const PropertyCategories: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'Inactive categories are hidden from selection',
+        position: 'sidebar',
+        description: 'Inactive categories will not appear in dropdowns',
       },
     },
   ],
 }
+

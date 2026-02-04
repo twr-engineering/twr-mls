@@ -32,10 +32,20 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      required: true,
+      // required: true, // Removed to allow server-side autofill
       admin: {
         description: 'Alternative text for accessibility',
       },
+      hooks: {
+        beforeValidate: [
+          ({ value, data }) => {
+            if (!value) {
+              return 'Property Image' // Fallback
+            }
+            return value
+          }
+        ]
+      }
     },
     {
       name: 'uploadedBy',
@@ -49,5 +59,9 @@ export const Media: CollectionConfig = {
       },
     },
   ],
-  upload: true,
+  upload: {
+    staticDir: 'public/media',
+    adminThumbnail: 'thumbnail',
+    mimeTypes: ['image/*'],
+  },
 }

@@ -32,6 +32,7 @@ export const ExternalShareLinks: CollectionConfig = {
     useAsTitle: 'token',
     defaultColumns: ['listing', 'createdBy', 'isActive', 'expiresAt', 'viewCount', 'createdAt'],
     group: 'Listings',
+    hidden: () => true,
     description: 'Share links for external clients to view published listings',
   },
   access: {

@@ -1,12 +1,13 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import { authenticated, adminOnly, isAdmin, isApproverOrAdmin } from '@/access'
 
 export const Estates: CollectionConfig = {
   slug: 'estates',
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'includedDevelopments', 'isActive', 'updatedAt'],
-    group: 'Location Master Data',
+    group: 'Market Areas',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
     description: 'Estates are branded groupings of multiple Developments',
   },
   access: {

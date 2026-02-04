@@ -70,6 +70,7 @@ export const Documents: CollectionConfig = {
     useAsTitle: 'type',
     defaultColumns: ['type', 'listing', 'visibility', 'verified', 'uploadedBy', 'createdAt'],
     group: 'Listings',
+    hidden: true,
     description: 'Documents attached to listings (titles, contracts, etc.)',
   },
   access: {

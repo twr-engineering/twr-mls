@@ -21,8 +21,8 @@ export default async function MLSListingDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const cityName = typeof listing.city === 'object' ? listing.city.name : 'N/A'
-  const barangayName = typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'
+  const cityName = listing.cityName || 'N/A'
+  const barangayName = listing.barangayName || 'N/A'
   const developmentName =
     listing.development && typeof listing.development === 'object'
       ? listing.development.name

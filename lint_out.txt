@@ -1,0 +1,5 @@
+﻿
+> twr-mls@1.0.0 lint D:\twr\twr-mls
+> cross-env NODE_OPTIONS=--no-deprecation next lint
+
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

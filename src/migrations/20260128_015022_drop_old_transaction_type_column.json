@@ -1,6 +1,0 @@
-{
-  "id": "20260128_015022_drop_old_transaction_type_column",
-  "batch": 7,
-  "up": true,
-  "down": true
-}

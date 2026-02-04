@@ -19,105 +19,106 @@ beforeAll(async () => {
   const payloadConfig = await config
   payload = await getPayload({ config: payloadConfig })
 
-    const timestamp = Date.now()
+  const timestamp = Date.now()
 
-    // Create test users
-    testAdmin = await payload.create({
-      collection: 'users',
-      data: {
-        email: `test-admin-validation-${timestamp}@test.com`,
-        password: 'password123',
-        role: 'admin',
-        firstName: 'Test',
-        lastName: 'Admin',
-      },
-    })
+  // Create test users
+  testAdmin = await payload.create({
+    collection: 'users',
+    data: {
+      email: `test-admin-validation-${timestamp}@test.com`,
+      password: 'password123',
+      role: 'admin',
+      firstName: 'Test',
+      lastName: 'Admin',
+    },
+  })
 
-    testAgent = await payload.create({
-      collection: 'users',
-      data: {
-        email: `test-agent-validation-${timestamp}@test.com`,
-        password: 'password123',
-        role: 'agent',
-        firstName: 'Test',
-        lastName: 'Agent',
-      },
-    })
+  testAgent = await payload.create({
+    collection: 'users',
+    data: {
+      email: `test-agent-validation-${timestamp}@test.com`,
+      password: 'password123',
+      role: 'agent',
+      firstName: 'Test',
+      lastName: 'Agent',
+    },
+  })
 
-    // Create test property classification
-    testCategory = await payload.create({
-      collection: 'property-categories',
-      data: {
-        name: `Test Residential ${timestamp}`,
-        slug: `test-residential-${timestamp}`,
-        isActive: true,
-      },
-    })
+  // Create test property classification
+  testCategory = await payload.create({
+    collection: 'property-categories',
+    data: {
+      name: `Test Residential ${timestamp}`,
+      slug: `test-residential-${timestamp}`,
+      isActive: true,
+    },
+  })
 
-    testType = await payload.create({
-      collection: 'property-types',
-      data: {
-        name: `Test Condominium ${timestamp}`,
-        slug: `test-condominium-${timestamp}`,
-        category: testCategory.id,
-        isActive: true,
-      },
-    })
+  testType = await payload.create({
+    collection: 'property-types',
+    data: {
+      name: `Test Condominium ${timestamp}`,
+      slug: `test-condominium-${timestamp}`,
+      propertyCategory: testCategory.id,
+      isActive: true,
+    },
+  })
 
-    testLotType = await payload.create({
-      collection: 'property-types',
-      data: {
-        name: `Test Residential Lot ${timestamp}`,
-        slug: `test-residential-lot-${timestamp}`,
-        category: testCategory.id,
-        isActive: true,
-      },
-    })
+  testLotType = await payload.create({
+    collection: 'property-types',
+    data: {
+      name: `Test Residential Lot ${timestamp}`,
+      slug: `test-residential-lot-${timestamp}`,
+      propertyCategory: testCategory.id,
+      isActive: true,
+    },
+  })
 
-    // Create test location data
-    testProvince = await payload.create({
-      collection: 'provinces',
-      data: {
-        name: `Test Province ${timestamp}`,
-        slug: `test-province-${timestamp}`,
-        psgcCode: `51${String(timestamp).slice(-8)}`,
-        region: 'Test Region',
-        isActive: true,
-      },
-    })
+  // Create test location data
+  testProvince = await payload.create({
+    collection: 'provinces',
+    data: {
+      name: `Test Province ${timestamp}`,
+      slug: `test-province-${timestamp}`,
+      psgcCode: `51${String(timestamp).slice(-8)}`,
+      region: 'Test Region',
+      isActive: true,
+    },
+  })
 
-    testCity = await payload.create({
-      collection: 'cities',
-      data: {
-        name: `Test City ${timestamp}`,
-        slug: `test-city-${timestamp}`,
-        province: testProvince.id,
-        psgcCode: `52${String(timestamp).slice(-8)}`,
-        isActive: true,
-      },
-    })
+  testCity = await payload.create({
+    collection: 'cities',
+    data: {
+      name: `Test City ${timestamp}`,
+      slug: `test-city-${timestamp}`,
+      province: testProvince.id,
+      psgcCode: `52${String(timestamp).slice(-8)}`,
+      isActive: true,
+    },
+  })
 
-    testBarangay = await payload.create({
-      collection: 'barangays',
-      data: {
-        name: `Test Barangay ${timestamp}`,
-        slug: `test-barangay-${timestamp}`,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        psgcCode: `53${String(timestamp).slice(-8)}`,
-        isActive: true,
-      },
-    })
+  testBarangay = await payload.create({
+    collection: 'barangays',
+    data: {
+      name: `Test Barangay ${timestamp}`,
+      slug: `test-barangay-${timestamp}`,
 
-    testDevelopment = await payload.create({
-      collection: 'developments',
-      data: {
-        name: `Test Development ${timestamp}`,
-        slug: `test-development-${timestamp}`,
-        barangay: testBarangay.id,
-        isActive: true,
-      },
-    })
+      city: testCity.id,
+      psgcCode: `53${String(timestamp).slice(-8)}`,
+      isActive: true,
+    },
+  })
+
+  testDevelopment = await payload.create({
+    collection: 'developments',
+    data: {
+      name: `Test Development ${timestamp}`,
+      slug: `test-development-${timestamp}`,
+      city: testCity.psgcCode!,
+      barangay: testBarangay.psgcCode!,
+      isActive: true,
+    },
+  })
 })
 
 afterAll(async () => {
@@ -147,15 +148,16 @@ describe('Listings Validation - Preselling', () => {
           modelName: 'Model A',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
-          indicativePrice: 5000000,
+          transactionType: ['sale'],
+          indicativePriceMin: 5000000,
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAdmin,
       }),
     ).rejects.toThrow('Preselling listings must have a Development selected')
@@ -170,16 +172,17 @@ describe('Listings Validation - Preselling', () => {
           listingType: 'preselling',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
-          indicativePrice: 5000000,
+          indicativePriceMin: 5000000,
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAdmin,
       }),
     ).rejects.toThrow('Preselling listings must have a Model Name')
@@ -195,15 +198,16 @@ describe('Listings Validation - Preselling', () => {
           modelName: 'Model A',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAdmin,
       }),
     ).rejects.toThrow(/Indicative Price or a Price Range/)
@@ -219,17 +223,18 @@ describe('Listings Validation - Preselling', () => {
           modelName: 'Model A',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
           indicativePriceMin: 10000000,
           indicativePriceMax: 5000000, // Max less than min
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAdmin,
       }),
     ).rejects.toThrow(/Min cannot be greater than/)
@@ -245,15 +250,16 @@ describe('Listings Validation - Preselling', () => {
           modelName: 'Model A',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
-          indicativePrice: 5000000,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+          indicativePriceMin: 5000000,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAdmin,
       }),
     ).rejects.toThrow(/Minimum Lot Area or Minimum Floor Area/)
@@ -269,17 +275,18 @@ describe('Listings Validation - Preselling', () => {
           modelName: 'Model A',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
-          indicativePrice: 5000000,
+          indicativePriceMin: 5000000,
           minFloorAreaSqm: 50,
           price: 5000000, // Resale-only field
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAdmin,
       }),
     ).rejects.toThrow(/resale-only fields/)
@@ -294,16 +301,17 @@ describe('Listings Validation - Preselling', () => {
         modelName: 'Model A',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         development: testDevelopment.id,
-        indicativePrice: 5000000,
+        indicativePriceMin: 5000000,
         minFloorAreaSqm: 50,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'draft',
       },
+      draft: true,
       user: testAdmin,
     })
 
@@ -323,13 +331,14 @@ describe('Listings Validation - Resale', () => {
           listingType: 'resale',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+          transactionType: ['sale'],
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAgent,
       }),
     ).rejects.toThrow(/must have a valid Price/)
@@ -344,14 +353,15 @@ describe('Listings Validation - Resale', () => {
           listingType: 'resale',
           propertyCategory: testCategory.id,
           propertyType: testLotType.id, // Lot type
-          transactionType: 'sale',
+          transactionType: ['sale'],
           price: 5000000,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAgent,
       }),
     ).rejects.toThrow(/must have a valid Lot Area/)
@@ -366,15 +376,16 @@ describe('Listings Validation - Resale', () => {
           listingType: 'resale',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           price: 5000000,
           modelName: 'Model A', // Preselling-only field
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAgent,
       }),
     ).rejects.toThrow(/preselling-only fields/)
@@ -388,14 +399,15 @@ describe('Listings Validation - Resale', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'draft',
       },
+      draft: true,
       user: testAgent,
     })
 

@@ -1,0 +1,203 @@
+﻿src/app/(frontend)/(agent)/listings/[id]/edit/page.tsx(56,66): error TS2339: Property 'id' does not exist on type 'never'.
+src/app/(frontend)/(agent)/listings/[id]/edit/page.tsx(57,78): error TS2339: Property 'id' does not exist on type 'never'.
+src/app/(frontend)/(agent)/listings/[id]/edit/page.tsx(132,36): error TS2322: Type '{ title: string; description: { [k: string]: unknown; root: { type: string; children: { type: any; version: number; [k: string]: unknown; }[]; direction: ("ltr" | "rtl") | null; format: "left" | "start" | "center" | "right" | "end" | "justify" | ""; indent: number; version: number; }; } | undefined; ... 27 more ...;...' is not assignable to type 'Partial<{ title: string; propertyCategoryId: number; propertyTypeId: number; listingType: "resale" | "preselling"; transactionType: "sale" | "rent"; cityId: number; barangayId: number; fullAddress: string; ... 20 more ...; presellingNotes?: string | undefined; }> & { ...; }'.
+  Type '{ title: string; description: { [k: string]: unknown; root: { type: string; children: { type: any; version: number; [k: string]: unknown; }[]; direction: ("ltr" | "rtl") | null; format: "left" | "start" | "center" | "right" | "end" | "justify" | ""; indent: number; version: number; }; } | undefined; ... 27 more ...;...' is not assignable to type 'Partial<{ title: string; propertyCategoryId: number; propertyTypeId: number; listingType: "resale" | "preselling"; transactionType: "sale" | "rent"; cityId: number; barangayId: number; fullAddress: string; ... 20 more ...; presellingNotes?: string | undefined; }>'.
+    Types of property 'transactionType' are incompatible.
+      Type '("sale" | "rent")[]' is not assignable to type '"sale" | "rent" | undefined'.
+src/app/(frontend)/(agent)/listings/[id]/page.tsx(32,68): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/listings/[id]/page.tsx(33,80): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/listings/page.tsx(83,68): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/listings/page.tsx(84,76): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/mls/[id]/page.tsx(24,68): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/mls/[id]/page.tsx(25,80): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/mls/page.tsx(87,82): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/mls/page.tsx(89,75): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/shared-links/new/page.tsx(29,68): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/(agent)/shared-links/new/page.tsx(30,80): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/(frontend)/share/[token]/page.tsx(70,16): error TS2352: Conversion of type 'string' to type 'City' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/app/(frontend)/share/[token]/page.tsx(71,20): error TS2352: Conversion of type 'string' to type 'Barangay' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/app/(frontend)/share/[token]/page.tsx(92,16): error TS2367: This comparison appears to be unintentional because the types '("sale" | "rent")[]' and 'string' have no overlap.
+src/components/AgentListingsGrid.tsx(93,73): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(94,40): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(98,42): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(99,47): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(189,79): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(190,45): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(197,87): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/AgentListingsGrid.tsx(198,49): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(138,71): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(139,38): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(143,40): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(144,45): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(251,93): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(252,52): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(260,52): error TS2339: Property 'name' does not exist on type 'never'.
+src/components/ListingsCardView/index.tsx(261,56): error TS2339: Property 'name' does not exist on type 'never'.
+src/hooks/listings/validatePropertyClassification.ts(34,27): error TS2339: Property 'category' does not exist on type 'PropertyType'.
+src/hooks/listings/validatePropertyClassification.ts(35,24): error TS2339: Property 'category' does not exist on type 'PropertyType'.
+src/hooks/listings/validatePropertyClassification.ts(36,24): error TS2339: Property 'category' does not exist on type 'PropertyType'.
+src/payload.config.base.ts(42,7): error TS2353: Object literal may only specify known properties, and 'favicon' does not exist in type 'MetaConfig'.
+src/payload.config.base.ts(47,9): error TS2322: Type '() => React.JSX.Element' is not assignable to type 'CustomComponent<Record<string, any>> | undefined'.
+src/payload.config.base.ts(48,9): error TS2322: Type '() => React.JSX.Element' is not assignable to type 'CustomComponent<Record<string, any>> | undefined'.
+src/scripts/add-columns.ts(2,16): error TS7016: Could not find a declaration file for module 'pg'. 'D:/twr/twr-mls/node_modules/.pnpm/pg@8.17.2/node_modules/pg/esm/index.mjs' implicitly has an 'any' type.
+  If the 'pg' package actually exposes this module, consider sending a pull request to amend 'https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pg'
+src/scripts/check-listings-table.ts(1,22): error TS7016: Could not find a declaration file for module 'pg'. 'D:/twr/twr-mls/node_modules/.pnpm/pg@8.17.2/node_modules/pg/esm/index.mjs' implicitly has an 'any' type.
+  If the 'pg' package actually exposes this module, consider sending a pull request to amend 'https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pg'
+src/scripts/check-listings-table.ts(17,22): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/scripts/check-listings-table.ts(20,35): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/scripts/check-listings-table.ts(21,39): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/scripts/check-listings-table.ts(22,37): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/scripts/check-listings-table.ts(23,41): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/scripts/seed-property-classification.ts(61,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(73,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(85,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(97,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(175,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(187,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(199,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(214,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/seed-property-classification.ts(226,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/scripts/sync-locations.ts(63,50): error TS2345: Argument of type '{ collection: "cities"; data: { name: any; slug: any; psgcCode: any; isActive: true; }; }' is not assignable to parameter of type 'Options<"cities", CitiesSelect<false> | CitiesSelect<true>>'.
+  Type '{ collection: "cities"; data: { name: any; slug: any; psgcCode: any; isActive: true; }; }' is not assignable to type '{ data: DraftDataFromCollectionSlug<"cities">; draft: true; } & BaseOptions<"cities", CitiesSelect<false> | CitiesSelect<true>>'.
+    Property 'draft' is missing in type '{ collection: "cities"; data: { name: any; slug: any; psgcCode: any; isActive: true; }; }' but required in type '{ data: DraftDataFromCollectionSlug<"cities">; draft: true; }'.
+src/seeds/property-classifications.seed.ts(175,13): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+src/src/components/ListingsNav.tsx(1,29): error TS2307: Cannot find module '../../components/ListingsNav' or its corresponding type declarations.
+src/src/components/StatusField.tsx(1,29): error TS2307: Cannot find module '../../components/StatusField' or its corresponding type declarations.
+tests/int/access-control.int.spec.ts(22,19): error TS2304: Cannot find name 'Province'.
+tests/int/access-control.int.spec.ts(94,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/access-control.int.spec.ts(126,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/access-control.int.spec.ts(142,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/access-control.int.spec.ts(146,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/access-control.int.spec.ts(147,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/access-control.int.spec.ts(163,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/access-control.int.spec.ts(167,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/access-control.int.spec.ts(168,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/access-control.int.spec.ts(184,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/access-control.int.spec.ts(188,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/access-control.int.spec.ts(189,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/access-control.int.spec.ts(268,20): error TS2339: Property 'propertyOwnerName' does not exist on type 'Listing'.
+tests/int/access-control.int.spec.ts(269,20): error TS2339: Property 'propertyOwnerContact' does not exist on type 'Listing'.
+tests/int/access-control.int.spec.ts(281,20): error TS2339: Property 'propertyOwnerName' does not exist on type 'Listing'.
+tests/int/access-control.int.spec.ts(282,20): error TS2339: Property 'propertyOwnerContact' does not exist on type 'Listing'.
+tests/int/access-control.int.spec.ts(305,20): error TS2339: Property 'propertyOwnerName' does not exist on type 'Listing'.
+tests/int/access-control.int.spec.ts(306,20): error TS2339: Property 'propertyOwnerContact' does not exist on type 'Listing'.
+tests/int/access-control.int.spec.ts(325,20): error TS2339: Property 'propertyOwnerName' does not exist on type 'Listing'.
+tests/int/critical-workflows.int.spec.ts(98,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/critical-workflows.int.spec.ts(142,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/critical-workflows.int.spec.ts(154,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/critical-workflows.int.spec.ts(210,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(217,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(218,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(266,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(270,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(271,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(323,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(327,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(328,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(367,63): error TS2339: Property 'id' does not exist on type 'never'.
+tests/int/critical-workflows.int.spec.ts(403,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(407,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(408,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(417,44): error TS2345: Argument of type '{ collection: "external-share-links"; data: { listing: number; isActive: true; }; user: User; overrideAccess: false; }' is not assignable to parameter of type 'Options<"external-share-links", ExternalShareLinksSelect<false> | ExternalShareLinksSelect<true>>'.
+  Type '{ collection: "external-share-links"; data: { listing: number; isActive: true; }; user: User; overrideAccess: false; }' is not assignable to type '{ data: DraftDataFromCollectionSlug<"external-share-links">; draft: true; } & BaseOptions<"external-share-links", ExternalShareLinksSelect<false> | ExternalShareLinksSelect<...>>'.
+    Property 'draft' is missing in type '{ collection: "external-share-links"; data: { listing: number; isActive: true; }; user: User; overrideAccess: false; }' but required in type '{ data: DraftDataFromCollectionSlug<"external-share-links">; draft: true; }'.
+tests/int/critical-workflows.int.spec.ts(476,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(480,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(481,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(499,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(504,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(505,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(524,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(528,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(529,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(547,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/critical-workflows.int.spec.ts(552,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(553,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/critical-workflows.int.spec.ts(564,28): error TS2551: Property 'indicativePrice' does not exist on type 'Listing'. Did you mean 'indicativePriceMin'?
+tests/int/document-visibility.int.spec.ts(22,19): error TS2304: Cannot find name 'Province'.
+tests/int/document-visibility.int.spec.ts(83,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/document-visibility.int.spec.ts(115,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/document-visibility.int.spec.ts(131,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/document-visibility.int.spec.ts(135,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/document-visibility.int.spec.ts(136,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/document-visibility.int.spec.ts(166,22): error TS2345: Argument of type '{ collection: "documents"; data: { listing: number; type: "other"; visibility: "private"; }; user: User; overrideAccess: false; }' is not assignable to parameter of type 'Options<"documents", DocumentsSelect<false> | DocumentsSelect<true>>'.
+  Type '{ collection: "documents"; data: { listing: number; type: "other"; visibility: "private"; }; user: User; overrideAccess: false; }' is not assignable to type '{ data: DraftDataFromCollectionSlug<"documents">; draft: true; } & BaseOptions<"documents", DocumentsSelect<false> | DocumentsSelect<true>>'.
+    Property 'draft' is missing in type '{ collection: "documents"; data: { listing: number; type: "other"; visibility: "private"; }; user: User; overrideAccess: false; }' but required in type '{ data: DraftDataFromCollectionSlug<"documents">; draft: true; }'.
+tests/int/document-visibility.int.spec.ts(183,38): error TS2345: Argument of type '{ collection: "documents"; data: { listing: number; type: "other"; visibility: "private"; }; user: User; overrideAccess: false; }' is not assignable to parameter of type 'Options<"documents", DocumentsSelect<false> | DocumentsSelect<true>>'.
+  Type '{ collection: "documents"; data: { listing: number; type: "other"; visibility: "private"; }; user: User; overrideAccess: false; }' is not assignable to type '{ data: DraftDataFromCollectionSlug<"documents">; draft: true; } & BaseOptions<"documents", DocumentsSelect<false> | DocumentsSelect<true>>'.
+    Property 'draft' is missing in type '{ collection: "documents"; data: { listing: number; type: "other"; visibility: "private"; }; user: User; overrideAccess: false; }' but required in type '{ data: DraftDataFromCollectionSlug<"documents">; draft: true; }'.
+tests/int/document-visibility.int.spec.ts(200,38): error TS2345: Argument of type '{ collection: "documents"; data: { listing: number; type: "other"; }; user: User; overrideAccess: false; }' is not assignable to parameter of type 'Options<"documents", DocumentsSelect<false> | DocumentsSelect<true>>'.
+  Type '{ collection: "documents"; data: { listing: number; type: "other"; }; user: User; overrideAccess: false; }' is not assignable to type '{ data: DraftDataFromCollectionSlug<"documents">; draft: true; } & BaseOptions<"documents", DocumentsSelect<false> | DocumentsSelect<true>>'.
+    Property 'draft' is missing in type '{ collection: "documents"; data: { listing: number; type: "other"; }; user: User; overrideAccess: false; }' but required in type '{ data: DraftDataFromCollectionSlug<"documents">; draft: true; }'.
+tests/int/listings-validation.int.spec.ts(62,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/listings-validation.int.spec.ts(72,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/listings-validation.int.spec.ts(105,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/listings-validation.int.spec.ts(150,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(154,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(155,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(173,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(178,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(179,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(198,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(202,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(203,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(222,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(228,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(229,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(248,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(252,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(253,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(272,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(278,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(279,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(297,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(302,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(303,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(326,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(328,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(329,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(347,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(350,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(351,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(369,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(373,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(374,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(391,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/listings-validation.int.spec.ts(394,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/listings-validation.int.spec.ts(395,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/property-classification.int.spec.ts(62,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/property-classification.int.spec.ts(72,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/property-classification.int.spec.ts(126,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/property-classification.int.spec.ts(158,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/property-classification.int.spec.ts(161,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/property-classification.int.spec.ts(162,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/property-classification.int.spec.ts(181,11): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/property-classification.int.spec.ts(184,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/property-classification.int.spec.ts(185,11): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/property-classification.int.spec.ts(203,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/property-classification.int.spec.ts(205,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/property-classification.int.spec.ts(206,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(21,19): error TS2304: Cannot find name 'Province'.
+tests/int/status-transitions.int.spec.ts(92,9): error TS2353: Object literal may only specify known properties, and 'category' does not exist in type '(Omit<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<PropertyType, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/status-transitions.int.spec.ts(124,9): error TS2353: Object literal may only specify known properties, and 'filterProvince' does not exist in type '(Omit<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id"> & Partial<Pick<Barangay, "createdAt" | "deletedAt" | "updatedAt" | "id">>) | DraftDataFromCollectionSlug<...>'.
+tests/int/status-transitions.int.spec.ts(155,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(159,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(160,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(188,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(192,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(193,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(221,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(225,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(226,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(254,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(258,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(259,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(287,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(291,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(292,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(320,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(324,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(325,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(354,9): error TS2322: Type 'string' is not assignable to type '("sale" | "rent")[]'.
+tests/int/status-transitions.int.spec.ts(358,9): error TS2322: Type 'number' is not assignable to type 'string'.
+tests/int/status-transitions.int.spec.ts(359,9): error TS2322: Type 'number' is not assignable to type 'string'.

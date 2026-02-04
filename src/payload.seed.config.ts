@@ -14,5 +14,6 @@ export default buildConfig({
             connectionString: process.env.DATABASE_URL || '',
         },
         migrationDir: path.resolve(dirname, 'seeds'),
+        push: false, // Allowed to push
     }),
 })

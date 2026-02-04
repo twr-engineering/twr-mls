@@ -6,7 +6,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   submitted: ['published', 'needs_revision', 'rejected'],
   needs_revision: ['submitted'],
   published: ['draft'],
-  rejected: ['draft'],
+  rejected: ['draft', 'needs_revision'],
 }
 
 /**
@@ -50,6 +50,10 @@ export const validateStatusTransition: CollectionBeforeChangeHook<Listing> = asy
   if (req.user?.role === 'agent') {
     if (newStatus !== 'submitted') {
       throw new Error('Agents can only submit listings for review')
+    }
+    // Agents can transition from 'draft' or 'needs_revision' to 'submitted'
+    if (oldStatus !== 'draft' && oldStatus !== 'needs_revision') {
+      throw new Error('You can only submit listings from Draft or Needs Revision status')
     }
   }
 

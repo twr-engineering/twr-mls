@@ -2,8 +2,8 @@ import type { Access, FieldAccess } from 'payload'
 import type { UserRole } from '@/collections/Users'
 
 type User = {
-  id: number
-  email: string
+  id: number | string
+  email?: string
   role?: UserRole
 }
 
@@ -20,7 +20,8 @@ type AccessArgs = {
  * @returns True if the user has one of the roles, false otherwise
  */
 export const hasRole = (user: User | null | undefined, roles: UserRole[]): boolean => {
-  if (!user || !user.role) return false
+  if (!user || typeof user !== 'object') return false
+  if (!user.role) return false
   if (!roles || !Array.isArray(roles)) return false
   return roles.includes(user.role as UserRole)
 }

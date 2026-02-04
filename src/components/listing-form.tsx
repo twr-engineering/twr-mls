@@ -118,8 +118,15 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
   const form = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
     defaultValues: initialData || {
+      title: '',
+      description: '',
       listingType: 'resale',
       transactionType: 'sale',
+      propertyCategoryId: 0,
+      propertyTypeId: 0,
+      cityId: 0,
+      barangayId: 0,
+      fullAddress: '',
       price: 0,
     },
   })
@@ -142,11 +149,11 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
   // Filter cities by selected province
   const filteredCities = selectedProvinceId
     ? cities.filter((city) => {
-        if (typeof city.province === 'object' && city.province !== null) {
-          return city.province.id === selectedProvinceId
-        }
-        return city.province === selectedProvinceId
-      })
+      if (typeof city.province === 'object' && city.province !== null) {
+        return city.province.id === selectedProvinceId
+      }
+      return city.province === selectedProvinceId
+    })
     : cities
 
   useEffect(() => {

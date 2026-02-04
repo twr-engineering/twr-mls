@@ -32,6 +32,7 @@ describe('Property Classification Validation', () => {
         firstName: 'Test',
         lastName: 'Agent',
       },
+      draft: true,
     })
 
     // Create test categories
@@ -42,6 +43,7 @@ describe('Property Classification Validation', () => {
         slug: `test-category-1-${timestamp}`,
         isActive: true,
       },
+      draft: true,
     })
 
     category2 = await payload.create({
@@ -51,6 +53,7 @@ describe('Property Classification Validation', () => {
         slug: `test-category-2-${timestamp}`,
         isActive: true,
       },
+      draft: true,
     })
 
     // Create types in different categories
@@ -59,9 +62,10 @@ describe('Property Classification Validation', () => {
       data: {
         name: `Type in Cat 1 ${timestamp}`,
         slug: `type-in-cat-1-${timestamp}`,
-        category: category1.id,
+        propertyCategory: category1.id,
         isActive: true,
       },
+      draft: true,
     })
 
     typeInCat2 = await payload.create({
@@ -69,9 +73,10 @@ describe('Property Classification Validation', () => {
       data: {
         name: `Type in Cat 2 ${timestamp}`,
         slug: `type-in-cat-2-${timestamp}`,
-        category: category2.id,
+        propertyCategory: category2.id,
         isActive: true,
       },
+      draft: true,
     })
 
     // Create subtypes
@@ -83,6 +88,7 @@ describe('Property Classification Validation', () => {
         propertyType: typeInCat1.id,
         isActive: true,
       },
+      draft: true,
     })
 
     subtypeInType2 = await payload.create({
@@ -93,6 +99,7 @@ describe('Property Classification Validation', () => {
         propertyType: typeInCat2.id,
         isActive: true,
       },
+      draft: true,
     })
 
     // Create location data
@@ -105,6 +112,7 @@ describe('Property Classification Validation', () => {
         region: 'Test Region',
         isActive: true,
       },
+      draft: true,
     })
 
     testCity = await payload.create({
@@ -116,6 +124,7 @@ describe('Property Classification Validation', () => {
         psgcCode: `42${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testBarangay = await payload.create({
@@ -123,11 +132,12 @@ describe('Property Classification Validation', () => {
       data: {
         name: `Test Barangay Class ${timestamp}`,
         slug: `test-barangay-class-${timestamp}`,
-        filterProvince: testProvince.id,
+
         city: testCity.id,
         psgcCode: `43${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
   })
 
@@ -155,14 +165,15 @@ describe('Property Classification Validation', () => {
           listingType: 'resale',
           propertyCategory: category1.id,
           propertyType: typeInCat2.id, // Type belongs to category2
-          transactionType: 'sale',
+          transactionType: ['sale'],
           price: 5000000,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAgent,
       }),
     ).rejects.toThrow(/belongs to category/)
@@ -178,14 +189,15 @@ describe('Property Classification Validation', () => {
           propertyCategory: category1.id,
           propertyType: typeInCat1.id,
           propertySubtype: subtypeInType2.id, // Subtype belongs to typeInCat2
-          transactionType: 'sale',
+          transactionType: ['sale'],
           price: 5000000,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '123 Test St',
           status: 'draft',
         },
+        draft: true,
         user: testAgent,
       }),
     ).rejects.toThrow(/belongs to type/)
@@ -200,13 +212,14 @@ describe('Property Classification Validation', () => {
         propertyCategory: category1.id,
         propertyType: typeInCat1.id,
         propertySubtype: subtypeInType1.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        city: testCity.id,
-        barangay: testBarangay.id,
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'draft',
       },
+      draft: true,
       user: testAgent,
     })
 

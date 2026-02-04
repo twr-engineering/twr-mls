@@ -45,6 +45,7 @@ describe('Critical Workflows E2E', () => {
         firstName: 'Agent',
         lastName: 'One',
       },
+      draft: true,
     })
 
     testAgent2 = await payload.create({
@@ -56,6 +57,7 @@ describe('Critical Workflows E2E', () => {
         firstName: 'Agent',
         lastName: 'Two',
       },
+      draft: true,
     })
 
     testApprover = await payload.create({
@@ -67,6 +69,7 @@ describe('Critical Workflows E2E', () => {
         firstName: 'Approver',
         lastName: 'User',
       },
+      draft: true,
     })
 
     testAdmin = await payload.create({
@@ -78,6 +81,7 @@ describe('Critical Workflows E2E', () => {
         firstName: 'Admin',
         lastName: 'User',
       },
+      draft: true,
     })
 
     // Create test property classification
@@ -88,6 +92,7 @@ describe('Critical Workflows E2E', () => {
         slug: `e2e-residential-${timestamp}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testType = await payload.create({
@@ -95,9 +100,10 @@ describe('Critical Workflows E2E', () => {
       data: {
         name: `E2E House ${timestamp}`,
         slug: `e2e-house-${timestamp}`,
-        category: testCategory.id,
+        propertyCategory: testCategory.id,
         isActive: true,
       },
+      draft: true,
     })
 
     // Create test locations
@@ -110,6 +116,7 @@ describe('Critical Workflows E2E', () => {
         region: 'E2E Region',
         isActive: true,
       },
+      draft: true,
     })
 
     testCity = await payload.create({
@@ -121,6 +128,7 @@ describe('Critical Workflows E2E', () => {
         psgcCode: `92${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testCity2 = await payload.create({
@@ -132,6 +140,7 @@ describe('Critical Workflows E2E', () => {
         psgcCode: `93${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testBarangay = await payload.create({
@@ -139,11 +148,12 @@ describe('Critical Workflows E2E', () => {
       data: {
         name: `E2E Barangay 1 ${timestamp}`,
         slug: `e2e-barangay-1-${timestamp}`,
-        filterProvince: testProvince.id,
+
         city: testCity.id,
         psgcCode: `94${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testBarangay2 = await payload.create({
@@ -151,11 +161,12 @@ describe('Critical Workflows E2E', () => {
       data: {
         name: `E2E Barangay 2 ${timestamp}`,
         slug: `e2e-barangay-2-${timestamp}`,
-        filterProvince: testProvince.id,
+
         city: testCity2.id,
         psgcCode: `95${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testDevelopment = await payload.create({
@@ -163,9 +174,11 @@ describe('Critical Workflows E2E', () => {
       data: {
         name: `E2E Development ${timestamp}`,
         slug: `e2e-development-${timestamp}`,
-        barangay: testBarangay.id,
+        city: testCity.psgcCode!,
+        barangay: testBarangay.psgcCode!,
         isActive: true,
       },
+      draft: true,
     })
   })
 
@@ -207,18 +220,19 @@ describe('Critical Workflows E2E', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
         lotAreaSqm: 100,
         floorAreaSqm: 80,
         bedrooms: 3,
         bathrooms: 2,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 E2E Street',
         status: 'draft',
       },
+      draft: true,
       user: testAgent,
       overrideAccess: false,
     })
@@ -263,12 +277,12 @@ describe('Critical Workflows E2E', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 3000000,
         floorAreaSqm: 50,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '456 E2E Avenue',
         status: 'draft',
       },
@@ -320,15 +334,16 @@ describe('Critical Workflows E2E', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 4000000,
         floorAreaSqm: 60,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '789 E2E Road',
         status: 'published',
       },
+      draft: true,
       user: testAgent2,
       overrideAccess: false,
     })
@@ -356,7 +371,7 @@ describe('Critical Workflows E2E', () => {
     const cityFiltered = await payload.find({
       collection: 'listings',
       where: {
-        and: [{ status: { equals: 'published' } }, { city: { equals: testCity.id } }],
+        and: [{ status: { equals: 'published' } }, { city: { equals: testCity.psgcCode! } }],
       },
       user: testAgent,
       overrideAccess: false,
@@ -364,8 +379,7 @@ describe('Critical Workflows E2E', () => {
 
     expect(
       cityFiltered.docs.every((doc) => {
-        const city = typeof doc.city === 'object' ? doc.city?.id : doc.city
-        return city === testCity.id
+        return doc.city === testCity.psgcCode!
       }),
     ).toBe(true)
 
@@ -400,12 +414,12 @@ describe('Critical Workflows E2E', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 2500000,
         floorAreaSqm: 45,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '321 E2E Boulevard',
         status: 'published',
       },
@@ -420,6 +434,7 @@ describe('Critical Workflows E2E', () => {
         listing: listing.id,
         isActive: true,
       },
+      draft: true,
       user: testAgent,
       overrideAccess: false,
     })
@@ -473,16 +488,17 @@ describe('Critical Workflows E2E', () => {
           modelName: 'Model A',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
-          indicativePrice: 3000000,
+          transactionType: ['sale'],
+          indicativePriceMin: 3000000,
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '111 E2E Street',
           status: 'draft',
         },
         user: testAdmin,
+        draft: true,
         overrideAccess: false,
       }),
     ).rejects.toThrow(/Development/)
@@ -496,17 +512,18 @@ describe('Critical Workflows E2E', () => {
           listingType: 'preselling',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
-          indicativePrice: 3000000,
+          indicativePriceMin: 3000000,
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '222 E2E Street',
           status: 'draft',
         },
         user: testAdmin,
+        draft: true,
         overrideAccess: false,
       }),
     ).rejects.toThrow(/Model Name/)
@@ -521,16 +538,17 @@ describe('Critical Workflows E2E', () => {
           modelName: 'Model B',
           propertyCategory: testCategory.id,
           propertyType: testType.id,
-          transactionType: 'sale',
+          transactionType: ['sale'],
           development: testDevelopment.id,
           minFloorAreaSqm: 50,
-          filterProvince: testProvince.id,
-          city: testCity.id,
-          barangay: testBarangay.id,
+
+          city: 'Test City',
+          barangay: 'Test Barangay',
           fullAddress: '333 E2E Street',
           status: 'draft',
         },
         user: testAdmin,
+        draft: true,
         overrideAccess: false,
       }),
     ).rejects.toThrow(/Price/)
@@ -544,23 +562,24 @@ describe('Critical Workflows E2E', () => {
         modelName: 'Model C',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         development: testDevelopment.id,
-        indicativePrice: 4000000,
+        indicativePriceMin: 4000000,
         minFloorAreaSqm: 60,
-        filterProvince: testProvince.id,
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '444 E2E Street',
         status: 'draft',
       },
       user: testAdmin,
+      draft: true,
       overrideAccess: false,
     })
 
     expect(validPreselling).toBeDefined()
     expect(validPreselling.listingType).toBe('preselling')
     expect(validPreselling.modelName).toBe('Model C')
-    expect(validPreselling.indicativePrice).toBe(4000000)
+    expect(validPreselling.indicativePriceMin).toBe(4000000)
   })
 })
