@@ -1,30 +1,18 @@
+
 import 'dotenv/config'
 import { getPayload } from 'payload'
-import config from '@payload-config'
+import config from '../payload.seed.config'
 
 async function checkTables() {
-    console.log('Connecting to database via Payload...')
-
     const payload = await getPayload({ config })
 
     try {
-        console.log('Checking existing tables...')
-
-        // Query to list all tables
-        const result = await payload.db.drizzle.execute(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      ORDER BY table_name;
-    `)
-
-        console.log('Tables in database:')
-        console.log(result.rows)
-    } catch (error) {
-        console.error('Error:', error)
-    } finally {
-        process.exit(0)
+        const result = await payload.db.drizzle.execute('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'')
+        console.log('Tables found:', result.rows.map((r: any) => r.table_name).sort())
+    } catch (e) {
+        console.error('Error fetching tables:', e)
     }
+    process.exit(0)
 }
 
 checkTables()
