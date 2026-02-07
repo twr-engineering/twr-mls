@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Filter, X, Share } from 'lucide-react'
+import { Filter, X, Share, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Barangay as PayloadBarangay, Development } from '@/payload-types'
 
@@ -47,6 +47,7 @@ type SearchFiltersProps = {
 export function SearchFilters({ availableLocations = {}, currentFilters }: SearchFiltersProps) {
   const router = useRouter()
   const _searchParams = useSearchParams()
+  const [isLinkCopied, setIsLinkCopied] = useState(false)
 
   const [listingType, setListingType] = useState(currentFilters.listingType || 'both')
   const [transactionType, setTransactionType] = useState(currentFilters.transactionType || '')
@@ -154,11 +155,14 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
       // Copy the share URL to clipboard and show success
       try {
         await navigator.clipboard.writeText(data.shareUrl)
-        toast.success('Link copied! Ready to share curated listings.')
+        setIsLinkCopied(true)
+        // Reset button after 3 seconds
+        setTimeout(() => setIsLinkCopied(false), 3000)
       } catch {
         // Fallback if clipboard fails (e.g., document not focused)
         prompt('Copy this link to share:', data.shareUrl)
-        toast.success('Share link ready!')
+        setIsLinkCopied(true)
+        setTimeout(() => setIsLinkCopied(false), 3000)
       }
     } catch (error) {
       console.error('Share error:', error)
@@ -175,9 +179,23 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
             Search Filters
           </div>
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={handleShareSearch} className="gap-2">
-          <Share className="h-4 w-4" />
-          Share Curated Search
+        <Button
+          variant={isLinkCopied ? 'default' : 'outline'}
+          size="sm"
+          onClick={handleShareSearch}
+          className={`gap-2 transition-all ${isLinkCopied ? 'bg-green-600 hover:bg-green-700' : ''}`}
+        >
+          {isLinkCopied ? (
+            <>
+              <Check className="h-4 w-4" />
+              Link Copied!
+            </>
+          ) : (
+            <>
+              <Share className="h-4 w-4" />
+              Share Curated Search
+            </>
+          )}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
