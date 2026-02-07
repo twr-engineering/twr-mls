@@ -1,4 +1,4 @@
-import { searchListings, getCities } from '@/lib/payload/api'
+import { searchListings, getCities, getAvailableLocations } from '@/lib/payload/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SearchFilters } from '@/components/search-filters'
@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 type SearchParams = Promise<{
   listingType?: string
   transactionType?: string
+  provinceId?: string
   cityId?: string
   barangayId?: string
   developmentId?: string
@@ -30,6 +31,7 @@ export default async function MLSSearchPage({
   const filters = {
     listingType: (params.listingType as 'resale' | 'preselling' | 'both') || 'both',
     transactionType: params.transactionType as 'sale' | 'rent' | undefined,
+    provinceId: params.provinceId,
     cityId: params.cityId,
     barangayId: params.barangayId,
     developmentId: params.developmentId ? parseInt(params.developmentId) : undefined,
@@ -41,7 +43,8 @@ export default async function MLSSearchPage({
   }
 
   const listings = await searchListings(filters)
-  const cities = await getCities()
+  // Fetch available locations instead of raw cities
+  const availableLocations = await getAvailableLocations()
 
   return (
     <div className="space-y-6">
@@ -52,7 +55,7 @@ export default async function MLSSearchPage({
         </p>
       </div>
 
-      <SearchFilters cities={cities} currentFilters={filters} />
+      <SearchFilters availableLocations={availableLocations} currentFilters={filters} />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

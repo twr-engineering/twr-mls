@@ -11,6 +11,7 @@ import * as migration_20260201_162712_rename_preselling_area_fields from './2026
 import * as migration_20260201_162841_add_indicative_turnover_field from './20260201_162841_add_indicative_turnover_field';
 import * as migration_20260204_073314_fix_missing_transaction_type_table from './20260204_073314_fix_missing_transaction_type_table';
 import * as migration_20260204_075237_fix_missing_preselling_columns from './20260204_075237_fix_missing_preselling_columns';
+import * as migration_20260207_121858 from './20260207_121858';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20260204_075237_fix_missing_preselling_columns.up,
     down: migration_20260204_075237_fix_missing_preselling_columns.down,
-    name: '20260204_075237_fix_missing_preselling_columns'
+    name: '20260204_075237_fix_missing_preselling_columns',
+  },
+  {
+    up: migration_20260207_121858.up,
+    down: migration_20260207_121858.down,
+    name: '20260207_121858'
   },
 ];

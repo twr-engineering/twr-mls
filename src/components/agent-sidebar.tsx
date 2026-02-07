@@ -71,11 +71,7 @@ export function AgentSidebar({ user, ...props }: AgentSidebarProps) {
       url: '/mls',
       icon: SearchIcon,
     },
-    {
-      title: 'Create Listing',
-      url: '/listings/new',
-      icon: PlusCircleIcon,
-    },
+
     {
       title: 'Shared Links',
       url: '/shared-links',

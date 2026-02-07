@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SearchableSelect } from './ui/searchable-select'
 import { Textarea } from '@/components/ui/textarea'
+import { SearchableSelect } from './ui/searchable-select'
+import { MultiSelect, Option } from './ui/multi-select'
 
 type ListingOption = {
   id: string | number
   label: string
   code?: string
+  type?: string // 'Mun', 'City', etc.
 }
 
 type ApiDoc = {
@@ -28,6 +30,7 @@ export type ListingFormData = {
   fullAddress?: string
   price?: number
   description?: string
+  provinceId?: string | number
   cityId?: string | number
   barangayId?: string | number
   developmentId?: string | number
@@ -70,6 +73,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
   const [description, setDescription] = useState(initialData?.description || '')
 
   // Relationships / options
+  const [provinces, setProvinces] = useState<ListingOption[]>([])
   const [cities, setCities] = useState<ListingOption[]>([])
   const [barangays, setBarangays] = useState<ListingOption[]>([])
   const [developments, setDevelopments] = useState<ListingOption[]>([])
@@ -78,6 +82,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
   const [subtypes, setSubtypes] = useState<ListingOption[]>([])
 
   // Location State (Payload IDs for filtering UI)
+  const [provinceId, setProvinceId] = useState<string>(initialData?.provinceId?.toString() || '')
   const [cityId, setCityId] = useState<string>(initialData?.cityId?.toString() || '')
   const [barangayId, setBarangayId] = useState<string>(initialData?.barangayId?.toString() || '')
   const [developmentId, setDevelopmentId] = useState<string>(initialData?.developmentId?.toString() || '')
@@ -88,6 +93,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   // Allow selecting one or both transaction types (sale, rent)
   // Handle both array and string (legacy)
+  // User requested simplify to multi-select, but schema supports multiple.
+  // We will use the MultiSelect component (array state).
   const [transactionTypes, setTransactionTypes] = useState<string[]>(
     Array.isArray(initialData?.transactionType)
       ? initialData.transactionType
@@ -95,6 +102,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         ? [initialData.transactionType]
         : []
   )
+
 
   // Property details
   const [floorAreaSqm, setFloorAreaSqm] = useState<string>(initialData?.floorAreaSqm?.toString() || '')
@@ -110,9 +118,12 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   // Pricing & Terms
   const [titleStatus, setTitleStatus] = useState<string>(initialData?.titleStatus || '')
-  const [paymentTerm, setPaymentTerm] = useState<string>(
-    initialData?.paymentTerms && initialData.paymentTerms.length > 0 ? initialData.paymentTerms[0] : ''
+
+  // Payment terms - Multi-select
+  const [paymentTerms, setPaymentTerms] = useState<string[]>(
+    initialData?.paymentTerms || []
   )
+
 
   // Media (images)
   const [imageFiles, setImageFiles] = useState<FileList | null>(null)
@@ -137,24 +148,24 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   // Load base options on mount
   useEffect(() => {
-    // 1. Fetch Cities from PSGC API
-    const loadCities = async () => {
+    // 1. Fetch Location Data (Provinces)
+    const loadProvinces = async () => {
       try {
-        const res = await fetch('https://psgc.cloud/api/cities')
-        if (!res.ok) throw new Error('Failed to fetch cities')
+        const res = await fetch('https://psgc.cloud/api/provinces')
+        if (!res.ok) throw new Error('Failed to fetch provinces')
         const data = await res.json()
         // Sort alphabetically
         data.sort((a: any, b: any) => a.name.localeCompare(b.name))
 
-        const cityOpts = data.map((c: any) => ({
-          id: c.code,
-          label: c.name,
-          code: c.code
+        const provOpts = data.map((p: any) => ({
+          id: p.code,
+          label: p.name,
+          code: p.code
         }))
-        setCities(cityOpts)
+        setProvinces(provOpts)
       } catch (e) {
-        console.error('City fetch error:', e)
-        setError('Failed to load cities from PSGC API.')
+        console.error('Province fetch error:', e)
+        setError('Failed to load provinces from PSGC API.')
       }
     }
 
@@ -170,8 +181,44 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
     }
 
     setIsLoading(true)
-    Promise.all([loadCities(), loadCategories()]).finally(() => setIsLoading(false))
+    Promise.all([loadProvinces(), loadCategories()]).finally(() => setIsLoading(false))
   }, [])
+
+  // Load cities when province changes
+  useEffect(() => {
+    if (!provinceId) {
+      setCities([])
+      setCityId('')
+      setBarangays([])
+      setBarangayId('')
+      setDevelopments([])
+      setDevelopmentId('')
+      return
+    }
+
+    void (async () => {
+      try {
+        // Fetch Cities/Municipalities for the selected province
+        const res = await fetch(`https://psgc.cloud/api/provinces/${provinceId}/cities-municipalities`)
+        if (!res.ok) throw new Error('Failed to fetch cities')
+        const data = await res.json()
+        // Sort alphabetically
+        data.sort((a: any, b: any) => a.name.localeCompare(b.name))
+
+        const cityOpts = data.map((c: any) => ({
+          id: c.code,
+          label: c.name,
+          code: c.code,
+          type: c.type // capture type (City, Mun, SubMun)
+        }))
+        setCities(cityOpts)
+        setCityId('')
+      } catch (e) {
+        console.error('City fetch error:', e)
+        setError('Failed to load cities for selected province.')
+      }
+    })()
+  }, [provinceId])
 
   // Load barangays when city (PSGC Code) changes
   useEffect(() => {
@@ -185,9 +232,25 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
     void (async () => {
       try {
+        // Determine if it's a city or municipality
+        const selectedCity = cities.find(c => String(c.id) === String(cityId))
+        const isMunicipality = selectedCity?.type === 'Mun'
+
         // Fetch Barangays from PSGC API
-        const res = await fetch(`https://psgc.cloud/api/cities/${cityId}/barangays`)
-        if (!res.ok) throw new Error('Failed to fetch barangays')
+        // Endpoint differs for City vs Municipality
+        const endpoint = isMunicipality
+          ? `https://psgc.cloud/api/municipalities/${cityId}/barangays`
+          : `https://psgc.cloud/api/cities/${cityId}/barangays`
+
+        const res = await fetch(endpoint)
+        if (!res.ok) {
+          // Fallback: if one fails, try the other? 
+          // Or just throw. Let's try to be robust. 
+          // If we guessed wrong or type is missing, maybe try the other.
+          // But relying on type should be enough if PSGC is consistent.
+          // Let's stick to type for now.
+          throw new Error(`Failed to fetch barangays (Status ${res.status})`)
+        }
         const data = await res.json()
         // Sort alphabetically
         data.sort((a: any, b: any) => a.name.localeCompare(b.name))
@@ -281,8 +344,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   const validateCurrentStep = () => {
     if (step === 1) {
-      if (!fullAddress || !cityId || !barangayId) {
-        setError('Please fill in all location fields (Address, City, Barangay).')
+      if (!fullAddress || !provinceId || !cityId || !barangayId) {
+        setError('Please fill in all location fields (Address, Province, City, Barangay).')
         return false
       }
     }
@@ -388,6 +451,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         description,
         city: cityPsgc, // Send PSGC Code
         barangay: barangayPsgc, // Send PSGC Code
+        province: provinceId,
+        provinceName: provinces.find((p) => String(p.id) === String(provinceId))?.label || '',
         development: developmentId ? Number(developmentId) : null,
         propertyCategory: categoryId ? Number(categoryId) : null,
         propertyType: typeId ? Number(typeId) : null,
@@ -404,8 +469,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         constructionYear: constructionYear ? Number(constructionYear) : null,
         tenure: tenure || null,
         titleStatus: titleStatus || null,
-        // Payload field is hasMany; we send an array with a single selected term
-        paymentTerms: paymentTerm ? [paymentTerm] : [],
+        // Payload field is hasMany; we send an array
+        paymentTerms: paymentTerms,
         // listingType and status defaults are handled by backend (resale + draft for agents)
         images: finalImageIds, // Send merged list
       }
@@ -493,14 +558,26 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                 <h2 className="text-sm font-semibold">Location</h2>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <Label>City {cities.length === 0 && !isLoading && <span className="text-xs text-destructive">(No cities loaded)</span>}</Label>
+                    <Label>Province</Label>
+                    <SearchableSelect
+                      options={provinces}
+                      value={provinceId}
+                      onChange={(val: string) => setProvinceId(val)}
+                      placeholder="Select province"
+                      searchPlaceholder="Search provinces..."
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>City {cities.length === 0 && !isLoading && provinceId && <span className="text-xs text-destructive">(No cities loaded)</span>}</Label>
                     <SearchableSelect
                       options={cities}
                       value={cityId}
                       onChange={(val: string) => setCityId(val)}
-                      placeholder="Select city"
+                      placeholder={provinceId ? 'Select city' : 'Select province first'}
                       searchPlaceholder="Search cities..."
-                      disabled={isLoading}
+                      disabled={isLoading || !provinceId}
                     />
                   </div>
 
@@ -811,46 +888,20 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
             <div className="space-y-6">
               {/* Transaction */}
               <div className="space-y-4">
-                {/* Transaction Type checkbox group (Multi-select) */}
                 <div className="max-w-xs space-y-2">
-                  <Label>Transaction Type</Label>
-                  <div className="flex flex-col gap-1 text-sm">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-3 w-3"
-                        disabled={isLoading}
-                        checked={transactionTypes.includes('sale')}
-                        onChange={(e) => {
-                          setTransactionTypes((prev) =>
-                            e.target.checked
-                              ? Array.from(new Set([...prev, 'sale']))
-                              : prev.filter((v) => v !== 'sale'),
-                          )
-                        }}
-                      />
-                      <span>For Sale</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-3 w-3"
-                        disabled={isLoading}
-                        checked={transactionTypes.includes('rent')}
-                        onChange={(e) => {
-                          setTransactionTypes((prev) =>
-                            e.target.checked
-                              ? Array.from(new Set([...prev, 'rent']))
-                              : prev.filter((v) => v !== 'rent'),
-                          )
-                        }}
-                      />
-                      <span>For Rent</span>
-                    </label>
-                  </div>
+                  <Label>Transaction Type <span className="text-destructive">*</span></Label>
+                  <MultiSelect
+                    options={[
+                      { label: 'For Sale', value: 'sale' },
+                      { label: 'For Rent', value: 'rent' },
+                    ]}
+                    selected={transactionTypes}
+                    onChange={setTransactionTypes}
+                    placeholder="Select transaction type"
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
-
 
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -874,24 +925,21 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
               {/* Payment Terms */}
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  {/* Payment Terms (single-select dropdown in UI) */}
+                  {/* Payment Terms (Multi-select) */}
                   <div>
                     <Label>Payment Terms</Label>
-                    <Select
-                      value={paymentTerm}
-                      onValueChange={(val) => setPaymentTerm(val)}
+                    <MultiSelect
+                      options={[
+                        { label: 'Cash', value: 'cash' },
+                        { label: 'Bank Financing', value: 'bank' },
+                        { label: 'Pag-IBIG', value: 'pagibig' },
+                        { label: 'Deferred Payment', value: 'deferred' },
+                      ]}
+                      selected={paymentTerms}
+                      onChange={setPaymentTerms}
+                      placeholder="Select payment terms"
                       disabled={isLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment term" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cash">Cash</SelectItem>
-                        <SelectItem value="bank">Bank Financing</SelectItem>
-                        <SelectItem value="pagibig">Pag-IBIG</SelectItem>
-                        <SelectItem value="deferred">Deferred Payment</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
                 </div>
               </div>
@@ -1050,7 +1098,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
               type="button"
               variant="outline"
               disabled={isLoading}
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/listings')}
             >
               Cancel
             </Button>

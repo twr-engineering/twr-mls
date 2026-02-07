@@ -76,6 +76,15 @@ export function SearchableSelect({
                                         onChange(String(option.id))
                                         setOpen(false)
                                     }}
+                                    className="cursor-pointer !pointer-events-auto !opacity-100"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onClick={() => {
+                                        onChange(String(option.id))
+                                        setOpen(false)
+                                    }}
                                 >
                                     <Check
                                         className={cn(

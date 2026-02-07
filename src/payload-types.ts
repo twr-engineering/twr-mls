@@ -483,6 +483,11 @@ export interface PropertySubtype {
 export interface Listing {
   id: number;
   /**
+   * Select province from PSGC database
+   */
+  province: string;
+  provinceName?: string | null;
+  /**
    * Select city from PSGC database
    */
   city: string;
@@ -1046,6 +1051,8 @@ export interface PropertySubtypesSelect<T extends boolean = true> {
  * via the `definition` "listings_select".
  */
 export interface ListingsSelect<T extends boolean = true> {
+  province?: T;
+  provinceName?: T;
   city?: T;
   cityName?: T;
   barangay?: T;

@@ -44,7 +44,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         </div>
         <div className="flex items-center gap-4">
           <ListingSearch />
-          {/* Avatar is handled in layout, but screenshot shows it here? We will trust layout for now or add if needed. */}
+          <Button asChild>
+            <Link href="/listings/new">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Listing
+            </Link>
+          </Button>
         </div>
       </div>
 
