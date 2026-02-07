@@ -69,7 +69,8 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     : []
 
   const filteredBarangays = provinceId && cityId && availableLocations[provinceId]?.cities[cityId]
-    ? availableLocations[provinceId].cities[cityId].barangays.sort((a: any, b: any) => a.name.localeCompare(b.name))
+    ? availableLocations[provinceId].cities[cityId].barangays.sort((a: any, b: any) =>
+      (a.name || '').localeCompare(b.name || ''))
     : []
 
   // Fetch developments when barangay changes
@@ -119,47 +120,65 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     router.push('/mls')
   }
 
-  const handleShareSearch = () => {
-    // Construct URL based on current state, similar to handleApplyFilters but copying instead of pushing to router
-    // Or simpler: just copy current window.location.href if we assume user has applied filters?
-    // User flow: Select filters -> Apply -> URL updates -> Share.
-    // So just copying window.location.href is correct if filters are applied.
-    // If not applied, the state in component might differ from URL.
-    // Safe bet: Construct URL from state to be sure, or just copy current URL.
-    // Given "Apply" updates URL, let's assume they clicked Apply.
-    // But if they didn't, sharing old URL might be confusing.
-    // Let's construct the URL to be safe, like handleApplyFilters does.
+  const handleShareSearch = async () => {
+    // Auto-generate title based on current date
+    const title = `Curated Search - ${new Date().toLocaleDateString()}`
 
-    const params = new URLSearchParams()
+    // Collect current filter values
+    const filters = {
+      listingType,
+      transactionType,
+      provinceId,
+      cityId,
+      barangayId,
+      developmentId,
+      minPrice,
+      maxPrice,
+      bedrooms,
+      bathrooms,
+    }
 
-    if (listingType && listingType !== 'both') params.set('listingType', listingType)
-    if (transactionType) params.set('transactionType', transactionType)
-    if (provinceId) params.set('provinceId', provinceId)
-    if (cityId) params.set('cityId', cityId)
-    if (barangayId) params.set('barangayId', barangayId)
-    if (developmentId) params.set('developmentId', developmentId)
-    if (minPrice) params.set('minPrice', minPrice)
-    if (maxPrice) params.set('maxPrice', maxPrice)
-    if (bedrooms) params.set('bedrooms', bedrooms)
-    if (bathrooms) params.set('bathrooms', bathrooms)
+    try {
+      const response = await fetch('/api/shared-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, filters }),
+      })
 
-    const url = `${window.location.origin}/mls?${params.toString()}`
-    navigator.clipboard.writeText(url)
-    toast.success('Search link copied to clipboard')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create shared link')
+      }
+
+      // Copy the share URL to clipboard and show success
+      try {
+        await navigator.clipboard.writeText(data.shareUrl)
+        toast.success('Link copied! Ready to share curated listings.')
+      } catch {
+        // Fallback if clipboard fails (e.g., document not focused)
+        prompt('Copy this link to share:', data.shareUrl)
+        toast.success('Share link ready!')
+      }
+    } catch (error) {
+      console.error('Share error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create shared link')
+    }
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             Search Filters
           </div>
-          <Button variant="ghost" size="icon" onClick={handleShareSearch} title="Share Search">
-            <Share className="h-4 w-4" />
-          </Button>
         </CardTitle>
+        <Button variant="outline" size="sm" onClick={handleShareSearch} className="gap-2">
+          <Share className="h-4 w-4" />
+          Share Curated Search
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -5,4 +5,5 @@ export { DevelopmentCitySelectField } from './DevelopmentCitySelectField'
 export { DevelopmentBarangaySelectField } from './DevelopmentBarangaySelectField'
 export { TownshipCitySelectField } from './TownshipCitySelectField'
 export { TownshipBarangaySelectField } from './TownshipBarangaySelectField'
+export { ProvinceSelectField } from './ProvinceSelectField'
 

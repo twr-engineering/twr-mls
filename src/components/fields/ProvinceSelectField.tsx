@@ -1,15 +1,13 @@
 'use client'
 
 import React, { useEffect, useState, useMemo, useRef } from 'react'
-import { useField } from '@payloadcms/ui'
+import { useField, useForm } from '@payloadcms/ui'
 
 const PSGC_API = 'https://psgc.cloud/api'
 
-interface City {
+interface Province {
     code: string
     name: string
-    regionCode: string
-    provinceCode: string
 }
 
 type Props = {
@@ -21,46 +19,30 @@ type Props = {
     }
 }
 
-/**
- * City select field for the Townships collection.
- * Fetches cities from PSGC API.
- * Used to filter covered barangays.
- */
-export const TownshipCitySelectField: React.FC<Props> = ({ path, field }) => {
+export const ProvinceSelectField: React.FC<Props> = ({ path, field }) => {
     const { value, setValue } = useField<string>({ path })
-
-    // Watch province field
-    const provincePath = path.replace(/city$/, 'province')
-    const { value: provinceCode } = useField<string>({ path: provincePath })
-
-    const [cities, setCities] = useState<City[]>([])
+    const { dispatchFields } = useForm()
+    const [provinces, setProvinces] = useState<Province[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [isOpen, setIsOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (provinceCode) {
-            const fetchCities = async () => {
-                setLoading(true)
-                try {
-                    const res = await fetch(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities`)
-                    const data: City[] = await res.json()
-                    data.sort((a, b) => a.name.localeCompare(b.name))
-                    setCities(data)
-                } catch (err) {
-                    console.error('Failed to fetch cities:', err)
-                    setCities([])
-                } finally {
-                    setLoading(false)
-                }
+        const fetchProvinces = async () => {
+            try {
+                const res = await fetch(`${PSGC_API}/provinces`)
+                const data: Province[] = await res.json()
+                data.sort((a, b) => a.name.localeCompare(b.name))
+                setProvinces(data)
+            } catch (err) {
+                console.error('Failed to fetch provinces:', err)
+            } finally {
+                setLoading(false)
             }
-            fetchCities()
-        } else {
-            setCities([])
-            setLoading(false)
         }
-    }, [provinceCode])
+        fetchProvinces()
+    }, [])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -72,47 +54,65 @@ export const TownshipCitySelectField: React.FC<Props> = ({ path, field }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    const filteredCities = useMemo(() => {
-        if (!search) return cities
-        return cities.filter((city) =>
-            city.name.toLowerCase().includes(search.toLowerCase())
-        )
-    }, [cities, search])
+    const filteredProvinces = useMemo(() => {
+        if (!search) return provinces.slice(0, 100)
+        return provinces.filter((province) =>
+            province.name.toLowerCase().includes(search.toLowerCase())
+        ).slice(0, 100)
+    }, [provinces, search])
 
-    const selectedCity = cities.find((c) => c.code === value)
+    const selectedProvince = provinces.find((p) => p.code === value)
 
-    const handleSelect = (city: City) => {
-        setValue(city.code)
+    const handleSelect = (province: Province) => {
+        setValue(province.code)
+
+        // Update sibling provinceName field
+        const provinceNamePath = path.replace(/province$/, 'provinceName')
+        dispatchFields({
+            type: 'UPDATE',
+            path: provinceNamePath,
+            value: province.name
+        })
+
         setSearch('')
         setIsOpen(false)
     }
 
     const handleClear = () => {
         setValue('')
+
+        // Clear sibling provinceName field
+        const provinceNamePath = path.replace(/province$/, 'provinceName')
+        dispatchFields({
+            type: 'UPDATE',
+            path: provinceNamePath,
+            value: ''
+        })
+
         setSearch('')
     }
 
     return (
-        <div className="field-type text" ref={dropdownRef}>
+        <div className="field-type relationship" ref={dropdownRef}>
             <label className="field-label">
-                {field.label || 'City'}
+                {field.label || 'Province'}
                 {field.required && <span className="required">*</span>}
             </label>
 
             <div className="rs-container" style={{ position: 'relative' }}>
                 {loading ? (
-                    <div style={{
+                    <div className="value-container" style={{
                         padding: '10px 12px',
                         border: '1px solid var(--theme-elevation-150)',
                         borderRadius: '4px',
                         background: 'var(--theme-input-bg)',
-                        minHeight: '42px',
                     }}>
-                        Loading cities...
+                        Loading provinces...
                     </div>
                 ) : (
                     <>
                         <div
+                            className="value-container"
                             onClick={() => setIsOpen(!isOpen)}
                             style={{
                                 padding: '10px 12px',
@@ -126,11 +126,11 @@ export const TownshipCitySelectField: React.FC<Props> = ({ path, field }) => {
                                 minHeight: '42px',
                             }}
                         >
-                            <span style={{ color: selectedCity ? 'inherit' : 'var(--theme-elevation-400)' }}>
-                                {selectedCity ? selectedCity.name : 'Select a city...'}
+                            <span style={{ color: selectedProvince ? 'inherit' : 'var(--theme-elevation-400)' }}>
+                                {selectedProvince ? selectedProvince.name : 'Select a province...'}
                             </span>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                {selectedCity && (
+                                {selectedProvince && (
                                     <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleClear(); }}
@@ -167,7 +167,7 @@ export const TownshipCitySelectField: React.FC<Props> = ({ path, field }) => {
                             }}>
                                 <input
                                     type="text"
-                                    placeholder="Search cities..."
+                                    placeholder="Search provinces..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     autoFocus
@@ -183,24 +183,24 @@ export const TownshipCitySelectField: React.FC<Props> = ({ path, field }) => {
                                     }}
                                 />
                                 <div style={{ maxHeight: '250px', overflow: 'auto' }}>
-                                    {filteredCities.length === 0 ? (
+                                    {filteredProvinces.length === 0 ? (
                                         <div style={{ padding: '12px', color: 'var(--theme-elevation-400)' }}>
-                                            No cities found
+                                            No provinces found
                                         </div>
                                     ) : (
-                                        filteredCities.map((city) => (
+                                        filteredProvinces.map((province) => (
                                             <div
-                                                key={city.code}
-                                                onClick={() => handleSelect(city)}
+                                                key={province.code}
+                                                onClick={() => handleSelect(province)}
                                                 style={{
                                                     padding: '10px 12px',
                                                     cursor: 'pointer',
-                                                    background: city.code === value ? 'var(--theme-elevation-100)' : 'transparent',
+                                                    background: province.code === value ? 'var(--theme-elevation-100)' : 'transparent',
                                                 }}
                                                 onMouseEnter={(e) => e.currentTarget.style.background = 'var(--theme-elevation-50)'}
-                                                onMouseLeave={(e) => e.currentTarget.style.background = city.code === value ? 'var(--theme-elevation-100)' : 'transparent'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = province.code === value ? 'var(--theme-elevation-100)' : 'transparent'}
                                             >
-                                                {city.name}
+                                                {province.name}
                                             </div>
                                         ))
                                     )}
@@ -212,10 +212,10 @@ export const TownshipCitySelectField: React.FC<Props> = ({ path, field }) => {
             </div>
 
             <div className="field-description">
-                {selectedCity ? `PSGC Code: ${selectedCity.code}` : 'Select a city to filter barangays'}
+                {selectedProvince ? `PSGC Code: ${selectedProvince.code}` : 'Select a province from PSGC database'}
             </div>
         </div>
     )
 }
 
-export default TownshipCitySelectField
+export default ProvinceSelectField

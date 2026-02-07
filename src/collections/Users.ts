@@ -40,7 +40,15 @@ export const Users: CollectionConfig = {
     group: 'System',
     hidden: ({ user }) => !isAdmin(user),
   },
-  auth: true,
+  auth: {
+    // Token expires after 1 hour of inactivity
+    tokenExpiration: 3600,
+    cookies: {
+      // Ensure secure cookies in production
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Lax',
+    },
+  },
   access: {
     read: canReadUser,
     create: adminOnly,

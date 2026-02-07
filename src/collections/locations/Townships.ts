@@ -50,6 +50,24 @@ export const Townships: CollectionConfig = {
       },
     },
     {
+      name: 'province',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Select province from PSGC database',
+        components: {
+          Field: '@/components/fields/ProvinceSelectField',
+        },
+      },
+    },
+    {
+      name: 'provinceName',
+      type: 'text',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
       name: 'city',
       type: 'text',
       required: true,

@@ -19,6 +19,7 @@ import { Listings } from './collections/Listings'
 import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
+import { SharedLinks } from './collections/SharedLinks'
 import { PropertyCategories } from './collections/PropertyCategories'
 import { PropertyTypes } from './collections/PropertyTypes'
 import { PropertySubtypes } from './collections/PropertySubtypes'
@@ -34,7 +35,7 @@ const dirname = path.dirname(filename)
 export const config: Config = {
   admin: {
     user: Users.slug,
-    logoutRoute: '/admin/login',
+    logoutRoute: '/',
     importMap: {
       baseDir: path.resolve(dirname),
     },
@@ -66,6 +67,7 @@ export const config: Config = {
     Documents,
     Notifications,
     ExternalShareLinks,
+    SharedLinks,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

@@ -1,8 +1,8 @@
+import { default as default_8b70914db2db830772d24d4a7cf4faa8 } from '@/components/fields/ProvinceSelectField'
 import { default as default_0815de40e8f52b55bda1e5c82ca86182 } from '@/components/fields/DevelopmentCitySelectField'
 import { default as default_98692b13a123e147a37497d5841d7fd9 } from '@/components/fields/DevelopmentBarangaySelectField'
 import { default as default_d81af4bba8b5e20f7ff8f3f4661c3463 } from '@/components/fields/TownshipCitySelectField'
 import { default as default_61e11b6d8320dd0f8cc5df8a19fc6545 } from '@/components/fields/TownshipBarangaySelectField'
-import { default as default_8b70914db2db830772d24d4a7cf4faa8 } from '@/components/fields/ProvinceSelectField'
 import { default as default_e94e579c74facb19f27dd880beedc775 } from '@/components/fields/CitySelectField'
 import { default as default_158d5475a337518ba614ff37b3bc6e66 } from '@/components/fields/BarangaySelectField'
 import { default as default_659e779edd783d7c4bd218be3b105790 } from '@/components/fields/DevelopmentSelectField'
@@ -32,11 +32,11 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { CollectionCards as CollectionCards_ab83ff7e88da8d3530831f296ec4756a } from '@payloadcms/ui/rsc'
 
 export const importMap = {
+  "@/components/fields/ProvinceSelectField#default": default_8b70914db2db830772d24d4a7cf4faa8,
   "@/components/fields/DevelopmentCitySelectField#default": default_0815de40e8f52b55bda1e5c82ca86182,
   "@/components/fields/DevelopmentBarangaySelectField#default": default_98692b13a123e147a37497d5841d7fd9,
   "@/components/fields/TownshipCitySelectField#default": default_d81af4bba8b5e20f7ff8f3f4661c3463,
   "@/components/fields/TownshipBarangaySelectField#default": default_61e11b6d8320dd0f8cc5df8a19fc6545,
-  "@/components/fields/ProvinceSelectField#default": default_8b70914db2db830772d24d4a7cf4faa8,
   "@/components/fields/CitySelectField#default": default_e94e579c74facb19f27dd880beedc775,
   "@/components/fields/BarangaySelectField#default": default_158d5475a337518ba614ff37b3bc6e66,
   "@/components/fields/DevelopmentSelectField#default": default_659e779edd783d7c4bd218be3b105790,

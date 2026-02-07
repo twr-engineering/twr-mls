@@ -450,7 +450,9 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         price: price ? Number(price) : null,
         description,
         city: cityPsgc, // Send PSGC Code
+        cityName: cities.find((c) => String(c.id) === String(cityId))?.label || '',
         barangay: barangayPsgc, // Send PSGC Code
+        barangayName: barangays.find((b) => String(b.id) === String(barangayId))?.label || '',
         province: provinceId,
         provinceName: provinces.find((p) => String(p.id) === String(provinceId))?.label || '',
         development: developmentId ? Number(developmentId) : null,

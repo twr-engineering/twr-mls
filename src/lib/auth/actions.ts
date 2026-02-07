@@ -51,7 +51,7 @@ export async function logoutAction(): Promise<void> {
   await payloadLogout({
     config,
   })
-  redirect('/login')
+  redirect('/')
 }
 
 export async function getUser(): Promise<AuthUser | null> {

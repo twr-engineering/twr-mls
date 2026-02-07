@@ -26,6 +26,11 @@ type Props = {
 export const DevelopmentCitySelectField: React.FC<Props> = ({ path, field }) => {
     const { value, setValue } = useField<string>({ path })
     const { dispatchFields } = useForm()
+
+    // Watch province field
+    const provincePath = path.replace(/city$/, 'province')
+    const { value: provinceCode } = useField<string>({ path: provincePath })
+
     const [cities, setCities] = useState<City[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -33,20 +38,27 @@ export const DevelopmentCitySelectField: React.FC<Props> = ({ path, field }) => 
     const dropdownRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const fetchCities = async () => {
-            try {
-                const res = await fetch(`${PSGC_API}/cities`)
-                const data: City[] = await res.json()
-                data.sort((a, b) => a.name.localeCompare(b.name))
-                setCities(data)
-            } catch (err) {
-                console.error('Failed to fetch cities:', err)
-            } finally {
-                setLoading(false)
+        if (provinceCode) {
+            const fetchCities = async () => {
+                setLoading(true)
+                try {
+                    const res = await fetch(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities`)
+                    const data: City[] = await res.json()
+                    data.sort((a, b) => a.name.localeCompare(b.name))
+                    setCities(data)
+                } catch (err) {
+                    console.error('Failed to fetch cities:', err)
+                    setCities([])
+                } finally {
+                    setLoading(false)
+                }
             }
+            fetchCities()
+        } else {
+            setCities([])
+            setLoading(false)
         }
-        fetchCities()
-    }, [])
+    }, [provinceCode])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -216,7 +228,11 @@ export const DevelopmentCitySelectField: React.FC<Props> = ({ path, field }) => 
             </div>
 
             <div className="field-description">
-                {selectedCity ? `PSGC Code: ${selectedCity.code}` : 'Select a city from PSGC database'}
+                {selectedCity
+                    ? `PSGC Code: ${selectedCity.code}`
+                    : provinceCode
+                        ? 'Select a city from PSGC database'
+                        : 'Select a province first'}
             </div>
         </div>
     )

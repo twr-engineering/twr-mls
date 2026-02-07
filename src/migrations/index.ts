@@ -12,6 +12,7 @@ import * as migration_20260201_162841_add_indicative_turnover_field from './2026
 import * as migration_20260204_073314_fix_missing_transaction_type_table from './20260204_073314_fix_missing_transaction_type_table';
 import * as migration_20260204_075237_fix_missing_preselling_columns from './20260204_075237_fix_missing_preselling_columns';
 import * as migration_20260207_121858 from './20260207_121858';
+import * as migration_20260207_152018_add_shared_links_table from './20260207_152018_add_shared_links_table';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20260207_121858.up,
     down: migration_20260207_121858.down,
-    name: '20260207_121858'
+    name: '20260207_121858',
+  },
+  {
+    up: migration_20260207_152018_add_shared_links_table.up,
+    down: migration_20260207_152018_add_shared_links_table.down,
+    name: '20260207_152018_add_shared_links_table'
   },
 ];

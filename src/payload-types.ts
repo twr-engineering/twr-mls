@@ -82,6 +82,7 @@ export interface Config {
     documents: Document;
     notifications: Notification;
     'external-share-links': ExternalShareLink;
+    'shared-links': SharedLink;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -104,6 +105,7 @@ export interface Config {
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'external-share-links': ExternalShareLinksSelect<false> | ExternalShareLinksSelect<true>;
+    'shared-links': SharedLinksSelect<false> | SharedLinksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -310,6 +312,11 @@ export interface Development {
   id: number;
   name: string;
   /**
+   * Select province from PSGC database
+   */
+  province: string;
+  provinceName?: string | null;
+  /**
    * Select city from PSGC database
    */
   city: string;
@@ -371,6 +378,11 @@ export interface Township {
    * URL-friendly identifier
    */
   slug: string;
+  /**
+   * Select province from PSGC database
+   */
+  province: string;
+  provinceName?: string | null;
   /**
    * Select city from PSGC database
    */
@@ -755,6 +767,38 @@ export interface ExternalShareLink {
   createdAt: string;
 }
 /**
+ * Curated search links that can be shared with clients
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shared-links".
+ */
+export interface SharedLink {
+  id: number;
+  /**
+   * A descriptive title for this shared link
+   */
+  title: string;
+  /**
+   * Unique identifier for this shared link
+   */
+  slug: string;
+  /**
+   * Search filters stored as JSON
+   */
+  filters:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  createdBy: number | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -837,6 +881,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'external-share-links';
         value: number | ExternalShareLink;
+      } | null)
+    | ({
+        relationTo: 'shared-links';
+        value: number | SharedLink;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -973,6 +1021,8 @@ export interface BarangaysSelect<T extends boolean = true> {
  */
 export interface DevelopmentsSelect<T extends boolean = true> {
   name?: T;
+  province?: T;
+  provinceName?: T;
   city?: T;
   cityName?: T;
   barangay?: T;
@@ -1002,6 +1052,8 @@ export interface EstatesSelect<T extends boolean = true> {
 export interface TownshipsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  province?: T;
+  provinceName?: T;
   city?: T;
   coveredBarangays?: T;
   isActive?: T;
@@ -1140,6 +1192,18 @@ export interface ExternalShareLinksSelect<T extends boolean = true> {
   isActive?: T;
   viewCount?: T;
   lastViewedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shared-links_select".
+ */
+export interface SharedLinksSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  filters?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
