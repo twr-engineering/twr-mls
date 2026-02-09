@@ -13,7 +13,7 @@ export default async function SharedLinksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Shared Links</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Shared Links</h1>
           <p className="text-muted-foreground">
             Manage curated search links for your clients
           </p>

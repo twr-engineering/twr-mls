@@ -394,16 +394,17 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Name Your Curated Link</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-gray-900">Name Your Curated Link</DialogTitle>
+            <DialogDescription className="text-gray-600">
               Enter a name for this curated search link. This will help you identify it later.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="linkName">Link Name</Label>
+              <Label htmlFor="linkName" className="text-gray-900">Link Name</Label>
               <Input
                 id="linkName"
+                className="text-gray-900 placeholder:text-gray-400"
                 placeholder="e.g., Properties for John - Cagayan de Oro"
                 value={linkName}
                 onChange={(e) => setLinkName(e.target.value)}

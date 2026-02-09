@@ -9,6 +9,24 @@ import { ListingTypeBadge } from '@/components/listing-type-badge'
 
 export const dynamic = 'force-dynamic'
 
+// Status color mapping for badges
+function getStatusBadgeClass(status: string): string {
+  switch (status) {
+    case 'published':
+      return 'bg-green-100 text-green-800 border-green-200'
+    case 'draft':
+      return 'bg-gray-100 text-gray-800 border-gray-200'
+    case 'submitted':
+      return 'bg-blue-100 text-blue-800 border-blue-200'
+    case 'needs_revision':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    case 'archived':
+      return 'bg-red-100 text-red-800 border-red-200'
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+}
+
 export default async function DashboardPage() {
   const user = await getUser()
   const stats = await getUserListingStats()
@@ -17,7 +35,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-muted-foreground">
           Welcome back, {user?.email}
         </p>
@@ -26,40 +44,40 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Listings</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Total Listings</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">All your listings</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Drafts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.draft}</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.draft}</div>
             <p className="text-xs text-muted-foreground mt-1">Unsubmitted listings</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Pending Approval</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.submitted}</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.submitted}</div>
             <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Published</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Published</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.published}</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.published}</div>
             <p className="text-xs text-muted-foreground mt-1">Live on MLS</p>
           </CardContent>
         </Card>
@@ -87,7 +105,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-gray-900">Quick Actions</CardTitle>
             <CardDescription>Common tasks for agents</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -114,7 +132,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Listings</CardTitle>
+            <CardTitle className="text-gray-900">Recent Listings</CardTitle>
             <CardDescription>Your latest listing activity</CardDescription>
           </CardHeader>
           <CardContent>
@@ -130,8 +148,8 @@ export default async function DashboardPage() {
                       <p className="text-sm font-medium leading-none truncate">{listing.title}</p>
                       <div className="flex items-center gap-2">
                         <ListingTypeBadge listingType={listing.listingType} className="text-xs" />
-                        <Badge variant="outline" className="text-xs">
-                          {listing.status}
+                        <Badge variant="outline" className={`text-xs ${getStatusBadgeClass(listing.status)}`}>
+                          {listing.status.replace('_', ' ')}
                         </Badge>
                       </div>
                     </div>
