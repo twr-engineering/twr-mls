@@ -35,7 +35,9 @@ const dirname = path.dirname(filename)
 export const config: Config = {
   admin: {
     user: Users.slug,
-    logoutRoute: '/',
+    routes: {
+      logout: '/',
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
