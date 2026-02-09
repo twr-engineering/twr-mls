@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly, isAgent, isAdmin, isApproverOrAdmin } from '@/access'
+import { authenticated, adminOnly, isApproverOrAdmin } from '@/access'
 
 export const PropertyCategories: CollectionConfig = {
   slug: 'property-categories',

@@ -17,11 +17,6 @@ interface Development {
     name: string
 }
 
-interface Barangay {
-    id: string | number
-    psgcCode: string
-}
-
 export const DevelopmentSelectField: React.FC<Props> = ({ path, field }) => {
     const { value, setValue } = useField<string | number>({ path })
     const [developments, setDevelopments] = useState<Development[]>([])

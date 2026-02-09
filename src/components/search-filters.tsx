@@ -23,9 +23,7 @@ import {
 } from '@/components/ui/dialog'
 import { Filter, X, Share, Check } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Barangay as PayloadBarangay, Development } from '@/payload-types'
-
-type Barangay = PayloadBarangay & { psgcCode: string }
+import type { Development } from '@/payload-types'
 
 
 type SearchFiltersProps = {

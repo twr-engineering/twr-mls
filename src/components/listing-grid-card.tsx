@@ -1,19 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
-import { MoreHorizontal, MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
+import { MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
 import type { Listing } from '@/payload-types'
 import Image from 'next/image'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ListingPreviewDialog } from './listing-preview-dialog'
 
 export function ListingGridCard({ listing, readOnly = false }: { listing: Listing, readOnly?: boolean }) {

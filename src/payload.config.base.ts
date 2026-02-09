@@ -26,8 +26,9 @@ import { PropertySubtypes } from './collections/PropertySubtypes'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
-import { BrandLogo } from './components/BrandLogo'
-import { BrandIcon } from './components/BrandIcon'
+// Uncomment when ready to use custom branding
+// import { BrandLogo } from './components/BrandLogo'
+// import { BrandIcon } from './components/BrandIcon'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)

@@ -13,7 +13,6 @@ import {
     ChevronRight,
     Edit,
     Trash2,
-    X,
     CheckCircle
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'

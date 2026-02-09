@@ -5,7 +5,6 @@ import {
   LayoutDashboardIcon,
   FileTextIcon,
   SearchIcon,
-  PlusCircleIcon,
   ShareIcon,
   UserIcon,
   HomeIcon,

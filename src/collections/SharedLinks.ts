@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly, isAdmin, isApproverOrAdmin } from '@/access'
+import { authenticated, isAdmin } from '@/access'
 
 /**
  * SharedLinks Collection

@@ -1,4 +1,4 @@
-import { searchListings, getCities, getAvailableLocations } from '@/lib/payload/api'
+import { searchListings, getAvailableLocations } from '@/lib/payload/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SearchFilters } from '@/components/search-filters'
