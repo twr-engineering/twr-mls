@@ -725,3 +725,49 @@ export async function getAvailableLocations() {
     return {}
   }
 }
+
+/**
+ * Get all curated search links created by the current user
+ */
+export async function getUserCuratedLinks() {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'shared-links',
+    where: {
+      createdBy: { equals: user.id },
+    },
+    limit: 100,
+    sort: '-createdAt',
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Delete a curated search link
+ */
+export async function deleteCuratedLink(id: string) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.delete({
+    collection: 'shared-links',
+    id,
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
