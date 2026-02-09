@@ -51,3 +51,11 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Log files
+*.log
+*_log.txt
+build_log.txt
+tsc_log*.txt
+migration_log.txt
+lint_results.txt
