@@ -680,7 +680,6 @@ export const Listings: CollectionConfig = {
               name: 'indicativeTurnover',
               type: 'text',
               admin: {
-                // @ts-expect-error - placeholder property not in official types
                 placeholder: 'e.g., Q4 2026, 18-24 months, Ready for Occupancy',
                 description: 'Estimated completion/turnover timeline (informational only)',
               },
