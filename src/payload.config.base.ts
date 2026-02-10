@@ -88,24 +88,23 @@ export const config: Config = {
   }),
   sharp,
   plugins: [
-    ...(process.env.S3_ACCESS_KEY_ID
-      ? [
-        s3Storage({
-          collections: {
-            media: true,
-          },
-          bucket: process.env.S3_BUCKET!,
-          config: {
-            endpoint: process.env.S3_ENDPOINT!,
-            region: process.env.S3_REGION!,
-            credentials: {
-              accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-              secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
-            },
-            forcePathStyle: true,
-          },
-        }),
-      ]
-      : []),
+    s3Storage({
+      collections: {
+        media: {
+          disableLocalStorage: !!process.env.S3_ACCESS_KEY_ID,
+        },
+      },
+      enabled: !!process.env.S3_ACCESS_KEY_ID,
+      bucket: process.env.S3_BUCKET || '',
+      config: {
+        endpoint: process.env.S3_ENDPOINT || '',
+        region: process.env.S3_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+        },
+        forcePathStyle: true,
+      },
+    }),
   ],
 }
