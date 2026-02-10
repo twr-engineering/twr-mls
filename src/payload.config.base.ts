@@ -82,6 +82,7 @@ export const config: Config = {
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
+      max: 10,
     },
     migrationDir: path.resolve(dirname, 'migrations'),
     push: false, // Temporarily enabled to sync schema changes
