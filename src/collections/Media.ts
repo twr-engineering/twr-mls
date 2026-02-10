@@ -9,7 +9,7 @@ export const Media: CollectionConfig = {
   },
   access: {
 
-    read: authenticated,
+    read: () => true,
 
     create: authenticated,
 

@@ -12,8 +12,8 @@ export default async function AgentLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Ensure only agents can access this layout
-  const user = await requireAuth(['agent'])
+  // Ensure only agents (and admins/approvers) can access this layout
+  const user = await requireAuth(['agent', 'admin', 'approver'])
 
   return (
     <SidebarProvider>
@@ -21,7 +21,7 @@ export default async function AgentLayout({
         user={{
           name: user.email.split('@')[0],
           email: user.email,
-          avatar: '/avatars/default.jpg',
+          avatar: user.avatar || '/default.png',
         }}
       />
       <SidebarInset>

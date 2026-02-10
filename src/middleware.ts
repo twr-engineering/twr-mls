@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 const publicPaths = ['/login', '/share']
 
-const agentPaths = ['/dashboard', '/listings']
+const agentPaths = ['/dashboard', '/listings', '/profile']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

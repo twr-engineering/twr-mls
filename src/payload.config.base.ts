@@ -39,20 +39,18 @@ export const config: Config = {
     routes: {
       logout: '/',
     },
+    components: {
+      logout: {
+        Button: '/components/LogoutButton#LogoutButton',
+      },
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
     meta: {
       titleSuffix: '- TWR MLS',
     },
-    /*
-    components: {
-      graphics: {
-        Logo: BrandLogo as any,
-        Icon: BrandIcon as any,
-      },
-    },
-    */
+
   },
   collections: [
     Users,
