@@ -58,7 +58,7 @@ async function seed() {
       data: {
         name: 'House & Lot',
         slug: 'house-lot',
-        category: residentialCategory.id,
+        propertyCategory: residentialCategory.id,
         description: 'Single-family house with land',
         isActive: true,
       },
@@ -70,7 +70,7 @@ async function seed() {
       data: {
         name: 'Condominium',
         slug: 'condominium',
-        category: residentialCategory.id,
+        propertyCategory: residentialCategory.id,
         description: 'Condominium unit',
         isActive: true,
       },
@@ -82,7 +82,7 @@ async function seed() {
       data: {
         name: 'Townhouse',
         slug: 'townhouse',
-        category: residentialCategory.id,
+        propertyCategory: residentialCategory.id,
         description: 'Townhouse or row house',
         isActive: true,
       },
@@ -94,7 +94,7 @@ async function seed() {
       data: {
         name: 'Residential Lot',
         slug: 'residential-lot',
-        category: residentialCategory.id,
+        propertyCategory: residentialCategory.id,
         description: 'Vacant residential lot',
         isActive: true,
       },
@@ -172,7 +172,7 @@ async function seed() {
       data: {
         name: 'Office Space',
         slug: 'office-space',
-        category: commercialCategory.id,
+        propertyCategory: commercialCategory.id,
         description: 'Office building or space',
         isActive: true,
       },
@@ -184,7 +184,7 @@ async function seed() {
       data: {
         name: 'Retail Space',
         slug: 'retail-space',
-        category: commercialCategory.id,
+        propertyCategory: commercialCategory.id,
         description: 'Retail shop or mall space',
         isActive: true,
       },
@@ -196,7 +196,7 @@ async function seed() {
       data: {
         name: 'Commercial Lot',
         slug: 'commercial-lot',
-        category: commercialCategory.id,
+        propertyCategory: commercialCategory.id,
         description: 'Vacant commercial lot',
         isActive: true,
       },
@@ -211,7 +211,7 @@ async function seed() {
       data: {
         name: 'Warehouse',
         slug: 'warehouse',
-        category: industrialCategory.id,
+        propertyCategory: industrialCategory.id,
         description: 'Warehouse or storage facility',
         isActive: true,
       },
@@ -223,7 +223,7 @@ async function seed() {
       data: {
         name: 'Industrial Lot',
         slug: 'industrial-lot',
-        category: industrialCategory.id,
+        propertyCategory: industrialCategory.id,
         description: 'Vacant industrial lot',
         isActive: true,
       },

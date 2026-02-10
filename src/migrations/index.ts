@@ -9,6 +9,10 @@ import * as migration_20260201_072914_add_indicative_price_field from './2026020
 import * as migration_20260201_073938_make_price_field_conditional from './20260201_073938_make_price_field_conditional';
 import * as migration_20260201_162712_rename_preselling_area_fields from './20260201_162712_rename_preselling_area_fields';
 import * as migration_20260201_162841_add_indicative_turnover_field from './20260201_162841_add_indicative_turnover_field';
+import * as migration_20260204_073314_fix_missing_transaction_type_table from './20260204_073314_fix_missing_transaction_type_table';
+import * as migration_20260204_075237_fix_missing_preselling_columns from './20260204_075237_fix_missing_preselling_columns';
+import * as migration_20260207_121858 from './20260207_121858';
+import * as migration_20260207_152018_add_shared_links_table from './20260207_152018_add_shared_links_table';
 
 export const migrations = [
   {
@@ -54,7 +58,7 @@ export const migrations = [
   {
     up: migration_20260201_073938_make_price_field_conditional.up,
     down: migration_20260201_073938_make_price_field_conditional.down,
-    name: '20260201_073938_make_price_field_conditional'
+    name: '20260201_073938_make_price_field_conditional',
   },
   {
     up: migration_20260201_162712_rename_preselling_area_fields.up,
@@ -65,5 +69,25 @@ export const migrations = [
     up: migration_20260201_162841_add_indicative_turnover_field.up,
     down: migration_20260201_162841_add_indicative_turnover_field.down,
     name: '20260201_162841_add_indicative_turnover_field',
+  },
+  {
+    up: migration_20260204_073314_fix_missing_transaction_type_table.up,
+    down: migration_20260204_073314_fix_missing_transaction_type_table.down,
+    name: '20260204_073314_fix_missing_transaction_type_table',
+  },
+  {
+    up: migration_20260204_075237_fix_missing_preselling_columns.up,
+    down: migration_20260204_075237_fix_missing_preselling_columns.down,
+    name: '20260204_075237_fix_missing_preselling_columns',
+  },
+  {
+    up: migration_20260207_121858.up,
+    down: migration_20260207_121858.down,
+    name: '20260207_121858',
+  },
+  {
+    up: migration_20260207_152018_add_shared_links_table.up,
+    down: migration_20260207_152018_add_shared_links_table.down,
+    name: '20260207_152018_add_shared_links_table'
   },
 ];

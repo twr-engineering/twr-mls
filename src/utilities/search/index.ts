@@ -12,7 +12,7 @@ export * from './types'
 export async function expandTownshipToBarangays(
   payload: Payload,
   townshipId: number,
-): Promise<number[]> {
+): Promise<string[]> {
   const township = await payload.findByID({
     collection: 'townships',
     id: townshipId,
@@ -21,7 +21,8 @@ export async function expandTownshipToBarangays(
 
   if (!township || !township.coveredBarangays) return []
 
-  return township.coveredBarangays.map((b) => (typeof b === 'object' ? b.id : b))
+  // coveredBarangays is string[] because it's a select field with hasMany
+  return township.coveredBarangays as unknown as string[]
 }
 
 /**
@@ -190,10 +191,10 @@ export function parseSearchParams(searchParams: URLSearchParams): ListingSearchF
   }
 
   const cityId = searchParams.get('cityId')
-  if (cityId) filters.cityId = parseInt(cityId, 10)
+  if (cityId) filters.cityId = cityId
 
   const barangayId = searchParams.get('barangayId')
-  if (barangayId) filters.barangayId = parseInt(barangayId, 10)
+  if (barangayId) filters.barangayId = barangayId
 
   const developmentId = searchParams.get('developmentId')
   if (developmentId) filters.developmentId = parseInt(developmentId, 10)

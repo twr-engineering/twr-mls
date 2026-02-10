@@ -8,6 +8,7 @@ import type {
   PropertyType,
   City,
   Barangay,
+  Province,
 } from '@/payload-types'
 
 let payload: Payload
@@ -50,6 +51,7 @@ describe('Status Transition Validation', () => {
         firstName: 'Test',
         lastName: 'Agent',
       },
+      draft: true,
     })
 
     approver = await payload.create({
@@ -61,6 +63,7 @@ describe('Status Transition Validation', () => {
         firstName: 'Test',
         lastName: 'Approver',
       },
+      draft: true,
     })
 
     admin = await payload.create({
@@ -72,6 +75,7 @@ describe('Status Transition Validation', () => {
         firstName: 'Test',
         lastName: 'Admin',
       },
+      draft: true,
     })
 
     // Create test data
@@ -82,6 +86,7 @@ describe('Status Transition Validation', () => {
         slug: `status-test-category-${timestamp}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testType = await payload.create({
@@ -89,9 +94,10 @@ describe('Status Transition Validation', () => {
       data: {
         name: `Status Test Type ${timestamp}`,
         slug: `status-test-type-${timestamp}`,
-        category: testCategory.id,
+        propertyCategory: testCategory.id,
         isActive: true,
       },
+      draft: true,
     })
 
     testProvince = await payload.create({
@@ -103,6 +109,7 @@ describe('Status Transition Validation', () => {
         region: 'Test Region',
         isActive: true,
       },
+      draft: true,
     })
 
     testCity = await payload.create({
@@ -110,10 +117,10 @@ describe('Status Transition Validation', () => {
       data: {
         name: `Status Test City ${timestamp}`,
         slug: `status-test-city-${timestamp}`,
-        province: testProvince.id,
         psgcCode: `32${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testBarangay = await payload.create({
@@ -121,12 +128,13 @@ describe('Status Transition Validation', () => {
       data: {
         name: `Status Test Barangay ${timestamp}`,
         slug: `status-test-barangay-${timestamp}`,
-        filterProvince: testProvince.id,
+
 
         city: testCity.id,
         psgcCode: `33${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
   })
 
@@ -152,15 +160,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'draft',
       },
+      draft: true,
       user: agent,
     })
 
@@ -170,6 +179,7 @@ describe('Status Transition Validation', () => {
       data: {
         status: 'submitted',
       },
+      draft: true,
       user: agent,
       overrideAccess: false,
     })
@@ -185,15 +195,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'submitted',
       },
+      draft: true,
       user: agent,
     })
 
@@ -204,6 +215,7 @@ describe('Status Transition Validation', () => {
         data: {
           status: 'published',
         },
+        draft: true,
         user: agent,
         overrideAccess: false,
       }),
@@ -218,15 +230,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'submitted',
       },
+      draft: true,
       user: agent,
     })
 
@@ -251,15 +264,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'submitted',
       },
+      draft: true,
       user: agent,
     })
 
@@ -284,15 +298,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'needs_revision',
       },
+      draft: true,
       user: agent,
     })
 
@@ -302,6 +317,7 @@ describe('Status Transition Validation', () => {
       data: {
         status: 'submitted',
       },
+      draft: true,
       user: agent,
       overrideAccess: false,
     })
@@ -317,15 +333,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'draft',
       },
+      draft: true,
       user: agent,
     })
 
@@ -351,15 +368,16 @@ describe('Status Transition Validation', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
 
-        city: testCity.id,
-        barangay: testBarangay.id,
+
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Test St',
         status: 'draft',
       },
+      draft: true,
       user: agent,
     })
 

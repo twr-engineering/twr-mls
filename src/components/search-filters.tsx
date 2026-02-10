@@ -13,30 +13,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Filter, X } from 'lucide-react'
-import type { City, Barangay, Development } from '@/payload-types'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Filter, X, Share, Check } from 'lucide-react'
+import { toast } from 'sonner'
+import type { Development } from '@/payload-types'
+
 
 type SearchFiltersProps = {
-  cities: City[]
   currentFilters: {
     listingType?: string
     transactionType?: string
-    cityId?: number
-    barangayId?: number
+    provinceId?: string
+    cityId?: string
+    barangayId?: string
     developmentId?: number
     minPrice?: number
     maxPrice?: number
     bedrooms?: number
     bathrooms?: number
   }
+  availableLocations?: Record<string, {
+    id: string
+    name: string
+    cities: Record<string, {
+      id: string
+      name: string
+      barangays: { id: string, name: string }[]
+    }>
+  }>
 }
 
-export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
+export function SearchFilters({ availableLocations = {}, currentFilters }: SearchFiltersProps) {
   const router = useRouter()
   const _searchParams = useSearchParams()
+  const [isLinkCopied, setIsLinkCopied] = useState(false)
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [linkName, setLinkName] = useState('')
+  const [isCreatingLink, setIsCreatingLink] = useState(false)
 
   const [listingType, setListingType] = useState(currentFilters.listingType || 'both')
   const [transactionType, setTransactionType] = useState(currentFilters.transactionType || '')
+  const [provinceId, setProvinceId] = useState(currentFilters.provinceId?.toString() || '')
   const [cityId, setCityId] = useState(currentFilters.cityId?.toString() || '')
   const [barangayId, setBarangayId] = useState(currentFilters.barangayId?.toString() || '')
   const [developmentId, setDevelopmentId] = useState(currentFilters.developmentId?.toString() || '')
@@ -45,27 +69,30 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
   const [bedrooms, setBedrooms] = useState(currentFilters.bedrooms?.toString() || '')
   const [bathrooms, setBathrooms] = useState(currentFilters.bathrooms?.toString() || '')
 
-  const [barangays, setBarangays] = useState<Barangay[]>([])
   const [developments, setDevelopments] = useState<Development[]>([])
 
-  // Fetch barangays when city changes
-  useEffect(() => {
-    if (cityId) {
-      fetch(`/api/psgc/barangays?cityId=${cityId}`)
-        .then((res) => res.json())
-        .then((data) => setBarangays(data))
-        .catch((err) => console.error('Error fetching barangays:', err))
-    } else {
-      setBarangays([])
-    }
-  }, [cityId])
+  // No need for effects to fetch data anymore, we derive from availableLocations
+
+  const provinces = Object.values(availableLocations).sort((a, b) => a.name.localeCompare(b.name))
+  const cities = provinceId && availableLocations[provinceId]
+    ? Object.values(availableLocations[provinceId].cities).sort((a, b) => a.name.localeCompare(b.name))
+    : []
+
+  const filteredBarangays = provinceId && cityId && availableLocations[provinceId]?.cities[cityId]
+    ? availableLocations[provinceId].cities[cityId].barangays.sort((a: any, b: any) =>
+      (a.name || '').localeCompare(b.name || ''))
+    : []
 
   // Fetch developments when barangay changes
   useEffect(() => {
     if (barangayId) {
-      fetch(`/api/psgc/developments?barangayId=${barangayId}`)
+      fetch(`/api/developments?where[barangay][equals]=${barangayId}&limit=100`)
         .then((res) => res.json())
-        .then((data) => setDevelopments(data))
+        .then((data) => {
+          // Adapt the response from payload API to what the component expects
+          const docs = data.docs || []
+          setDevelopments(docs)
+        })
         .catch((err) => console.error('Error fetching developments:', err))
     } else {
       setDevelopments([])
@@ -77,6 +104,7 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
 
     if (listingType && listingType !== 'both') params.set('listingType', listingType)
     if (transactionType) params.set('transactionType', transactionType)
+    if (provinceId) params.set('provinceId', provinceId)
     if (cityId) params.set('cityId', cityId)
     if (barangayId) params.set('barangayId', barangayId)
     if (developmentId) params.set('developmentId', developmentId)
@@ -91,6 +119,7 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
   const handleClearFilters = () => {
     setListingType('both')
     setTransactionType('')
+    setProvinceId('')
     setCityId('')
     setBarangayId('')
     setDevelopmentId('')
@@ -101,153 +130,309 @@ export function SearchFilters({ cities, currentFilters }: SearchFiltersProps) {
     router.push('/mls')
   }
 
+  const handleShareSearch = () => {
+    // Set a default name suggestion
+    setLinkName(`Curated Search - ${new Date().toLocaleDateString()}`)
+    setIsShareDialogOpen(true)
+  }
+
+  const handleCreateShareLink = async () => {
+    if (!linkName.trim()) {
+      toast.error('Please enter a name for the link')
+      return
+    }
+
+    setIsCreatingLink(true)
+
+    // Collect current filter values
+    const filters = {
+      listingType,
+      transactionType,
+      provinceId,
+      cityId,
+      barangayId,
+      developmentId,
+      minPrice,
+      maxPrice,
+      bedrooms,
+      bathrooms,
+    }
+
+    try {
+      const response = await fetch('/api/shared-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: linkName.trim(), filters }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create shared link')
+      }
+
+      // Copy the share URL to clipboard and show success
+      try {
+        await navigator.clipboard.writeText(data.shareUrl)
+        toast.success('Link created and copied to clipboard!')
+        setIsLinkCopied(true)
+        // Reset button after 3 seconds
+        setTimeout(() => setIsLinkCopied(false), 3000)
+      } catch {
+        // Fallback if clipboard fails (e.g., document not focused)
+        prompt('Copy this link to share:', data.shareUrl)
+        toast.success('Link created successfully!')
+        setIsLinkCopied(true)
+        setTimeout(() => setIsLinkCopied(false), 3000)
+      }
+
+      // Close dialog and reset
+      setIsShareDialogOpen(false)
+      setLinkName('')
+    } catch (error) {
+      console.error('Share error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create shared link')
+    } finally {
+      setIsCreatingLink(false)
+    }
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          Search Filters
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label>Listing Type</Label>
-          <Select value={listingType} onValueChange={setListingType}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="both">All Types</SelectItem>
-              <SelectItem value="resale">Resale Only</SelectItem>
-              <SelectItem value="preselling">Preselling Only</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Transaction Type</Label>
-          <Select value={transactionType} onValueChange={setTransactionType}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Transaction Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sale">For Sale</SelectItem>
-              <SelectItem value="rent">For Rent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>City</Label>
-          <Select value={cityId} onValueChange={(value) => {
-            setCityId(value)
-            setBarangayId('')
-            setDevelopmentId('')
-          }}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Cities" />
-            </SelectTrigger>
-            <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={city.id} value={city.id.toString()}>
-                  {city.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Barangay</Label>
-          <Select
-            value={barangayId}
-            onValueChange={(value) => {
-              setBarangayId(value)
-              setDevelopmentId('')
-            }}
-            disabled={!cityId || barangays.length === 0}
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Search Filters
+            </div>
+          </CardTitle>
+          <Button
+            variant={isLinkCopied ? 'default' : 'outline'}
+            size="sm"
+            onClick={handleShareSearch}
+            className={`gap-2 transition-all ${isLinkCopied ? 'bg-green-600 hover:bg-green-700' : ''}`}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="All Barangays" />
-            </SelectTrigger>
-            <SelectContent>
-              {barangays.map((barangay) => (
-                <SelectItem key={barangay.id} value={barangay.id.toString()}>
-                  {barangay.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Development</Label>
-          <Select
-            value={developmentId}
-            onValueChange={setDevelopmentId}
-            disabled={!barangayId || developments.length === 0}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All Developments" />
-            </SelectTrigger>
-            <SelectContent>
-              {developments.map((dev) => (
-                <SelectItem key={dev.id} value={dev.id.toString()}>
-                  {dev.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Price Range (₱)</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              placeholder="Min"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Max"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-2">
-            <Label>Bedrooms</Label>
-            <Input
-              type="number"
-              placeholder="Any"
-              value={bedrooms}
-              onChange={(e) => setBedrooms(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Bathrooms</Label>
-            <Input
-              type="number"
-              placeholder="Any"
-              value={bathrooms}
-              onChange={(e) => setBathrooms(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 pt-4">
-          <Button onClick={handleApplyFilters} className="flex-1">
-            Apply Filters
+            {isLinkCopied ? (
+              <>
+                <Check className="h-4 w-4" />
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <Share className="h-4 w-4" />
+                Share Curated Search
+              </>
+            )}
           </Button>
-          <Button onClick={handleClearFilters} variant="outline" size="icon">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Listing Type</Label>
+              <Select value={listingType} onValueChange={setListingType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="both">All Types</SelectItem>
+                  <SelectItem value="resale">Resale Only</SelectItem>
+                  <SelectItem value="preselling">Preselling Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Transaction Type</Label>
+              <Select value={transactionType} onValueChange={setTransactionType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Transaction Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sale">For Sale</SelectItem>
+                  <SelectItem value="rent">For Rent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Province</Label>
+              <Select value={provinceId} onValueChange={(value) => {
+                setProvinceId(value)
+                setCityId('')
+                setBarangayId('')
+                setDevelopmentId('')
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Provinces" />
+                </SelectTrigger>
+                <SelectContent>
+                  {provinces.map((prov) => (
+                    <SelectItem key={prov.id} value={prov.id}>
+                      {prov.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>City</Label>
+              <Select
+                value={cityId}
+                onValueChange={(value) => {
+                  setCityId(value)
+                  setBarangayId('')
+                  setDevelopmentId('')
+                }}
+                disabled={!provinceId || cities.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Cities" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((city) => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Barangay</Label>
+              <Select
+                value={barangayId}
+                onValueChange={(value) => {
+                  setBarangayId(value)
+                  setDevelopmentId('')
+                }}
+                disabled={!cityId || filteredBarangays.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Barangays" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredBarangays.map((barangay: any) => (
+                    <SelectItem key={barangay.id} value={barangay.id}>
+                      {barangay.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Development</Label>
+              <Select
+                value={developmentId}
+                onValueChange={setDevelopmentId}
+                disabled={!barangayId || developments.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Developments" />
+                </SelectTrigger>
+                <SelectContent>
+                  {developments.map((dev) => (
+                    <SelectItem key={dev.id} value={String(dev.id)}>
+                      {dev.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Price Range (₱)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Bedrooms / Bathrooms</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  type="number"
+                  placeholder="Bed"
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Bath"
+                  value={bathrooms}
+                  onChange={(e) => setBathrooms(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-end gap-2">
+              <Button onClick={handleApplyFilters} className="flex-1">
+                Apply
+              </Button>
+              <Button onClick={handleClearFilters} variant="outline" size="icon">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900">Name Your Curated Link</DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Enter a name for this curated search link. This will help you identify it later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="linkName" className="text-gray-900">Link Name</Label>
+              <Input
+                id="linkName"
+                className="text-gray-900 placeholder:text-gray-400"
+                placeholder="e.g., Properties for John - Cagayan de Oro"
+                value={linkName}
+                onChange={(e) => setLinkName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isCreatingLink) {
+                    handleCreateShareLink()
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsShareDialogOpen(false)}
+              disabled={isCreatingLink}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateShareLink}
+              disabled={isCreatingLink || !linkName.trim()}
+            >
+              {isCreatingLink ? 'Creating...' : 'Create & Copy Link'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

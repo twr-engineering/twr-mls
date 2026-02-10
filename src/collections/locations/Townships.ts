@@ -1,13 +1,14 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import { authenticated, adminOnly, isApproverOrAdmin } from '@/access'
 
 export const Townships: CollectionConfig = {
   slug: 'townships',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'coveredBarangays', 'isActive', 'updatedAt'],
-    group: 'Location Master Data',
+    defaultColumns: ['name', 'slug', 'city', 'isActive', 'updatedAt'],
+    group: 'Market Areas',
     description: 'Townships are market-recognized geographic areas spanning multiple barangays',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
   },
   access: {
     read: authenticated,
@@ -49,16 +50,43 @@ export const Townships: CollectionConfig = {
       },
     },
     {
-      name: 'coveredBarangays',
-      type: 'relationship',
-      relationTo: 'barangays',
-      hasMany: true,
+      name: 'province',
+      type: 'text',
       required: true,
       admin: {
-        description: 'Barangays covered by this township (source of truth for township membership)',
+        description: 'Select province from PSGC database',
+        components: {
+          Field: '@/components/fields/ProvinceSelectField',
+        },
       },
-      filterOptions: {
-        isActive: { equals: true },
+    },
+    {
+      name: 'provinceName',
+      type: 'text',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'city',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Select city from PSGC database',
+        components: {
+          Field: '@/components/fields/TownshipCitySelectField',
+        },
+      },
+    },
+    {
+      name: 'coveredBarangays',
+      type: 'json',
+      required: true,
+      admin: {
+        description: 'Barangays covered by this township',
+        components: {
+          Field: '@/components/fields/TownshipBarangaySelectField',
+        },
       },
     },
     {

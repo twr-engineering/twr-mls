@@ -58,7 +58,7 @@ export function NavUser({
       }
 
       toast.success('Logged out successfully')
-      router.push('/admin')
+      router.push('/')
       router.refresh()
     } catch (error) {
       console.error('Logout error:', error)

@@ -9,6 +9,7 @@ import type {
   PropertyType,
   City,
   Barangay,
+  Province,
 } from '@/payload-types'
 
 let payload: Payload
@@ -41,6 +42,7 @@ describe('Document Visibility Control', () => {
         firstName: 'Agent',
         lastName: 'One',
       },
+      draft: true,
     })
 
     agent2 = await payload.create({
@@ -52,6 +54,7 @@ describe('Document Visibility Control', () => {
         firstName: 'Agent',
         lastName: 'Two',
       },
+      draft: true,
     })
 
     approver = await payload.create({
@@ -63,6 +66,7 @@ describe('Document Visibility Control', () => {
         firstName: 'Test',
         lastName: 'Approver',
       },
+      draft: true,
     })
 
     // Create test data
@@ -73,6 +77,7 @@ describe('Document Visibility Control', () => {
         slug: `doc-test-category-${timestamp}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testType = await payload.create({
@@ -80,9 +85,10 @@ describe('Document Visibility Control', () => {
       data: {
         name: `Doc Test Type ${timestamp}`,
         slug: `doc-test-type-${timestamp}`,
-        category: testCategory.id,
+        propertyCategory: testCategory.id,
         isActive: true,
       },
+      draft: true,
     })
 
     testProvince = await payload.create({
@@ -94,6 +100,7 @@ describe('Document Visibility Control', () => {
         region: 'Test Region',
         isActive: true,
       },
+      draft: true,
     })
 
     testCity = await payload.create({
@@ -101,10 +108,10 @@ describe('Document Visibility Control', () => {
       data: {
         name: `Doc Test City ${timestamp}`,
         slug: `doc-test-city-${timestamp}`,
-        province: testProvince.id,
         psgcCode: `22${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     testBarangay = await payload.create({
@@ -112,12 +119,11 @@ describe('Document Visibility Control', () => {
       data: {
         name: `Doc Test Barangay ${timestamp}`,
         slug: `doc-test-barangay-${timestamp}`,
-        filterProvince: testProvince.id,
-
         city: testCity.id,
         psgcCode: `23${String(timestamp).slice(-8)}`,
         isActive: true,
       },
+      draft: true,
     })
 
     // Create listing by agent1
@@ -128,15 +134,14 @@ describe('Document Visibility Control', () => {
         listingType: 'resale',
         propertyCategory: testCategory.id,
         propertyType: testType.id,
-        transactionType: 'sale',
+        transactionType: ['rent', 'sale'],
         price: 5000000,
-        filterProvince: testProvince.id,
-
-        city: testCity.id,
-        barangay: testBarangay.id,
+        city: 'Test City',
+        barangay: 'Test Barangay',
         fullAddress: '123 Doc Test St',
         status: 'draft',
       },
+      draft: true,
       user: agent1,
     })
 
@@ -171,6 +176,7 @@ describe('Document Visibility Control', () => {
           visibility: 'private',
         },
         user: agent2,
+        draft: true,
         overrideAccess: false,
       }),
     ).rejects.toThrow(/can only upload documents to your own listings/)
@@ -187,6 +193,7 @@ describe('Document Visibility Control', () => {
         type: 'other',
         visibility: 'private',
       },
+      draft: true,
       user: agent1,
       overrideAccess: false,
     })
@@ -204,6 +211,7 @@ describe('Document Visibility Control', () => {
         type: 'other',
         // Not specifying visibility
       },
+      draft: true,
       user: agent1,
       overrideAccess: false,
     })
@@ -220,6 +228,7 @@ describe('Document Visibility Control', () => {
       },
       user: agent2,
       overrideAccess: false,
+      draft: true,
     })
 
     // Should only see internal documents, not private ones
@@ -235,6 +244,7 @@ describe('Document Visibility Control', () => {
       },
       user: approver,
       overrideAccess: false,
+      draft: true,
     })
 
     // Approver should see all documents
@@ -247,6 +257,7 @@ describe('Document Visibility Control', () => {
       where: {
         listing: { equals: agent1Listing.id },
       },
+      draft: true,
       user: agent1,
       overrideAccess: false,
     })

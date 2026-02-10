@@ -1,12 +1,13 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, adminOnly } from '@/access'
+import { authenticated, adminOnly, isApproverOrAdmin } from '@/access'
 
 export const Developments: CollectionConfig = {
   slug: 'developments',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'barangay', 'isActive', 'updatedAt'],
+    defaultColumns: ['name', 'cityName', 'barangayName', 'isActive', 'updatedAt'],
     group: 'Location Master Data',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
     description: 'Developments (subdivisions) belong to a Barangay',
   },
   access: {
@@ -25,16 +26,57 @@ export const Developments: CollectionConfig = {
       },
     },
     {
-      name: 'barangay',
-      type: 'relationship',
-      relationTo: 'barangays',
+      name: 'province',
+      type: 'text',
       required: true,
-      hasMany: false,
       admin: {
-        description: 'The barangay this development is located in',
+        description: 'Select province from PSGC database',
+        components: {
+          Field: '@/components/fields/ProvinceSelectField',
+        },
       },
-      filterOptions: {
-        isActive: { equals: true },
+    },
+    {
+      name: 'provinceName',
+      type: 'text',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'city',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Select city from PSGC database',
+        components: {
+          Field: '@/components/fields/DevelopmentCitySelectField',
+        },
+      },
+    },
+    {
+      name: 'cityName',
+      type: 'text',
+      admin: {
+        hidden: true, // Used for display
+      },
+    },
+    {
+      name: 'barangay',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Select barangay from PSGC database (filtered by city)',
+        components: {
+          Field: '@/components/fields/DevelopmentBarangaySelectField',
+        },
+      },
+    },
+    {
+      name: 'barangayName',
+      type: 'text',
+      admin: {
+        hidden: true, // Used for display
       },
     },
     {

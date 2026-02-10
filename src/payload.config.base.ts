@@ -19,11 +19,16 @@ import { Listings } from './collections/Listings'
 import { Documents } from './collections/Documents'
 import { Notifications } from './collections/Notifications'
 import { ExternalShareLinks } from './collections/ExternalShareLinks'
+import { SharedLinks } from './collections/SharedLinks'
 import { PropertyCategories } from './collections/PropertyCategories'
 import { PropertyTypes } from './collections/PropertyTypes'
 import { PropertySubtypes } from './collections/PropertySubtypes'
 
 import { s3Storage } from '@payloadcms/storage-s3'
+
+// Uncomment when ready to use custom branding
+// import { BrandLogo } from './components/BrandLogo'
+// import { BrandIcon } from './components/BrandIcon'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -31,12 +36,23 @@ const dirname = path.dirname(filename)
 export const config: Config = {
   admin: {
     user: Users.slug,
+    routes: {
+      logout: '/',
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
-    components: {
-      afterNavLinks: ['@/components/LogoutButton'],
+    meta: {
+      titleSuffix: '- TWR MLS',
     },
+    /*
+    components: {
+      graphics: {
+        Logo: BrandLogo as any,
+        Icon: BrandIcon as any,
+      },
+    },
+    */
   },
   collections: [
     Users,
@@ -54,35 +70,42 @@ export const config: Config = {
     Documents,
     Notifications,
     ExternalShareLinks,
+    SharedLinks,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
+  cors: [process.env.PAYLOAD_PUBLIC_SERVER_URL || '', 'http://localhost:3000', 'http://localhost:3001'].filter(Boolean),
+  csrf: [process.env.PAYLOAD_PUBLIC_SERVER_URL || '', 'http://localhost:3000', 'http://localhost:3001'].filter(Boolean),
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
     migrationDir: path.resolve(dirname, 'migrations'),
-    push: false,
+    push: false, // Temporarily enabled to sync schema changes
   }),
   sharp,
   plugins: [
-    s3Storage({
-      collections: {
-        media: true, // replace 'media' with your upload collection slug
-      },
-      bucket: process.env.S3_BUCKET!,
-      config: {
-        endpoint: process.env.S3_ENDPOINT!,
-        region: process.env.S3_REGION!,
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
-        },
-        forcePathStyle: true,
-      },
-    }),
+    ...(process.env.S3_ACCESS_KEY_ID
+      ? [
+        s3Storage({
+          collections: {
+            media: true,
+          },
+          bucket: process.env.S3_BUCKET!,
+          config: {
+            endpoint: process.env.S3_ENDPOINT!,
+            region: process.env.S3_REGION!,
+            credentials: {
+              accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+              secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+            },
+            forcePathStyle: true,
+          },
+        }),
+      ]
+      : []),
   ],
 }

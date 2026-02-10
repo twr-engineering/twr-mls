@@ -33,6 +33,7 @@ export async function getUserListings(filters?: {
   status?: string
   listingType?: string
   limit?: number
+  search?: string
 }) {
   const payload = await getPayloadInstance()
   const user = await getAuthUser()
@@ -41,13 +42,22 @@ export async function getUserListings(filters?: {
     throw new Error('Not authenticated')
   }
 
+  const where: Where = {
+    createdBy: { equals: user.id },
+    ...(filters?.status && filters.status !== 'all' && { status: { equals: filters.status } }),
+    ...(filters?.listingType && { listingType: { equals: filters.listingType } }),
+  }
+
+  if (filters?.search) {
+    where.or = [
+      { title: { like: filters.search } },
+      { fullAddress: { like: filters.search } },
+    ]
+  }
+
   const result = await payload.find({
     collection: 'listings',
-    where: {
-      createdBy: { equals: user.id },
-      ...(filters?.status && { status: { equals: filters.status } }),
-      ...(filters?.listingType && { listingType: { equals: filters.listingType } }),
-    },
+    where,
     limit: filters?.limit || 50,
     sort: '-createdAt',
     overrideAccess: false,
@@ -238,8 +248,8 @@ export async function getUserListingStats() {
 export async function searchListings(filters?: {
   listingType?: 'resale' | 'preselling' | 'both'
   transactionType?: 'sale' | 'rent'
-  cityId?: number
-  barangayId?: number
+  cityId?: string
+  barangayId?: string
   developmentId?: number
   minPrice?: number
   maxPrice?: number
@@ -271,10 +281,10 @@ export async function searchListings(filters?: {
 
   // Location filters
   if (filters?.cityId) {
-    where.city = { equals: filters.cityId }
+    where.city = { equals: filters.cityId.toString() }
   }
   if (filters?.barangayId) {
-    where.barangay = { equals: filters.barangayId }
+    where.barangay = { equals: filters.barangayId.toString() }
   }
   if (filters?.developmentId) {
     where.development = { equals: filters.developmentId }
@@ -635,6 +645,126 @@ export async function deleteDocument(documentId: string) {
   const result = await payload.delete({
     collection: 'documents',
     id: documentId,
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Get available locations (provinces, cities, barangays) that have published listings
+ * Returns a hierarchical tree structure
+ */
+export async function getAvailableLocations() {
+  const payload = await getPayloadInstance()
+
+  // Use raw SQL for efficient aggregation of distinct locations
+  // payload.db.drizzle is available in the postgres adapter
+  const { sql } = await import('@payloadcms/db-postgres')
+
+  try {
+    // db.drizzle is available in postgres adapter
+    const result = await payload.db.drizzle.execute(sql`
+      SELECT DISTINCT
+        province,
+        province_name,
+        city,
+        city_name,
+        barangay,
+        barangay_name
+      FROM listings
+      WHERE status = 'published'
+      AND province IS NOT NULL
+      ORDER BY province_name, city_name, barangay_name
+    `)
+
+    // Transform flat rows into a tree structure
+    const tree: Record<string, any> = {}
+
+    for (const row of result.rows) {
+      const r = row as any
+      const province = r.province as string
+      const province_name = r.province_name as string
+      const city = r.city as string
+      const city_name = r.city_name as string
+      const barangay = r.barangay as string
+      const barangay_name = r.barangay_name as string
+
+      if (!province) continue
+
+      if (!tree[province]) {
+        tree[province] = {
+          id: province,
+          name: province_name || province, // Fallback to ID if name missing
+          cities: {}
+        }
+      }
+
+      if (city) {
+        if (!tree[province].cities[city]) {
+          tree[province].cities[city] = {
+            id: city,
+            name: city_name || city,
+            barangays: []
+          }
+        }
+
+        if (barangay) {
+          tree[province].cities[city].barangays.push({
+            id: barangay,
+            name: barangay_name || barangay
+          })
+        }
+      }
+    }
+
+    return tree
+  } catch (error) {
+    console.error('Error fetching available locations:', error)
+    return {}
+  }
+}
+
+/**
+ * Get all curated search links created by the current user
+ */
+export async function getUserCuratedLinks() {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.find({
+    collection: 'shared-links',
+    where: {
+      createdBy: { equals: user.id },
+    },
+    limit: 100,
+    sort: '-createdAt',
+    overrideAccess: false,
+    user,
+  })
+
+  return result
+}
+
+/**
+ * Delete a curated search link
+ */
+export async function deleteCuratedLink(id: string) {
+  const payload = await getPayloadInstance()
+  const user = await getAuthUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  const result = await payload.delete({
+    collection: 'shared-links',
+    id,
     overrideAccess: false,
     user,
   })

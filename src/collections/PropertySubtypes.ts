@@ -1,28 +1,20 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated } from '@/access'
+import { authenticated, adminOnly, isApproverOrAdmin } from '@/access'
 
 export const PropertySubtypes: CollectionConfig = {
   slug: 'property-subtypes',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'propertyType', 'isActive'],
-    group: 'Master Data',
-    description: 'Property subtypes (e.g., Studio, 2BR)',
+    defaultColumns: ['name', 'propertyType', 'slug', 'isActive', 'updatedAt'],
+    group: 'Listing Master Data',
+    description: 'More specific subtypes that belong to a property type',
+    hidden: ({ user }) => !isApproverOrAdmin(user),
   },
   access: {
     read: authenticated,
-    create: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
-    update: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
-    delete: ({ req: { user } }) => {
-      if (!user) return false
-      return user.role === 'admin'
-    },
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   fields: [
     {
@@ -30,7 +22,7 @@ export const PropertySubtypes: CollectionConfig = {
       type: 'text',
       required: true,
       admin: {
-        description: 'Subtype name (e.g., Studio, 1BR, 2BR)',
+        placeholder: 'e.g., 1BR Condo, Commercial Lot',
       },
     },
     {
@@ -39,18 +31,20 @@ export const PropertySubtypes: CollectionConfig = {
       relationTo: 'property-types',
       required: true,
       hasMany: false,
+      admin: {
+        description: 'Property type this subtype belongs to',
+      },
       filterOptions: {
         isActive: { equals: true },
-      },
-      admin: {
-        description: 'Parent type this subtype belongs to',
       },
     },
     {
       name: 'slug',
       type: 'text',
       required: true,
+      unique: true,
       admin: {
+        placeholder: 'e.g., 1br-condo',
         description: 'URL-friendly identifier',
       },
       hooks: {
@@ -60,7 +54,7 @@ export const PropertySubtypes: CollectionConfig = {
               return data.name
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '')
+                .replace(/(^-|-$)/g, '')
             }
             return value
           },
@@ -79,13 +73,15 @@ export const PropertySubtypes: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'Inactive subtypes are hidden from selection',
+        position: 'sidebar',
+        description: 'Inactive subtypes will not appear in dropdowns',
       },
     },
   ],
   indexes: [
     {
-      fields: ['propertyType'],
+      fields: ['propertyType', 'name'],
+      unique: true,
     },
   ],
 }

@@ -19,7 +19,7 @@ export default async function SharePage({ params }: Props) {
     where: {
       token: { equals: token },
     },
-    depth: 2, 
+    depth: 2,
   })
 
   if (shareLinks.docs.length === 0) {
@@ -67,9 +67,9 @@ export default async function SharePage({ params }: Props) {
     notFound()
   }
 
-  const city = listing.city as City | null
-  const barangay = listing.barangay as Barangay | null
-  const development = listing.development as Development | null
+  const city = listing.city as unknown as City | null
+  const barangay = listing.barangay as unknown as Barangay | null
+  const development = listing.development as unknown as Development | null
 
   const formatPrice = (price: number | null | undefined) => {
     if (!price) return null
@@ -89,26 +89,24 @@ export default async function SharePage({ params }: Props) {
           {listing.listingType === 'preselling' ? 'Pre-Selling' : 'Resale'}
         </span>
         <span className={`transaction-badge ${listing.transactionType}`}>
-          For {listing.transactionType === 'sale' ? 'Sale' : 'Rent'}
+          For {listing.transactionType?.includes('sale') ? 'Sale' : 'Rent'}
         </span>
       </header>
 
       <main className="share-content">
         <h1 className="listing-title">{listing.title}</h1>
 
-        {}
-        {listing.price && (
-          <div className="price-section">
-            <span className="price">{formatPrice(listing.price)}</span>
-            {listing.pricePerSqm && (
-              <span className="price-per-sqm">
-                ({formatPrice(listing.pricePerSqm)}/sqm)
-              </span>
-            )}
-          </div>
-        )}
+        { }
+        <div className="price-section">
+          <span className="price">{formatPrice(listing.price)}</span>
+          {listing.pricePerSqm && (
+            <span className="price-per-sqm">
+              ({formatPrice(listing.pricePerSqm)}/sqm)
+            </span>
+          )}
+        </div>
 
-        {}
+        { }
         <div className="location-section">
           <p className="location">
             {development && typeof development === 'object' && development.name && `${development.name}, `}
@@ -120,7 +118,7 @@ export default async function SharePage({ params }: Props) {
           )}
         </div>
 
-        {}
+        { }
         {images.length > 0 && (
           <div className="images-section">
             {images.slice(0, 5).map((image, index) => (
@@ -140,7 +138,7 @@ export default async function SharePage({ params }: Props) {
           </div>
         )}
 
-        {}
+        { }
         <div className="specs-section">
           <h2>Property Details</h2>
           <div className="specs-grid">
@@ -201,12 +199,12 @@ export default async function SharePage({ params }: Props) {
           </div>
         </div>
 
-        {}
+        { }
         {listing.description && (
           <div className="description-section">
             <h2>Description</h2>
             <div className="description-content">
-              {}
+              { }
               <p>Contact the agent for more details about this property.</p>
             </div>
           </div>

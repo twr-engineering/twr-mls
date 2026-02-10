@@ -82,6 +82,7 @@ export interface Config {
     documents: Document;
     notifications: Notification;
     'external-share-links': ExternalShareLink;
+    'shared-links': SharedLink;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -104,6 +105,7 @@ export interface Config {
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'external-share-links': ExternalShareLinksSelect<false> | ExternalShareLinksSelect<true>;
+    'shared-links': SharedLinksSelect<false> | SharedLinksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -188,7 +190,7 @@ export interface Media {
   /**
    * Alternative text for accessibility
    */
-  alt: string;
+  alt?: string | null;
   /**
    * User who uploaded this file
    */
@@ -237,7 +239,7 @@ export interface Province {
   createdAt: string;
 }
 /**
- * Cities are the top level of the location hierarchy
+ * Cities and municipalities belonging to a province
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "cities".
@@ -265,7 +267,7 @@ export interface City {
   createdAt: string;
 }
 /**
- * Barangays belong to a City
+ * Barangays are the smallest administrative divisions
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "barangays".
@@ -310,9 +312,20 @@ export interface Development {
   id: number;
   name: string;
   /**
-   * The barangay this development is located in
+   * Select province from PSGC database
    */
-  barangay: number | Barangay;
+  province: string;
+  provinceName?: string | null;
+  /**
+   * Select city from PSGC database
+   */
+  city: string;
+  cityName?: string | null;
+  /**
+   * Select barangay from PSGC database (filtered by city)
+   */
+  barangay: string;
+  barangayName?: string | null;
   /**
    * Optional: Primary estate for admin clarity only (does NOT affect search logic)
    */
@@ -366,9 +379,26 @@ export interface Township {
    */
   slug: string;
   /**
-   * Barangays covered by this township (source of truth for township membership)
+   * Select province from PSGC database
    */
-  coveredBarangays: (number | Barangay)[];
+  province: string;
+  provinceName?: string | null;
+  /**
+   * Select city from PSGC database
+   */
+  city: string;
+  /**
+   * Barangays covered by this township
+   */
+  coveredBarangays:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Inactive townships will not appear in search filters
    */
@@ -377,16 +407,13 @@ export interface Township {
   createdAt: string;
 }
 /**
- * Property categories (e.g., Residential, Commercial)
+ * Top-level property categories (e.g., Residential, Commercial)
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "property-categories".
  */
 export interface PropertyCategory {
   id: number;
-  /**
-   * Category name (e.g., Residential, Commercial)
-   */
   name: string;
   /**
    * URL-friendly identifier
@@ -397,28 +424,25 @@ export interface PropertyCategory {
    */
   description?: string | null;
   /**
-   * Inactive categories are hidden from selection
+   * Inactive categories will not appear in dropdowns
    */
   isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Property types within categories (e.g., House, Condo)
+ * Property types that belong to a category (e.g., Condo, House & Lot)
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "property-types".
  */
 export interface PropertyType {
   id: number;
-  /**
-   * Type name (e.g., House & Lot, Condominium)
-   */
   name: string;
   /**
-   * Parent category this type belongs to
+   * Category this type belongs to
    */
-  category: number | PropertyCategory;
+  propertyCategory: number | PropertyCategory;
   /**
    * URL-friendly identifier
    */
@@ -428,26 +452,23 @@ export interface PropertyType {
    */
   description?: string | null;
   /**
-   * Inactive types are hidden from selection
+   * Inactive types will not appear in dropdowns
    */
   isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Property subtypes (e.g., Studio, 2BR)
+ * More specific subtypes that belong to a property type
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "property-subtypes".
  */
 export interface PropertySubtype {
   id: number;
-  /**
-   * Subtype name (e.g., Studio, 1BR, 2BR)
-   */
   name: string;
   /**
-   * Parent type this subtype belongs to
+   * Property type this subtype belongs to
    */
   propertyType: number | PropertyType;
   /**
@@ -459,7 +480,7 @@ export interface PropertySubtype {
    */
   description?: string | null;
   /**
-   * Inactive subtypes are hidden from selection
+   * Inactive subtypes will not appear in dropdowns
    */
   isActive?: boolean | null;
   updatedAt: string;
@@ -473,6 +494,37 @@ export interface PropertySubtype {
  */
 export interface Listing {
   id: number;
+  /**
+   * Select province from PSGC database
+   */
+  province: string;
+  provinceName?: string | null;
+  /**
+   * Select city from PSGC database
+   */
+  city: string;
+  cityName?: string | null;
+  /**
+   * Select barangay from PSGC database
+   */
+  barangay: string;
+  barangayName?: string | null;
+  /**
+   * Subdivision/development (optional)
+   */
+  development?: (number | null) | Development;
+  /**
+   * Auto-populated based on Barangay
+   */
+  township?: (number | null) | Township;
+  /**
+   * Auto-populated based on Development
+   */
+  estate?: (number | null) | Estate;
+  /**
+   * Complete address for internal reference
+   */
+  fullAddress: string;
   title: string;
   /**
    * Detailed description for internal use and client sharing
@@ -493,41 +545,17 @@ export interface Listing {
     [k: string]: unknown;
   } | null;
   /**
-   * Select category first (e.g., Residential)
+   * Top-level category (e.g., Residential, Commercial)
    */
   propertyCategory: number | PropertyCategory;
   /**
-   * Filtered by category (e.g., House & Lot)
+   * Specific type within the selected category
    */
   propertyType: number | PropertyType;
   /**
-   * Filtered by type (optional)
+   * Optional subtype within the selected property type
    */
   propertySubtype?: (number | null) | PropertySubtype;
-  propertyOwnerName?: string | null;
-  propertyOwnerContact?: string | null;
-  /**
-   * For agent reference only
-   */
-  propertyOwnerNotes?: string | null;
-  /**
-   * Agents can only create Resale listings
-   */
-  listingType: 'resale' | 'preselling';
-  /**
-   * Automatically set to the current user
-   */
-  createdBy?: (number | null) | User;
-  status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
-  transactionType: 'sale' | 'rent';
-  /**
-   * Required for resale listings
-   */
-  price?: number | null;
-  /**
-   * Required for lot-type properties
-   */
-  pricePerSqm?: number | null;
   /**
    * For condos, offices, buildings
    */
@@ -536,6 +564,14 @@ export interface Listing {
    * For lots, house-and-lot
    */
   lotAreaSqm?: number | null;
+  /**
+   * Minimum floor area (for filtering)
+   */
+  minFloorAreaSqm?: number | null;
+  /**
+   * Minimum lot area (for filtering)
+   */
+  minLotAreaSqm?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   parkingSlots?: number | null;
@@ -543,47 +579,17 @@ export interface Listing {
   constructionYear?: number | null;
   tenure?: ('freehold' | 'leasehold') | null;
   titleStatus?: ('clean' | 'mortgaged') | null;
+  transactionType: ('sale' | 'rent')[];
+  price: number;
+  /**
+   * Required for lot-type properties
+   */
+  pricePerSqm?: number | null;
   paymentTerms?: ('cash' | 'bank' | 'pagibig' | 'deferred')[] | null;
-  /**
-   * Select province first
-   */
-  filterProvince: number | Province;
-  /**
-   * Filtered by province (select province first)
-   */
-  city: number | City;
-  /**
-   * Filtered by city
-   */
-  barangay: number | Barangay;
-  /**
-   * Filtered by barangay (optional, select barangay first)
-   */
-  development?: (number | null) | Development;
-  /**
-   * Auto-populated based on Barangay
-   */
-  township?: (number | null) | Township;
-  /**
-   * Auto-populated based on Development
-   */
-  estate?: (number | null) | Estate;
-  /**
-   * Complete address for internal reference
-   */
-  fullAddress: string;
-  /**
-   * Upload listing photos
-   */
-  images?: (number | Media)[] | null;
   /**
    * Unit model or type name
    */
   modelName?: string | null;
-  /**
-   * Use this OR the price range below
-   */
-  indicativePrice?: number | null;
   /**
    * Starting price range
    */
@@ -592,8 +598,8 @@ export interface Listing {
    * Upper price range
    */
   indicativePriceMax?: number | null;
-  minLotAreaSqm?: number | null;
-  minFloorAreaSqm?: number | null;
+  minLotArea?: number | null;
+  minFloorArea?: number | null;
   /**
    * Standard inclusions and features
    */
@@ -620,6 +626,19 @@ export interface Listing {
    * Estimated completion/turnover timeline (informational only)
    */
   indicativeTurnover?: string | null;
+  /**
+   * Upload listing photos
+   */
+  images?: (number | Media)[] | null;
+  /**
+   * Agents can only create Resale listings
+   */
+  listingType: 'resale' | 'preselling';
+  /**
+   * Automatically set to the current user
+   */
+  createdBy?: (number | null) | User;
+  status: 'draft' | 'submitted' | 'needs_revision' | 'published' | 'rejected';
   updatedAt: string;
   createdAt: string;
 }
@@ -748,6 +767,38 @@ export interface ExternalShareLink {
   createdAt: string;
 }
 /**
+ * Curated search links that can be shared with clients
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shared-links".
+ */
+export interface SharedLink {
+  id: number;
+  /**
+   * A descriptive title for this shared link
+   */
+  title: string;
+  /**
+   * Unique identifier for this shared link
+   */
+  slug: string;
+  /**
+   * Search filters stored as JSON
+   */
+  filters:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  createdBy: number | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -830,6 +881,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'external-share-links';
         value: number | ExternalShareLink;
+      } | null)
+    | ({
+        relationTo: 'shared-links';
+        value: number | SharedLink;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -966,7 +1021,12 @@ export interface BarangaysSelect<T extends boolean = true> {
  */
 export interface DevelopmentsSelect<T extends boolean = true> {
   name?: T;
+  province?: T;
+  provinceName?: T;
+  city?: T;
+  cityName?: T;
   barangay?: T;
+  barangayName?: T;
   primaryEstate?: T;
   slug?: T;
   isActive?: T;
@@ -992,6 +1052,9 @@ export interface EstatesSelect<T extends boolean = true> {
 export interface TownshipsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  province?: T;
+  provinceName?: T;
+  city?: T;
   coveredBarangays?: T;
   isActive?: T;
   updatedAt?: T;
@@ -1015,7 +1078,7 @@ export interface PropertyCategoriesSelect<T extends boolean = true> {
  */
 export interface PropertyTypesSelect<T extends boolean = true> {
   name?: T;
-  category?: T;
+  propertyCategory?: T;
   slug?: T;
   description?: T;
   isActive?: T;
@@ -1040,22 +1103,25 @@ export interface PropertySubtypesSelect<T extends boolean = true> {
  * via the `definition` "listings_select".
  */
 export interface ListingsSelect<T extends boolean = true> {
+  province?: T;
+  provinceName?: T;
+  city?: T;
+  cityName?: T;
+  barangay?: T;
+  barangayName?: T;
+  development?: T;
+  township?: T;
+  estate?: T;
+  fullAddress?: T;
   title?: T;
   description?: T;
   propertyCategory?: T;
   propertyType?: T;
   propertySubtype?: T;
-  propertyOwnerName?: T;
-  propertyOwnerContact?: T;
-  propertyOwnerNotes?: T;
-  listingType?: T;
-  createdBy?: T;
-  status?: T;
-  transactionType?: T;
-  price?: T;
-  pricePerSqm?: T;
   floorAreaSqm?: T;
   lotAreaSqm?: T;
+  minFloorAreaSqm?: T;
+  minLotAreaSqm?: T;
   bedrooms?: T;
   bathrooms?: T;
   parkingSlots?: T;
@@ -1063,24 +1129,22 @@ export interface ListingsSelect<T extends boolean = true> {
   constructionYear?: T;
   tenure?: T;
   titleStatus?: T;
+  transactionType?: T;
+  price?: T;
+  pricePerSqm?: T;
   paymentTerms?: T;
-  filterProvince?: T;
-  city?: T;
-  barangay?: T;
-  development?: T;
-  township?: T;
-  estate?: T;
-  fullAddress?: T;
-  images?: T;
   modelName?: T;
-  indicativePrice?: T;
   indicativePriceMin?: T;
   indicativePriceMax?: T;
-  minLotAreaSqm?: T;
-  minFloorAreaSqm?: T;
+  minLotArea?: T;
+  minFloorArea?: T;
   standardInclusions?: T;
   presellingNotes?: T;
   indicativeTurnover?: T;
+  images?: T;
+  listingType?: T;
+  createdBy?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1128,6 +1192,18 @@ export interface ExternalShareLinksSelect<T extends boolean = true> {
   isActive?: T;
   viewCount?: T;
   lastViewedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shared-links_select".
+ */
+export interface SharedLinksSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  filters?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

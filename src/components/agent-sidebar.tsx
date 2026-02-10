@@ -5,7 +5,6 @@ import {
   LayoutDashboardIcon,
   FileTextIcon,
   SearchIcon,
-  PlusCircleIcon,
   ShareIcon,
   UserIcon,
   HomeIcon,
@@ -65,23 +64,13 @@ export function AgentSidebar({ user, ...props }: AgentSidebarProps) {
       title: 'My Listings',
       url: '/listings',
       icon: FileTextIcon,
-      items: [
-        { title: 'All Listings', url: '/listings' },
-        { title: 'Drafts', url: '/listings?status=draft' },
-        { title: 'Submitted', url: '/listings?status=submitted' },
-        { title: 'Published', url: '/listings?status=published' },
-      ],
     },
     {
       title: 'MLS Search',
       url: '/mls',
       icon: SearchIcon,
     },
-    {
-      title: 'Create Listing',
-      url: '/listings/new',
-      icon: PlusCircleIcon,
-    },
+
     {
       title: 'Shared Links',
       url: '/shared-links',

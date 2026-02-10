@@ -176,7 +176,8 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
             isActive: true,
           },
           draft: false,
-        })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any)
         typeId = created.id
         console.log(`  ✓ Created type: ${type.name} → ${category.name}`)
       } else {

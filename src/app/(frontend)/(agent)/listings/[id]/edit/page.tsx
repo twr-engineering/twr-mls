@@ -1,5 +1,6 @@
-import { getListingById, getCities } from '@/lib/payload/api'
-import { ListingForm } from '@/components/listing-form'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { getListingById } from '@/lib/payload/api'
+import { CreateListingForm } from '@/components/CreateListingForm'
 import { notFound } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { AlertCircle } from 'lucide-react'
@@ -51,33 +52,43 @@ export default async function EditListingPage({ params }: PageProps) {
     )
   }
 
-  const cities = await getCities()
 
-  const cityId = typeof listing.city === 'object' ? listing.city.id : listing.city
-  const barangayId = typeof listing.barangay === 'object' ? listing.barangay.id : listing.barangay
+
+  const cityId = typeof listing.city === 'object' ? (listing.city as any).id : listing.city
+  const barangayId = typeof listing.barangay === 'object' ? (listing.barangay as any).id : listing.barangay
   const developmentId =
-    typeof listing.development === 'object' ? listing.development?.id : listing.development
+    typeof listing.development === 'object' ? (listing.development as any)?.id : listing.development
 
   // Extract property classification IDs
   const propertyCategoryId =
     typeof listing.propertyCategory === 'object'
-      ? listing.propertyCategory.id
+      ? (listing.propertyCategory as any).id
       : listing.propertyCategory
   const propertyTypeId =
-    typeof listing.propertyType === 'object' ? listing.propertyType.id : listing.propertyType
+    typeof listing.propertyType === 'object' ? (listing.propertyType as any).id : listing.propertyType
   const propertySubtypeId =
     listing.propertySubtype && typeof listing.propertySubtype === 'object'
-      ? listing.propertySubtype.id
+      ? (listing.propertySubtype as any).id
       : listing.propertySubtype
 
-  const imageIds = Array.isArray(listing.images)
-    ? listing.images.map((img) => (typeof img === 'object' ? img.id : img)).filter(Boolean)
+  // Extract full image objects for preview, not just IDs
+  const images = Array.isArray(listing.images)
+    ? listing.images.map((img) => {
+      if (typeof img === 'object' && img !== null) {
+        return {
+          id: img.id,
+          url: img.url,
+          alt: img.alt,
+        }
+      }
+      return { id: img }
+    })
     : []
 
   const initialData = {
     // Basic fields
     title: listing.title,
-    description: listing.description || undefined,
+    description: (listing.description as any) || undefined,
     listingType: listing.listingType as 'resale' | 'preselling',
 
     // Property classification
@@ -86,7 +97,7 @@ export default async function EditListingPage({ params }: PageProps) {
     propertySubtypeId: propertySubtypeId || undefined,
 
     // Transaction
-    transactionType: listing.transactionType,
+    transactionType: listing.transactionType as any,
 
     // Common fields
     bedrooms: listing.bedrooms || undefined,
@@ -118,8 +129,8 @@ export default async function EditListingPage({ params }: PageProps) {
     developmentId: developmentId || undefined,
     fullAddress: listing.fullAddress,
 
-    // Images
-    images: imageIds,
+    // Images (pass full objects)
+    images,
   }
 
   return (
@@ -129,7 +140,7 @@ export default async function EditListingPage({ params }: PageProps) {
         <p className="text-muted-foreground">Update your property listing details</p>
       </div>
 
-      <ListingForm cities={cities} initialData={initialData} listingId={id} />
+      <CreateListingForm initialData={initialData} listingId={id} />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getListingById } from '@/lib/payload/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ListingTypeBadge } from '@/components/listing-type-badge'
@@ -26,8 +27,9 @@ export default async function NewShareLinkPage({
     notFound()
   }
 
-  const cityName = typeof listing.city === 'object' ? listing.city.name : 'N/A'
-  const barangayName = typeof listing.barangay === 'object' ? listing.barangay.name : 'N/A'
+  const cityName = typeof listing.city === 'object' ? (listing.city as any).name : 'N/A'
+  const barangayName =
+    typeof listing.barangay === 'object' ? (listing.barangay as any).name : 'N/A'
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
