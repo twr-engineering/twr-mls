@@ -157,7 +157,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
         where: {
           and: [
             { name: { equals: type.name } },
-            { category: { equals: categoryId } },
+            { propertyCategory: { equals: categoryId } },
           ],
         },
         limit: 1,
@@ -172,7 +172,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
             name: type.name,
             slug: toSlug(type.name),
             description: type.description,
-            category: categoryId,
+            propertyCategory: categoryId,
             isActive: true,
           },
           draft: false,
@@ -223,7 +223,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
             collection: 'property-subtypes',
             data: {
               name: subtypeName,
-              slug: toSlug(subtypeName),
+              slug: toSlug(`${type.name}-${subtypeName}`),
               description: `${subtypeName} unit`,
               propertyType: typeId,
               isActive: true,
