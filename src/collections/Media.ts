@@ -38,7 +38,7 @@ export const Media: CollectionConfig = {
       },
       hooks: {
         beforeValidate: [
-          ({ value, data }) => {
+          ({ value }) => {
             if (!value) {
               return 'Property Image' // Fallback
             }

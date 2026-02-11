@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export const BrandIcon = (props: any) => {
+export const BrandIcon = () => {
     return (
         <div className="flex items-center justify-center w-full h-full p-1">
             <img
