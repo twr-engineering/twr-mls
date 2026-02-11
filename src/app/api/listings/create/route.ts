@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
                 status: 'draft', // Always start as draft for agent submissions
             },
             user, // Pass user for access control
+            overrideAccess: true, // Bypass Payload internal access control since we verified auth above
         })
 
         return NextResponse.json(listing, { status: 201 })
