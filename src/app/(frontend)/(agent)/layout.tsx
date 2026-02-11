@@ -12,6 +12,11 @@ export default async function AgentLayout({
 }: {
   children: React.ReactNode
 }) {
+  type AvatarMedia = {
+    url?: string
+    filename?: string
+  }
+
   // Ensure only agents (and admins/approvers) can access this layout
   const user = await requireAuth(['agent', 'admin', 'approver'])
 
@@ -27,17 +32,18 @@ export default async function AgentLayout({
             if (typeof avatar === 'string') return avatar
 
             if (typeof avatar === 'object' && 'url' in avatar) {
-              const url = (avatar as any).url
-              if (url.startsWith('http')) return url
+              const media = avatar as AvatarMedia
+              const url = media.url
+              if (url && url.startsWith('http')) return url
 
               // Fallback for S3/Supabase - similar to ListingGridCard fix
               // Use filename if available, otherwise try to use the URL path
-              const filename = (avatar as any).filename
+              const filename = media.filename
               if (filename) {
                 return `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
               }
 
-              return url // fallback to relative if no filename (might still fail but worth a shot)
+              return url || '/default.png' // fallback to relative if no filename
             }
             return '/default.png'
           })(),
