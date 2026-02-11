@@ -104,6 +104,24 @@ export const config: Config = {
         },
         forcePathStyle: true,
       },
+      // @ts-ignore - generateFileURL is valid in runtime but types might be outdated
+      generateFileURL: (args: any) => {
+        // Strict Supabase Public URL Generation
+        // Endpoint in .env: https://[project-ref].storage.supabase.co/storage/v1/s3
+        // Target URL: https://[project-ref].supabase.co/storage/v1/object/public/[bucket]/[filename]
+
+        const endpoint = process.env.S3_ENDPOINT || ''
+
+        // Extract project ref (e.g., mxjqvqqtjjvfcimfzoxs)
+        let projectRef = 'mxjqvqqtjjvfcimfzoxs' // Default fallback based on observed env
+        const matches = endpoint.match(/https:\/\/([^.]+)\.storage\.supabase\.co/)
+        if (matches && matches[1]) {
+          projectRef = matches[1]
+        }
+
+        // Use standard supabase.co domain for storage delivery
+        return `https://${projectRef}.supabase.co/storage/v1/object/public/${args.bucket}/${args.filename}`
+      },
     }),
   ],
 }

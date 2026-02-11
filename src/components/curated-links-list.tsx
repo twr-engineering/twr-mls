@@ -5,9 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Plus, Copy, Trash2, ExternalLink, Check } from 'lucide-react'
+import { Plus, Copy, Trash2, ExternalLink, Check, Pencil } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { SharedLink } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -20,6 +30,9 @@ export function CuratedLinksList({ initialLinks }: CuratedLinksListProps) {
     const [links, setLinks] = useState<SharedLink[]>(initialLinks)
     const [copiedId, setCopiedId] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [editingLink, setEditingLink] = useState<SharedLink | null>(null)
+    const [newTitle, setNewTitle] = useState('')
+    const [isUpdating, setIsUpdating] = useState(false)
 
     const handleCopyLink = async (slug: string, id: string) => {
         const baseUrl = typeof window !== 'undefined'
@@ -57,6 +70,50 @@ export function CuratedLinksList({ initialLinks }: CuratedLinksListProps) {
             toast.error('Failed to delete link')
         } finally {
             setDeletingId(null)
+        }
+    }
+
+    const startEditing = (link: SharedLink) => {
+        setEditingLink(link)
+        setNewTitle(link.title)
+    }
+
+    const handleUpdate = async () => {
+        if (!editingLink) return
+        if (!newTitle.trim()) {
+            toast.error('Title cannot be empty')
+            return
+        }
+
+        setIsUpdating(true)
+        try {
+            const response = await fetch(`/api/shared-links/${editingLink.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: newTitle,
+                }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to update link')
+            }
+
+            const updatedLink = await response.json()
+
+            setLinks(links.map(link =>
+                link.id === editingLink.id ? { ...link, title: updatedLink.title } : link
+            ))
+
+            toast.success('Link updated successfully')
+            setEditingLink(null)
+        } catch (error) {
+            console.error('Update error:', error)
+            toast.error('Failed to update link')
+        } finally {
+            setIsUpdating(false)
         }
     }
 
@@ -140,6 +197,15 @@ export function CuratedLinksList({ initialLinks }: CuratedLinksListProps) {
                                     </a>
                                 </Button>
                                 <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => startEditing(link)}
+                                    className="gap-2"
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                    Edit
+                                </Button>
+                                <Button
                                     variant="destructive"
                                     size="sm"
                                     onClick={() => handleDelete(link.id.toString())}
@@ -154,6 +220,44 @@ export function CuratedLinksList({ initialLinks }: CuratedLinksListProps) {
                     </Card>
                 )
             })}
+
+            <Dialog open={!!editingLink} onOpenChange={(open) => !open && setEditingLink(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Shared Link</DialogTitle>
+                        <DialogDescription>
+                            Update the title for this shared link.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="title">Title</Label>
+                            <Input
+                                id="title"
+                                value={newTitle}
+                                onChange={(e) => setNewTitle(e.target.value)}
+                                placeholder="Enter a descriptive title"
+                                className="text-foreground"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setEditingLink(null)}
+                            disabled={isUpdating}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleUpdate}
+                            disabled={isUpdating || !newTitle.trim()}
+                        >
+                            {isUpdating ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
