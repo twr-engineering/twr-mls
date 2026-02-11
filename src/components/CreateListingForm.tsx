@@ -448,9 +448,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
       const payloadBody = {
         title,
         fullAddress,
-        fullAddress,
         price: price ? Number(price.replace(/,/g, '')) : null,
-        description,
         description,
         city: cityPsgc, // Send PSGC Code
         cityName: cities.find((c) => String(c.id) === String(cityId))?.label || '',
