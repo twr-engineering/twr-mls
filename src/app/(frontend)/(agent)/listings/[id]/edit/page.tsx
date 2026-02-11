@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getListingById } from '@/lib/payload/api'
 import { CreateListingForm } from '@/components/CreateListingForm'
 import { notFound } from 'next/navigation'
@@ -10,6 +9,8 @@ export const dynamic = 'force-dynamic'
 type PageProps = {
   params: Promise<{ id: string }>
 }
+
+type DocWithId = { id: string | number }
 
 export default async function EditListingPage({ params }: PageProps) {
   const { id } = await params
@@ -52,23 +53,21 @@ export default async function EditListingPage({ params }: PageProps) {
     )
   }
 
-
-
-  const cityId = typeof listing.city === 'object' ? (listing.city as any).id : listing.city
-  const barangayId = typeof listing.barangay === 'object' ? (listing.barangay as any).id : listing.barangay
+  const cityId = typeof listing.city === 'object' ? (listing.city as unknown as DocWithId).id : listing.city
+  const barangayId = typeof listing.barangay === 'object' ? (listing.barangay as unknown as DocWithId).id : listing.barangay
   const developmentId =
-    typeof listing.development === 'object' ? (listing.development as any)?.id : listing.development
+    typeof listing.development === 'object' ? (listing.development as unknown as DocWithId)?.id : listing.development
 
   // Extract property classification IDs
   const propertyCategoryId =
     typeof listing.propertyCategory === 'object'
-      ? (listing.propertyCategory as any).id
+      ? (listing.propertyCategory as unknown as DocWithId).id
       : listing.propertyCategory
   const propertyTypeId =
-    typeof listing.propertyType === 'object' ? (listing.propertyType as any).id : listing.propertyType
+    typeof listing.propertyType === 'object' ? (listing.propertyType as unknown as DocWithId).id : listing.propertyType
   const propertySubtypeId =
     listing.propertySubtype && typeof listing.propertySubtype === 'object'
-      ? (listing.propertySubtype as any).id
+      ? (listing.propertySubtype as unknown as DocWithId).id
       : listing.propertySubtype
 
   // Extract full image objects for preview, not just IDs
@@ -76,9 +75,9 @@ export default async function EditListingPage({ params }: PageProps) {
     ? listing.images.map((img) => {
       if (typeof img === 'object' && img !== null) {
         return {
-          id: img.id,
-          url: img.url,
-          alt: img.alt,
+          id: (img as unknown as DocWithId).id,
+          url: (img as unknown as { url: string }).url,
+          alt: (img as unknown as { alt: string }).alt,
         }
       }
       return { id: img }
@@ -88,7 +87,7 @@ export default async function EditListingPage({ params }: PageProps) {
   const initialData = {
     // Basic fields
     title: listing.title,
-    description: (listing.description as any) || undefined,
+    description: (listing.description as unknown as string) || undefined,
     listingType: listing.listingType as 'resale' | 'preselling',
 
     // Property classification
@@ -97,7 +96,7 @@ export default async function EditListingPage({ params }: PageProps) {
     propertySubtypeId: propertySubtypeId || undefined,
 
     // Transaction
-    transactionType: listing.transactionType as any,
+    transactionType: listing.transactionType as unknown as string[],
 
     // Common fields
     bedrooms: listing.bedrooms || undefined,
@@ -124,6 +123,7 @@ export default async function EditListingPage({ params }: PageProps) {
     presellingNotes: listing.presellingNotes || undefined,
 
     // Location
+    provinceId: typeof listing.province === 'object' ? (listing.province as unknown as DocWithId).id : listing.province,
     cityId,
     barangayId,
     developmentId: developmentId || undefined,

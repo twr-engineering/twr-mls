@@ -213,7 +213,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           type: c.type // capture type (City, Mun, SubMun)
         }))
         setCities(cityOpts)
-        setCityId('')
+
+        // Only clear if current cityId is not in new options
+        if (cityId && !cityOpts.find((c: any) => String(c.id) === String(cityId))) {
+          setCityId('')
+        }
       } catch (e) {
         console.error('City fetch error:', e)
         setError('Failed to load cities for selected province.')
@@ -233,25 +237,30 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
     void (async () => {
       try {
-        // Determine if it's a city or municipality
+        // Determine if it's a city or municipality nicely if type is available
         const selectedCity = cities.find(c => String(c.id) === String(cityId))
         const isMunicipality = selectedCity?.type === 'Mun'
 
-        // Fetch Barangays from PSGC API
-        // Endpoint differs for City vs Municipality
-        const endpoint = isMunicipality
+        // Primary Endpoint
+        let endpoint = isMunicipality
           ? `https://psgc.cloud/api/municipalities/${cityId}/barangays`
           : `https://psgc.cloud/api/cities/${cityId}/barangays`
 
-        const res = await fetch(endpoint)
+        let res = await fetch(endpoint)
+
+        // If primary failed (regardless of reason, though usually 404), try fallback
         if (!res.ok) {
-          // Fallback: if one fails, try the other? 
-          // Or just throw. Let's try to be robust. 
-          // If we guessed wrong or type is missing, maybe try the other.
-          // But relying on type should be enough if PSGC is consistent.
-          // Let's stick to type for now.
-          throw new Error(`Failed to fetch barangays (Status ${res.status})`)
+          const fallbackEndpoint = isMunicipality
+            ? `https://psgc.cloud/api/cities/${cityId}/barangays`
+            : `https://psgc.cloud/api/municipalities/${cityId}/barangays`
+
+          res = await fetch(fallbackEndpoint)
+
+          if (!res.ok) {
+            throw new Error(`Failed to fetch barangays (Status ${res.status})`)
+          }
         }
+
         const data = await res.json()
         // Sort alphabetically
         data.sort((a: any, b: any) => a.name.localeCompare(b.name))
@@ -262,9 +271,15 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           code: b.code
         }))
         setBarangays(brgyOpts)
-        setBarangayId('')
-        setDevelopments([])
-        setDevelopmentId('')
+
+        // Only clear if current barangayId is not in new options
+        if (barangayId && !brgyOpts.find((b: any) => String(b.id) === String(barangayId))) {
+          setBarangayId('')
+        }
+
+        // Reset developments only if barangay changed or became invalid
+        // setDevelopments([]) - logic moved to barangayId effect or manual reset if needed
+        // but we should probably re-fetch developments if barangay changes, handled by next effect
       } catch (e) {
         console.error(e)
         setError('Failed to load barangays for selected city.')
@@ -288,7 +303,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           'name'
         )
         setDevelopments(devOpts)
-        setDevelopmentId('')
+
+        // Only clear if current developmentId is not in new options
+        if (developmentId && !devOpts.find((d) => String(d.id) === String(developmentId))) {
+          setDevelopmentId('')
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load developments for selected barangay.')
@@ -312,7 +331,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           )}&where[isActive][equals]=true`,
         )
         setTypes(typeOpts)
-        setTypeId('')
+
+        // Only clear if current typeId is not in new options
+        if (typeId && !typeOpts.find((t) => String(t.id) === String(typeId))) {
+          setTypeId('')
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load property types for selected category.')
@@ -335,7 +358,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         )}&where[isActive][equals]=true`
         const opts = await fetchOptions(url)
         setSubtypes(opts)
-        setSubtypeId('')
+
+        // Only clear if current subtypeId is not in new options
+        if (subtypeId && !opts.find((s) => String(s.id) === String(subtypeId))) {
+          setSubtypeId('')
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load property subtypes.')
