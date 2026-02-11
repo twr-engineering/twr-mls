@@ -30,6 +30,7 @@ export default async function SharedListingsPage({ params }: SharedPageProps) {
     const filters = sharedLink.filters as Record<string, any>
 
     // Build query from saved filters
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {
         status: { equals: 'published' },
     }

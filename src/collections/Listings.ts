@@ -160,7 +160,7 @@ export const Listings: CollectionConfig = {
       // Validate location hierarchy (City -> Barangay -> Development)
       validateLocationHierarchy,
 
-      async ({ data, req, operation, originalDoc }) => {
+      async ({ data, operation, originalDoc }) => {
         if (operation === 'create' || operation === 'update') {
           // Reset property type and subtype when category changes
           if (operation === 'update' && originalDoc) {
@@ -262,7 +262,7 @@ export const Listings: CollectionConfig = {
                   filterOptions: ({ siblingData }) => {
                     return {
                       isActive: { equals: true },
-                      barangay: { equals: (siblingData as any)?.barangay || 'none' },
+                      barangay: { equals: (siblingData as Record<string, unknown>)?.barangay || 'none' },
                     }
                   },
                   admin: {
