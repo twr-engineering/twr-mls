@@ -62,7 +62,7 @@ export default async function HomePage() {
             {user ? (
               <div className="flex gap-4">
                 <Button size="lg" className="h-12 px-8 text-base bg-blue-600 text-white hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)] border border-blue-500 transition-all font-medium" asChild>
-                  <Link href="/admin">Access Dashboard</Link>
+                  <Link href="/dashboard">Access Dashboard</Link>
                 </Button>
                 <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 border-none transition-all font-medium" asChild>
                   <Link href="/admin/logout">Logout</Link>

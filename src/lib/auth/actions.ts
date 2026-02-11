@@ -11,6 +11,7 @@ export type AuthUser = {
   id: number
   email: string
   role: User['role']
+  avatar?: string | null
 }
 
 type LoginResult = {
@@ -61,10 +62,17 @@ export async function getUser(): Promise<AuthUser | null> {
     const { user } = await payload.auth({ headers })
 
     if (user) {
+      // Resolve avatar URL
+      let avatarUrl = null
+      if (user.avatar && typeof user.avatar === 'object' && 'url' in user.avatar) {
+        avatarUrl = user.avatar.url
+      }
+
       return {
         id: user.id,
         email: user.email as string,
         role: user.role,
+        avatar: avatarUrl,
       }
     }
 

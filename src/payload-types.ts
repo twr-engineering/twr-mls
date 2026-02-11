@@ -158,6 +158,10 @@ export interface User {
   lastName?: string | null;
   phone?: string | null;
   /**
+   * Profile picture
+   */
+  avatar?: (number | null) | Media;
+  /**
    * Inactive users cannot log in
    */
   isActive?: boolean | null;
@@ -937,6 +941,7 @@ export interface UsersSelect<T extends boolean = true> {
   firstName?: T;
   lastName?: T;
   phone?: T;
+  avatar?: T;
   isActive?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-console */
 process.env.PAYLOAD_SECRET = '28358c48afffe6026b4525347f56c3abb6e5660a2775cd49341348350f487696'
 process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/twr_mls'
 

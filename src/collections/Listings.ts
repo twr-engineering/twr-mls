@@ -122,19 +122,7 @@ const listingTypeFieldAccess: FieldAccess = ({ req: { user } }) => {
   return false
 }
 
-const propertyOwnerFieldAccess: FieldAccess = ({ req: { user }, doc }) => {
-  if (!user) return false
 
-  if (user.role === 'admin' || user.role === 'approver') {
-    return true
-  }
-
-  if (user.role === 'agent' && doc?.createdBy === user.id) {
-    return true
-  }
-
-  return false
-}
 
 export const Listings: CollectionConfig = {
   slug: 'listings',
@@ -172,7 +160,7 @@ export const Listings: CollectionConfig = {
       // Validate location hierarchy (City -> Barangay -> Development)
       validateLocationHierarchy,
 
-      async ({ data, req, operation, originalDoc }) => {
+      async ({ data, operation, originalDoc }) => {
         if (operation === 'create' || operation === 'update') {
           // Reset property type and subtype when category changes
           if (operation === 'update' && originalDoc) {
@@ -274,7 +262,7 @@ export const Listings: CollectionConfig = {
                   filterOptions: ({ siblingData }) => {
                     return {
                       isActive: { equals: true },
-                      barangay: { equals: (siblingData as any)?.barangay || 'none' },
+                      barangay: { equals: (siblingData as Record<string, unknown>)?.barangay || 'none' },
                     }
                   },
                   admin: {
@@ -692,7 +680,6 @@ export const Listings: CollectionConfig = {
               name: 'indicativeTurnover',
               type: 'text',
               admin: {
-                // @ts-ignore
                 placeholder: 'e.g., Q4 2026, 18-24 months, Ready for Occupancy',
                 description: 'Estimated completion/turnover timeline (informational only)',
               },

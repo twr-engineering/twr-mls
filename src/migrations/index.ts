@@ -13,6 +13,7 @@ import * as migration_20260204_073314_fix_missing_transaction_type_table from '.
 import * as migration_20260204_075237_fix_missing_preselling_columns from './20260204_075237_fix_missing_preselling_columns';
 import * as migration_20260207_121858 from './20260207_121858';
 import * as migration_20260207_152018_add_shared_links_table from './20260207_152018_add_shared_links_table';
+import * as migration_20260210_223000_add_avatar_to_users from './20260210_223000_add_avatar_to_users';
 
 export const migrations = [
   {
@@ -89,5 +90,10 @@ export const migrations = [
     up: migration_20260207_152018_add_shared_links_table.up,
     down: migration_20260207_152018_add_shared_links_table.down,
     name: '20260207_152018_add_shared_links_table'
+  },
+  {
+    up: migration_20260210_223000_add_avatar_to_users.up,
+    down: migration_20260210_223000_add_avatar_to_users.down,
+    name: '20260210_223000_add_avatar_to_users'
   },
 ];

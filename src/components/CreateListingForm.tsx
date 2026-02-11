@@ -69,7 +69,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
   // Basic fields
   const [title, setTitle] = useState(initialData?.title || '')
   const [fullAddress, setFullAddress] = useState(initialData?.fullAddress || '')
-  const [price, setPrice] = useState(initialData?.price?.toString() || '')
+  // Store price as string with commas for display
+  const [price, setPrice] = useState(initialData?.price ? initialData.price.toLocaleString() : '')
   const [description, setDescription] = useState(initialData?.description || '')
 
   // Relationships / options
@@ -447,7 +448,9 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
       const payloadBody = {
         title,
         fullAddress,
-        price: price ? Number(price) : null,
+        fullAddress,
+        price: price ? Number(price.replace(/,/g, '')) : null,
+        description,
         description,
         city: cityPsgc, // Send PSGC Code
         cityName: cities.find((c) => String(c.id) === String(cityId))?.label || '',
@@ -911,11 +914,31 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                     <Label htmlFor="price">Price (PHP) <span className="text-destructive">*</span></Label>
                     <Input
                       id="price"
-                      type="number"
-                      min={0}
-                      step={1000}
+                      type="text"
                       value={price}
-                      onChange={(e) => setPrice(e.target.value)}
+                      onChange={(e) => {
+                        // Remove non-numeric chars except decimal
+                        const rawValue = e.target.value.replace(/[^0-9.]/g, '')
+                        if (rawValue === '') {
+                          setPrice('')
+                          return
+                        }
+                        // Parse and format
+                        const number = parseFloat(rawValue)
+                        if (!isNaN(number)) {
+                          // Allow typing decimal point
+                          if (rawValue.endsWith('.')) {
+                            setPrice(number.toLocaleString() + '.')
+                          } else if (rawValue.includes('.') && rawValue.endsWith('0')) {
+                            // Handle cases like "1.0"
+                            setPrice(rawValue)
+                          } else {
+                            setPrice(number.toLocaleString())
+                          }
+                        } else {
+                          setPrice(rawValue)
+                        }
+                      }}
                       required
                       disabled={isLoading}
                       placeholder="Base price"

@@ -12,15 +12,34 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
     const [showPreview, setShowPreview] = useState(false)
 
     // Safe image handling
-    const mainImage =
-        listing.images &&
-            listing.images.length > 0 &&
-            typeof listing.images[0] === 'object' &&
-            listing.images[0].url
-            ? (listing.images[0].url.startsWith('/api/media/file/')
-                ? listing.images[0].url.replace('/api/media/file/', '/media/')
-                : listing.images[0].url)
-            : 'https://placehold.co/600x400?text=No+Image'
+    const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : null
+
+    let mainImage = 'https://placehold.co/600x400?text=No+Image'
+
+    if (firstImage && typeof firstImage === 'object' && 'url' in firstImage && firstImage.url) {
+        const url = firstImage.url
+        if (url.startsWith('http')) {
+            mainImage = url
+        } else if (url.startsWith('/api/media/file/')) {
+            // If it's a local proxy URL, try to use it, but if S3 is active, this might fail if files aren't local.
+            // Check if we have a filename to construct valid S3 URL
+            const filename = firstImage.filename
+            if (filename) {
+                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
+            } else {
+                mainImage = url.replace('/api/media/file/', '/media/')
+            }
+        } else {
+            // Fallback for relative paths or filenames
+            // Assume S3 if it's just a path/filename
+            if (url.startsWith('/media/')) {
+                const filename = url.replace('/media/', '')
+                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
+            } else {
+                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${url}`
+            }
+        }
+    }
 
     const statusColors: Record<string, string> = {
         published: 'bg-green-500',
