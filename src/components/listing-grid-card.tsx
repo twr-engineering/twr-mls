@@ -7,39 +7,14 @@ import { MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
 import type { Listing } from '@/payload-types'
 import Image from 'next/image'
 import { ListingPreviewDialog } from './listing-preview-dialog'
+import { getMediaUrl } from '@/lib/utils'
 
 export function ListingGridCard({ listing, readOnly = false }: { listing: Listing, readOnly?: boolean }) {
     const [showPreview, setShowPreview] = useState(false)
 
     // Safe image handling
     const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : null
-
-    let mainImage = 'https://placehold.co/600x400?text=No+Image'
-
-    if (firstImage && typeof firstImage === 'object' && 'url' in firstImage && firstImage.url) {
-        const url = firstImage.url
-        if (url.startsWith('http')) {
-            mainImage = url
-        } else if (url.startsWith('/api/media/file/')) {
-            // If it's a local proxy URL, try to use it, but if S3 is active, this might fail if files aren't local.
-            // Check if we have a filename to construct valid S3 URL
-            const filename = firstImage.filename
-            if (filename) {
-                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
-            } else {
-                mainImage = url.replace('/api/media/file/', '/media/')
-            }
-        } else {
-            // Fallback for relative paths or filenames
-            // Assume S3 if it's just a path/filename
-            if (url.startsWith('/media/')) {
-                const filename = url.replace('/media/', '')
-                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
-            } else {
-                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${url}`
-            }
-        }
-    }
+    const mainImage = getMediaUrl(firstImage)
 
     const statusColors: Record<string, string> = {
         published: 'bg-green-500',

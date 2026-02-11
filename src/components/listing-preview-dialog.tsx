@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type { Listing } from '@/payload-types'
-import { cn } from '@/lib/utils'
+import { cn, getMediaUrl } from '@/lib/utils'
 import Image from 'next/image'
 
 interface ListingPreviewDialogProps {
@@ -41,12 +41,12 @@ export function ListingPreviewDialog({
         listing.images && Array.isArray(listing.images)
             ? listing.images
                 .map((img) => {
-                    if (typeof img === 'object' && img?.url) {
+                    const url = getMediaUrl(img)
+                    // If we get a valid URL (not placeholder), use it
+                    if (url && !url.includes('placehold.co')) {
                         return {
-                            url: img.url.startsWith('/api/media/file/')
-                                ? img.url.replace('/api/media/file/', '/media/')
-                                : img.url,
-                            alt: img.alt || listing.title,
+                            url,
+                            alt: (typeof img === 'object' && img?.alt) || listing.title,
                         }
                     }
                     return null
@@ -134,13 +134,13 @@ export function ListingPreviewDialog({
                 </DialogTitle>
                 <div className="flex flex-col md:flex-row h-[90vh] md:h-[600px]">
                     {/* LEFT: Image Carousel */}
-                    <div className="relative w-full md:w-1/2 bg-black/5 h-64 md:h-full">
+                    <div className="relative w-full md:w-1/2 bg-black h-64 md:h-full flex items-center justify-center">
                         {currentImage ? (
                             <Image
                                 src={currentImage.url}
                                 alt={currentImage.alt}
                                 fill
-                                className="object-cover"
+                                className="object-contain"
                             />
                         ) : (
                             <div className="flex items-center justify-center h-full text-muted-foreground">

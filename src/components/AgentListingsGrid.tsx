@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { getMediaUrl } from '@/lib/utils'
 
 type AgentListingsGridProps = {
   listings: Listing[]
@@ -29,18 +30,13 @@ export function AgentListingsGrid({ listings, showEdit = true }: AgentListingsGr
         {listings.map((listing) => {
           // Derive primary image URL from images relationship (if any)
           let primaryImageUrl: string | null = null
-          let primaryImageAlt: string | undefined
+          const primaryImageAlt: string | undefined = (listing.images && listing.images.length > 0 && typeof listing.images[0] === 'object' && 'alt' in listing.images[0]) ? listing.images[0].alt || undefined : undefined
 
           if (Array.isArray(listing.images) && listing.images.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const first = listing.images[0] as any
-            if (first && typeof first === 'object') {
-              if (first.url) {
-                primaryImageUrl = first.url as string
-              }
-              if (first.alt) {
-                primaryImageAlt = first.alt as string
-              }
+            const first = listing.images[0]
+            const url = getMediaUrl(first)
+            if (url && !url.includes('placehold.co')) {
+              primaryImageUrl = url
             }
           }
 
