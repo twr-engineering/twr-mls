@@ -112,3 +112,86 @@ export async function GET(
         )
     }
 }
+
+/**
+ * PATCH /api/shared-links/[id]
+ * Update a curated search link
+ */
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params
+        const payload = await getPayload({ config })
+
+        const headersList = await getHeaders()
+        const cookieStore = await cookies()
+        const token = cookieStore.get('payload-token')?.value
+
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Authentication required' },
+                { status: 401 }
+            )
+        }
+
+        const { user } = await payload.auth({ headers: headersList })
+
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Invalid authentication' },
+                { status: 401 }
+            )
+        }
+
+        const body = await request.json()
+        const { title } = body
+
+        if (!title) {
+            return NextResponse.json(
+                { error: 'Title is required' },
+                { status: 400 }
+            )
+        }
+
+        // Check if the link exists and belongs to the user
+        const link = await payload.findByID({
+            collection: 'shared-links',
+            id,
+        })
+
+        if (!link) {
+            return NextResponse.json(
+                { error: 'Link not found' },
+                { status: 404 }
+            )
+        }
+
+        // Check ownership (unless admin)
+        const createdById = typeof link.createdBy === 'object' ? link.createdBy.id : link.createdBy
+        if (user.role !== 'admin' && createdById !== user.id) {
+            return NextResponse.json(
+                { error: 'Not authorized to update this link' },
+                { status: 403 }
+            )
+        }
+
+        // Update the link
+        const updatedLink = await payload.update({
+            collection: 'shared-links',
+            id,
+            data: {
+                title,
+            },
+        })
+
+        return NextResponse.json(updatedLink)
+    } catch (error) {
+        console.error('Error updating shared link:', error)
+        return NextResponse.json(
+            { error: 'Failed to update shared link' },
+            { status: 500 }
+        )
+    }
+}
