@@ -11,6 +11,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { SearchableSelect } from './ui/searchable-select'
 import { MultiSelect, Option } from './ui/multi-select'
 
+import type { Media } from '@/payload-types'
+
+/**
+ * Interface for listing options used in select fields.
+ */
 type ListingOption = {
   id: string | number
   label: string
@@ -18,6 +23,9 @@ type ListingOption = {
   type?: string // 'Mun', 'City', etc.
 }
 
+/**
+ * Interface for API documents returned from Payload.
+ */
 type ApiDoc = {
   id: string | number
   name?: string
@@ -25,6 +33,9 @@ type ApiDoc = {
   psgcCode?: string
 }
 
+/**
+ * Interface for the listing form data structure.
+ */
 export type ListingFormData = {
   title?: string
   fullAddress?: string
@@ -53,16 +64,23 @@ export type ListingFormData = {
   modelName?: string
   indicativePriceMin?: number
   indicativePriceMax?: number
-  standardInclusions?: any
+  standardInclusions?: unknown
   presellingNotes?: string
-  images?: any[]
+  images?: (number | { id: string | number; url?: string; alt?: string })[]
 }
 
+/**
+ * Props for the CreateListingForm component.
+ */
 type CreateListingFormProps = {
   initialData?: ListingFormData
   listingId?: string
 }
 
+/**
+ * A multi-step form for creating or editing property listings.
+ * Handles location selection via PSGC API, property classification, media uploads, and submission to Payload CMS.
+ */
 export function CreateListingForm({ initialData, listingId }: CreateListingFormProps) {
   const router = useRouter()
 
@@ -128,13 +146,15 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   // Media (images)
   const [imageFiles, setImageFiles] = useState<FileList | null>(null)
-  const [existingImages, setExistingImages] = useState<any[]>(initialData?.images || [])
+  const [existingImages, setExistingImages] = useState<(Media & { id: number | string })[]>(initialData?.images as any || [])
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch options helper
+  /**
+   * Helper function to fetch options from an API endpoint and map them to ListingOption.
+   */
   const fetchOptions = async (url: string, labelField: keyof ApiDoc = 'name'): Promise<ListingOption[]> => {
     const res = await fetch(url, { credentials: 'include' })
     if (!res.ok) throw new Error(`Failed to load ${url}`)
@@ -370,6 +390,9 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
     })()
   }, [typeId])
 
+  /**
+   * Validates the fields for the current step before allowing navigation to the next step.
+   */
   const validateCurrentStep = () => {
     if (step === 1) {
       if (!fullAddress || !provinceId || !cityId || !barangayId) {
@@ -399,17 +422,26 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
     return true
   }
 
+  /**
+   * Navigates to the next step if the current step is valid.
+   */
   const goNext = () => {
     if (validateCurrentStep()) {
       setStep((prev) => (prev < 6 ? ((prev + 1) as 2 | 3 | 4 | 5 | 6) : prev))
     }
   }
 
+  /**
+   * Navigates to the previous step.
+   */
   const goBack = () => {
     setError(null)
     setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev))
   }
 
+  /**
+   * Handles form submission, including image uploads and listing creation/update.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)

@@ -21,6 +21,10 @@ type AgentListingsGridProps = {
   showEdit?: boolean
 }
 
+/**
+ * Component for displaying a grid of listings for an agent.
+ * Includes preview functionality and edit links.
+ */
 export function AgentListingsGrid({ listings, showEdit = true }: AgentListingsGridProps) {
   const [selected, setSelected] = useState<Listing | null>(null)
 
@@ -30,11 +34,11 @@ export function AgentListingsGrid({ listings, showEdit = true }: AgentListingsGr
         {listings.map((listing) => {
           // Derive primary image URL from images relationship (if any)
           let primaryImageUrl: string | null = null
-          const primaryImageAlt: string | undefined = (listing.images && listing.images.length > 0 && typeof listing.images[0] === 'object' && 'alt' in listing.images[0]) ? listing.images[0].alt || undefined : undefined
+          const firstImage = (listing.images && listing.images.length > 0) ? listing.images[0] : null
+          const primaryImageAlt: string | undefined = (typeof firstImage === 'object' && firstImage !== null && 'alt' in firstImage) ? firstImage.alt || undefined : undefined
 
-          if (Array.isArray(listing.images) && listing.images.length > 0) {
-            const first = listing.images[0]
-            const url = getMediaUrl(first)
+          if (firstImage) {
+            const url = getMediaUrl(firstImage)
             if (url && !url.includes('placehold.co')) {
               primaryImageUrl = url
             }

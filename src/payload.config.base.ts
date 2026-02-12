@@ -104,20 +104,26 @@ export const config: Config = {
         },
         forcePathStyle: true,
       },
-      // @ts-ignore - generateFileURL is valid in runtime but types might be outdated
-      generateFileURL: (args: any) => {
+      // @ts-expect-error - generateFileURL might not be in the current plugin types but is valid in runtime
+      generateFileURL: (args: { bucket: string; filename: string }) => {
         // Strict Supabase Public URL Generation
         // Endpoint in .env: https://[project-ref].storage.supabase.co/storage/v1/s3
         // Target URL: https://[project-ref].supabase.co/storage/v1/object/public/[bucket]/[filename]
 
         const endpoint = process.env.S3_ENDPOINT || ''
 
-        // Extract project ref (e.g., mxjqvqqtjjvfcimfzoxs)
-        let projectRef = 'mxjqvqqtjjvfcimfzoxs' // Default fallback based on observed env
-        const matches = endpoint.match(/https:\/\/([^.]+)\.storage\.supabase\.co/)
-        if (matches && matches[1]) {
-          projectRef = matches[1]
+        // Extract project ref from environment if available, otherwise extract from endpoint
+        let projectRef = process.env.SUPABASE_PROJECT_ID
+
+        if (!projectRef) {
+          const matches = endpoint.match(/https:\/\/([^.]+)\.storage\.supabase\.co/)
+          if (matches && matches[1]) {
+            projectRef = matches[1]
+          }
         }
+
+        // Fallback to documented default if still not found
+        projectRef = projectRef || 'mxjqvqqtjjvfcimfzoxs'
 
         // Use standard supabase.co domain for storage delivery
         return `https://${projectRef}.supabase.co/storage/v1/object/public/${args.bucket}/${args.filename}`

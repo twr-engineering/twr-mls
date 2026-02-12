@@ -25,6 +25,10 @@ type EditListingFormProps = {
   listing: Listing
 }
 
+/**
+ * Component for editing an existing property listing.
+ * handles hydration of initial data and multi-step form navigation.
+ */
 export function EditListingForm({ listing }: EditListingFormProps) {
   const router = useRouter()
 
@@ -76,7 +80,9 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Helper to fetch options from Payload REST endpoints
+  /**
+   * Helper function to fetch options from an API endpoint and map them to Option.
+   */
   const fetchOptions = async (url: string, labelField: keyof ApiDoc = 'name'): Promise<Option[]> => {
     const res = await fetch(url, { credentials: 'include' })
     if (!res.ok) throw new Error(`Failed to load ${url}`)
@@ -104,13 +110,13 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     // Relationships: support both ID and populated objects
     const cityVal =
       listing.city && typeof listing.city === 'object' && 'id' in listing.city
-        ? String((listing.city as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
+        ? String((listing.city as unknown as { id: string | number }).id)
         : listing.city
           ? String(listing.city)
           : ''
     const barangayVal =
       listing.barangay && typeof listing.barangay === 'object' && 'id' in listing.barangay
-        ? String((listing.barangay as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
+        ? String((listing.barangay as unknown as { id: string | number }).id)
         : listing.barangay
           ? String(listing.barangay)
           : ''
@@ -119,14 +125,14 @@ export function EditListingForm({ listing }: EditListingFormProps) {
       listing.propertyCategory &&
         typeof listing.propertyCategory === 'object' &&
         'id' in listing.propertyCategory
-        ? String((listing.propertyCategory as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
+        ? String((listing.propertyCategory as unknown as { id: string | number }).id)
         : listing.propertyCategory
           ? String(listing.propertyCategory)
           : ''
 
     const typeVal =
       listing.propertyType && typeof listing.propertyType === 'object' && 'id' in listing.propertyType
-        ? String((listing.propertyType as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
+        ? String((listing.propertyType as unknown as { id: string | number }).id)
         : listing.propertyType
           ? String(listing.propertyType)
           : ''
@@ -220,14 +226,23 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     })()
   }, [categoryId])
 
+  /**
+   * Navigates to the next step.
+   */
   const goNext = () => {
     setStep((prev) => (prev < 6 ? ((prev + 1) as 2 | 3 | 4 | 5 | 6) : prev))
   }
 
+  /**
+   * Navigates to the previous step.
+   */
   const goBack = () => {
     setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev))
   }
 
+  /**
+   * Handles the submission of the edited listing data.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)

@@ -50,6 +50,10 @@ type SearchFiltersProps = {
   }>
 }
 
+/**
+ * Component for filtering listings on the MLS page.
+ * Includes location selection and common property filters.
+ */
 export function SearchFilters({ availableLocations = {}, currentFilters }: SearchFiltersProps) {
   const router = useRouter()
   const _searchParams = useSearchParams()
@@ -79,7 +83,7 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     : []
 
   const filteredBarangays = provinceId && cityId && availableLocations[provinceId]?.cities[cityId]
-    ? availableLocations[provinceId].cities[cityId].barangays.sort((a: any, b: any) =>
+    ? availableLocations[provinceId].cities[cityId].barangays.sort((a, b) =>
       (a.name || '').localeCompare(b.name || ''))
     : []
 
@@ -99,6 +103,9 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     }
   }, [barangayId])
 
+  /**
+   * Applies the current filter state by updating the URL search parameters.
+   */
   const handleApplyFilters = () => {
     const params = new URLSearchParams()
 
@@ -116,6 +123,9 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     router.push(`/mls?${params.toString()}`)
   }
 
+  /**
+   * Resets all filters to their default values and clears the URL search parameters.
+   */
   const handleClearFilters = () => {
     setListingType('both')
     setTransactionType('')
@@ -130,12 +140,18 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     router.push('/mls')
   }
 
+  /**
+   * Opens the dialog to name and share the current curated search.
+   */
   const handleShareSearch = () => {
     // Set a default name suggestion
     setLinkName(`Curated Search - ${new Date().toLocaleDateString()}`)
     setIsShareDialogOpen(true)
   }
 
+  /**
+   * Creates a shared link for the current search filters and copies it to the clipboard.
+   */
   const handleCreateShareLink = async () => {
     if (!linkName.trim()) {
       toast.error('Please enter a name for the link')
@@ -314,7 +330,7 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
                   <SelectValue placeholder="All Barangays" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredBarangays.map((barangay: any) => (
+                  {filteredBarangays.map((barangay) => (
                     <SelectItem key={barangay.id} value={barangay.id}>
                       {barangay.name}
                     </SelectItem>
