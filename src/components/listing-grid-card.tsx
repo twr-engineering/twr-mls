@@ -4,11 +4,15 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
-import type { Listing } from '@/payload-types'
+import type { Listing, User } from '@/payload-types'
 import Image from 'next/image'
 import { ListingPreviewDialog } from './listing-preview-dialog'
 import { getMediaUrl } from '@/lib/utils'
 
+/**
+ * Component for displaying a single listing in a grid view.
+ * Handles rendering listing details, status badges, and preview dialog.
+ */
 export function ListingGridCard({ listing, readOnly = false }: { listing: Listing, readOnly?: boolean }) {
     const [showPreview, setShowPreview] = useState(false)
 
@@ -57,10 +61,10 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                                 className="h-8 w-8 rounded-full shadow-md hover:bg-white"
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    // Assuming createdBy is populated or handled.
-                                    // If strict typing is an issue, we can cast or check.
-                                    // For now, simple alert if no phone, or proper tel link.
-                                    const phone = typeof listing.createdBy === 'object' ? (listing.createdBy as any)?.phone : null
+                                    // Properly check for populated User object
+                                    const phone = typeof listing.createdBy === 'object' && listing.createdBy !== null
+                                        ? (listing.createdBy as User).phone
+                                        : null
                                     if (phone) {
                                         window.location.href = `tel:${phone}`
                                     } else {
@@ -90,8 +94,8 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         <span className="truncate">
-                            {listing.cityName || (typeof listing.city === 'object' ? (listing.city as any)?.name : null) || 'City N/A'}
-                            {listing.barangayName ? `, ${listing.barangayName}` : (typeof listing.barangay === 'object' ? `, ${(listing.barangay as any)?.name}` : '')}
+                            {listing.cityName || (typeof listing.city === 'object' && listing.city !== null && 'name' in listing.city ? (listing.city as unknown as { name: string }).name : null) || 'City N/A'}
+                            {listing.barangayName ? `, ${listing.barangayName}` : (typeof listing.barangay === 'object' && listing.barangay !== null && 'name' in listing.barangay ? `, ${(listing.barangay as unknown as { name: string }).name}` : '')}
                         </span>
                     </div>
 
