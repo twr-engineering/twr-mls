@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
 import type { Listing, User } from '@/payload-types'
+import { isUser, isCity, isBarangay } from '@/lib/type-guards'
 import Image from 'next/image'
 import { ListingPreviewDialog } from './listing-preview-dialog'
 import { getMediaUrl } from '@/lib/utils'
@@ -62,8 +63,8 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     // Properly check for populated User object
-                                    const phone = typeof listing.createdBy === 'object' && listing.createdBy !== null
-                                        ? (listing.createdBy as User).phone
+                                    const phone = isUser(listing.createdBy)
+                                        ? listing.createdBy.phone
                                         : null
                                     if (phone) {
                                         window.location.href = `tel:${phone}`
@@ -94,8 +95,8 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         <span className="truncate">
-                            {listing.cityName || (typeof listing.city === 'object' && listing.city !== null && 'name' in listing.city ? (listing.city as unknown as { name: string }).name : null) || 'City N/A'}
-                            {listing.barangayName ? `, ${listing.barangayName}` : (typeof listing.barangay === 'object' && listing.barangay !== null && 'name' in listing.barangay ? `, ${(listing.barangay as unknown as { name: string }).name}` : '')}
+                            {listing.cityName || (isCity(listing.city) ? listing.city.name : null) || 'City N/A'}
+                            {listing.barangayName ? `, ${listing.barangayName}` : (isBarangay(listing.barangay) ? `, ${listing.barangay.name}` : '')}
                         </span>
                     </div>
 

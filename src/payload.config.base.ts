@@ -106,15 +106,12 @@ export const config: Config = {
       },
       // @ts-expect-error - generateFileURL might not be in the current plugin types but is valid in runtime
       generateFileURL: (args: { bucket: string; filename: string }) => {
-        // Strict Supabase Public URL Generation
-        // Endpoint in .env: https://[project-ref].storage.supabase.co/storage/v1/s3
-        // Target URL: https://[project-ref].supabase.co/storage/v1/object/public/[bucket]/[filename]
-
         const endpoint = process.env.S3_ENDPOINT || ''
 
         // Extract project ref from environment if available, otherwise extract from endpoint
         let projectRef = process.env.SUPABASE_PROJECT_ID
 
+        // Check for project ref
         if (!projectRef) {
           const matches = endpoint.match(/https:\/\/([^.]+)\.storage\.supabase\.co/)
           if (matches && matches[1]) {
@@ -122,8 +119,12 @@ export const config: Config = {
           }
         }
 
-        // Fallback to documented default if still not found
-        projectRef = projectRef || 'mxjqvqqtjjvfcimfzoxs'
+        // Strict Requirement: specific project ID must be in env vars or extracted from endpoint
+        if (!projectRef) {
+          // We do not fallback to a hardcoded ID to prevent leaking. 
+          // If missing, this will likely result in a broken URL, which is better than a security leak.
+          return '/error-missing-project-id'
+        }
 
         // Use standard supabase.co domain for storage delivery
         return `https://${projectRef}.supabase.co/storage/v1/object/public/${args.bucket}/${args.filename}`

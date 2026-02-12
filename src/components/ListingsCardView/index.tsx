@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Eye, Edit, Trash2, MapPin, DollarSign, Calendar } from 'lucide-react'
 import type { Listing } from '@/payload-types'
+import { isCity, isBarangay, isTownship, isEstate } from '@/lib/type-guards'
 
 interface ListingsCardViewProps {
   data?: {
@@ -162,14 +163,11 @@ export const ListingsCardView = (props: ListingsCardViewProps) => {
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {typeof listing.city === 'object' && listing.city !== null && 'name' in listing.city
-                      ? (listing.city as unknown as { name: string }).name
+                    {isCity(listing.city)
+                      ? listing.city.name
                       : 'Location N/A'}
-                    {listing.barangay &&
-                      typeof listing.barangay === 'object' &&
-                      listing.barangay !== null &&
-                      'name' in listing.barangay &&
-                      `, ${(listing.barangay as unknown as { name: string }).name}`}
+                    {isBarangay(listing.barangay) &&
+                      `, ${listing.barangay.name}`}
                   </span>
                 </div>
               )}
@@ -276,39 +274,29 @@ export const ListingsCardView = (props: ListingsCardViewProps) => {
                       {selectedListing.city && (
                         <p>
                           <strong>City:</strong>{' '}
-                          {typeof selectedListing.city === 'object' &&
-                            selectedListing.city !== null &&
-                            'name' in selectedListing.city
-                            ? (selectedListing.city as unknown as { name: string }).name
+                          {isCity(selectedListing.city)
+                            ? selectedListing.city.name
                             : 'N/A'}
                         </p>
                       )}
                       {selectedListing.barangay && (
                         <p>
                           <strong>Barangay:</strong>{' '}
-                          {typeof selectedListing.barangay === 'object' &&
-                            selectedListing.barangay !== null &&
-                            'name' in selectedListing.barangay
-                            ? (selectedListing.barangay as unknown as { name: string }).name
+                          {isBarangay(selectedListing.barangay)
+                            ? selectedListing.barangay.name
                             : 'N/A'}
                         </p>
                       )}
-                      {selectedListing.township &&
-                        typeof selectedListing.township === 'object' &&
-                        selectedListing.township !== null &&
-                        'name' in selectedListing.township && (
-                          <p>
-                            <strong>Township:</strong> {(selectedListing.township as unknown as { name: string }).name}
-                          </p>
-                        )}
-                      {selectedListing.estate &&
-                        typeof selectedListing.estate === 'object' &&
-                        selectedListing.estate !== null &&
-                        'name' in selectedListing.estate && (
-                          <p>
-                            <strong>Estate:</strong> {(selectedListing.estate as unknown as { name: string }).name}
-                          </p>
-                        )}
+                      {isTownship(selectedListing.township) && (
+                        <p>
+                          <strong>Township:</strong> {selectedListing.township.name}
+                        </p>
+                      )}
+                      {isEstate(selectedListing.estate) && (
+                        <p>
+                          <strong>Estate:</strong> {selectedListing.estate.name}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

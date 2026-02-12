@@ -12,6 +12,7 @@ import { SearchableSelect } from './ui/searchable-select'
 import { MultiSelect, Option } from './ui/multi-select'
 
 import type { Media } from '@/payload-types'
+import { isMedia } from '@/lib/type-guards'
 
 /**
  * Interface for listing options used in select fields.
@@ -146,7 +147,10 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   // Media (images)
   const [imageFiles, setImageFiles] = useState<FileList | null>(null)
-  const [existingImages, setExistingImages] = useState<(Media & { id: number | string })[]>(initialData?.images as any || [])
+
+  const [existingImages, setExistingImages] = useState<(number | string | (Media & { id: number | string }))[]>(
+    Array.isArray(initialData?.images) ? initialData.images : []
+  )
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -499,7 +503,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
       // Combine existing images (that verify weren't removed) with new uploads
       const finalImageIds = [
-        ...existingImages.map((img) => img.id || img),
+        ...existingImages.map((img) => (typeof img === 'object' && img !== null && 'id' in img ? img.id : img)),
         ...newImageIds
       ]
 

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { Listing } from '@/payload-types'
+import { isCity, isBarangay, isPropertyCategory, isPropertyType, isMedia } from '@/lib/type-guards'
 
 type Option = {
   id: string | number
@@ -108,34 +109,29 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     )
 
     // Relationships: support both ID and populated objects
-    const cityVal =
-      listing.city && typeof listing.city === 'object' && 'id' in listing.city
-        ? String((listing.city as unknown as { id: string | number }).id)
-        : listing.city
-          ? String(listing.city)
-          : ''
-    const barangayVal =
-      listing.barangay && typeof listing.barangay === 'object' && 'id' in listing.barangay
-        ? String((listing.barangay as unknown as { id: string | number }).id)
-        : listing.barangay
-          ? String(listing.barangay)
-          : ''
+    const cityVal = isCity(listing.city)
+      ? String(listing.city.id)
+      : listing.city
+        ? String(listing.city)
+        : ''
 
-    const categoryVal =
-      listing.propertyCategory &&
-        typeof listing.propertyCategory === 'object' &&
-        'id' in listing.propertyCategory
-        ? String((listing.propertyCategory as unknown as { id: string | number }).id)
-        : listing.propertyCategory
-          ? String(listing.propertyCategory)
-          : ''
+    const barangayVal = isBarangay(listing.barangay)
+      ? String(listing.barangay.id)
+      : listing.barangay
+        ? String(listing.barangay)
+        : ''
 
-    const typeVal =
-      listing.propertyType && typeof listing.propertyType === 'object' && 'id' in listing.propertyType
-        ? String((listing.propertyType as unknown as { id: string | number }).id)
-        : listing.propertyType
-          ? String(listing.propertyType)
-          : ''
+    const categoryVal = isPropertyCategory(listing.propertyCategory)
+      ? String(listing.propertyCategory.id)
+      : listing.propertyCategory
+        ? String(listing.propertyCategory)
+        : ''
+
+    const typeVal = isPropertyType(listing.propertyType)
+      ? String(listing.propertyType.id)
+      : listing.propertyType
+        ? String(listing.propertyType)
+        : ''
 
     setCityId(cityVal)
     setBarangayId(barangayVal)
@@ -283,9 +279,9 @@ export function EditListingForm({ listing }: EditListingFormProps) {
 
       // Existing images (keep them)
       const existingImageIds: Array<string | number> = Array.isArray(listing.images)
-        ? (listing.images as any[]) // eslint-disable-line @typescript-eslint/no-explicit-any
+        ? listing.images
           .map((img) =>
-            img && typeof img === 'object' && 'id' in img ? (img as any).id : img, // eslint-disable-line @typescript-eslint/no-explicit-any
+            isMedia(img) ? img.id : img,
           )
           .filter(Boolean)
         : []
