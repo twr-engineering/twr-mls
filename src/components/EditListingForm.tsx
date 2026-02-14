@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { Listing } from '@/payload-types'
+import { isCity, isBarangay, isPropertyCategory, isPropertyType, isMedia } from '@/lib/type-guards'
 
 type Option = {
   id: string | number
@@ -25,6 +26,10 @@ type EditListingFormProps = {
   listing: Listing
 }
 
+/**
+ * Component for editing an existing property listing.
+ * handles hydration of initial data and multi-step form navigation.
+ */
 export function EditListingForm({ listing }: EditListingFormProps) {
   const router = useRouter()
 
@@ -76,7 +81,9 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Helper to fetch options from Payload REST endpoints
+  /**
+   * Helper function to fetch options from an API endpoint and map them to Option.
+   */
   const fetchOptions = async (url: string, labelField: keyof ApiDoc = 'name'): Promise<Option[]> => {
     const res = await fetch(url, { credentials: 'include' })
     if (!res.ok) throw new Error(`Failed to load ${url}`)
@@ -102,34 +109,29 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     )
 
     // Relationships: support both ID and populated objects
-    const cityVal =
-      listing.city && typeof listing.city === 'object' && 'id' in listing.city
-        ? String((listing.city as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
-        : listing.city
-          ? String(listing.city)
-          : ''
-    const barangayVal =
-      listing.barangay && typeof listing.barangay === 'object' && 'id' in listing.barangay
-        ? String((listing.barangay as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
-        : listing.barangay
-          ? String(listing.barangay)
-          : ''
+    const cityVal = isCity(listing.city)
+      ? String(listing.city.id)
+      : listing.city
+        ? String(listing.city)
+        : ''
 
-    const categoryVal =
-      listing.propertyCategory &&
-        typeof listing.propertyCategory === 'object' &&
-        'id' in listing.propertyCategory
-        ? String((listing.propertyCategory as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
-        : listing.propertyCategory
-          ? String(listing.propertyCategory)
-          : ''
+    const barangayVal = isBarangay(listing.barangay)
+      ? String(listing.barangay.id)
+      : listing.barangay
+        ? String(listing.barangay)
+        : ''
 
-    const typeVal =
-      listing.propertyType && typeof listing.propertyType === 'object' && 'id' in listing.propertyType
-        ? String((listing.propertyType as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
-        : listing.propertyType
-          ? String(listing.propertyType)
-          : ''
+    const categoryVal = isPropertyCategory(listing.propertyCategory)
+      ? String(listing.propertyCategory.id)
+      : listing.propertyCategory
+        ? String(listing.propertyCategory)
+        : ''
+
+    const typeVal = isPropertyType(listing.propertyType)
+      ? String(listing.propertyType.id)
+      : listing.propertyType
+        ? String(listing.propertyType)
+        : ''
 
     setCityId(cityVal)
     setBarangayId(barangayVal)
@@ -220,14 +222,23 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     })()
   }, [categoryId])
 
+  /**
+   * Navigates to the next step.
+   */
   const goNext = () => {
     setStep((prev) => (prev < 6 ? ((prev + 1) as 2 | 3 | 4 | 5 | 6) : prev))
   }
 
+  /**
+   * Navigates to the previous step.
+   */
   const goBack = () => {
     setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev))
   }
 
+  /**
+   * Handles the submission of the edited listing data.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -268,9 +279,9 @@ export function EditListingForm({ listing }: EditListingFormProps) {
 
       // Existing images (keep them)
       const existingImageIds: Array<string | number> = Array.isArray(listing.images)
-        ? (listing.images as any[]) // eslint-disable-line @typescript-eslint/no-explicit-any
+        ? listing.images
           .map((img) =>
-            img && typeof img === 'object' && 'id' in img ? (img as any).id : img, // eslint-disable-line @typescript-eslint/no-explicit-any
+            isMedia(img) ? img.id : img,
           )
           .filter(Boolean)
         : []

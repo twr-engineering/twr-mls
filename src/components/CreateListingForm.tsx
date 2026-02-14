@@ -11,6 +11,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { SearchableSelect } from './ui/searchable-select'
 import { MultiSelect, Option } from './ui/multi-select'
 
+import type { Media } from '@/payload-types'
+import { isMedia } from '@/lib/type-guards'
+
+/**
+ * Interface for listing options used in select fields.
+ */
 type ListingOption = {
   id: string | number
   label: string
@@ -18,6 +24,9 @@ type ListingOption = {
   type?: string // 'Mun', 'City', etc.
 }
 
+/**
+ * Interface for API documents returned from Payload.
+ */
 type ApiDoc = {
   id: string | number
   name?: string
@@ -25,6 +34,9 @@ type ApiDoc = {
   psgcCode?: string
 }
 
+/**
+ * Interface for the listing form data structure.
+ */
 export type ListingFormData = {
   title?: string
   fullAddress?: string
@@ -53,16 +65,23 @@ export type ListingFormData = {
   modelName?: string
   indicativePriceMin?: number
   indicativePriceMax?: number
-  standardInclusions?: any
+  standardInclusions?: unknown
   presellingNotes?: string
-  images?: any[]
+  images?: (number | { id: string | number; url?: string; alt?: string })[]
 }
 
+/**
+ * Props for the CreateListingForm component.
+ */
 type CreateListingFormProps = {
   initialData?: ListingFormData
   listingId?: string
 }
 
+/**
+ * A multi-step form for creating or editing property listings.
+ * Handles location selection via PSGC API, property classification, media uploads, and submission to Payload CMS.
+ */
 export function CreateListingForm({ initialData, listingId }: CreateListingFormProps) {
   const router = useRouter()
 
@@ -128,13 +147,18 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   // Media (images)
   const [imageFiles, setImageFiles] = useState<FileList | null>(null)
-  const [existingImages, setExistingImages] = useState<any[]>(initialData?.images || [])
+
+  const [existingImages, setExistingImages] = useState<(number | string | (Media & { id: number | string }))[]>(
+    Array.isArray(initialData?.images) ? initialData.images : []
+  )
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch options helper
+  /**
+   * Helper function to fetch options from an API endpoint and map them to ListingOption.
+   */
   const fetchOptions = async (url: string, labelField: keyof ApiDoc = 'name'): Promise<ListingOption[]> => {
     const res = await fetch(url, { credentials: 'include' })
     if (!res.ok) throw new Error(`Failed to load ${url}`)
@@ -213,7 +237,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           type: c.type // capture type (City, Mun, SubMun)
         }))
         setCities(cityOpts)
-        setCityId('')
+
+        // Only clear if current cityId is not in new options
+        if (cityId && !cityOpts.find((c: any) => String(c.id) === String(cityId))) {
+          setCityId('')
+        }
       } catch (e) {
         console.error('City fetch error:', e)
         setError('Failed to load cities for selected province.')
@@ -233,25 +261,30 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
     void (async () => {
       try {
-        // Determine if it's a city or municipality
+        // Determine if it's a city or municipality nicely if type is available
         const selectedCity = cities.find(c => String(c.id) === String(cityId))
         const isMunicipality = selectedCity?.type === 'Mun'
 
-        // Fetch Barangays from PSGC API
-        // Endpoint differs for City vs Municipality
-        const endpoint = isMunicipality
+        // Primary Endpoint
+        let endpoint = isMunicipality
           ? `https://psgc.cloud/api/municipalities/${cityId}/barangays`
           : `https://psgc.cloud/api/cities/${cityId}/barangays`
 
-        const res = await fetch(endpoint)
+        let res = await fetch(endpoint)
+
+        // If primary failed (regardless of reason, though usually 404), try fallback
         if (!res.ok) {
-          // Fallback: if one fails, try the other? 
-          // Or just throw. Let's try to be robust. 
-          // If we guessed wrong or type is missing, maybe try the other.
-          // But relying on type should be enough if PSGC is consistent.
-          // Let's stick to type for now.
-          throw new Error(`Failed to fetch barangays (Status ${res.status})`)
+          const fallbackEndpoint = isMunicipality
+            ? `https://psgc.cloud/api/cities/${cityId}/barangays`
+            : `https://psgc.cloud/api/municipalities/${cityId}/barangays`
+
+          res = await fetch(fallbackEndpoint)
+
+          if (!res.ok) {
+            throw new Error(`Failed to fetch barangays (Status ${res.status})`)
+          }
         }
+
         const data = await res.json()
         // Sort alphabetically
         data.sort((a: any, b: any) => a.name.localeCompare(b.name))
@@ -262,9 +295,15 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           code: b.code
         }))
         setBarangays(brgyOpts)
-        setBarangayId('')
-        setDevelopments([])
-        setDevelopmentId('')
+
+        // Only clear if current barangayId is not in new options
+        if (barangayId && !brgyOpts.find((b: any) => String(b.id) === String(barangayId))) {
+          setBarangayId('')
+        }
+
+        // Reset developments only if barangay changed or became invalid
+        // setDevelopments([]) - logic moved to barangayId effect or manual reset if needed
+        // but we should probably re-fetch developments if barangay changes, handled by next effect
       } catch (e) {
         console.error(e)
         setError('Failed to load barangays for selected city.')
@@ -288,7 +327,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           'name'
         )
         setDevelopments(devOpts)
-        setDevelopmentId('')
+
+        // Only clear if current developmentId is not in new options
+        if (developmentId && !devOpts.find((d) => String(d.id) === String(developmentId))) {
+          setDevelopmentId('')
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load developments for selected barangay.')
@@ -312,7 +355,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
           )}&where[isActive][equals]=true`,
         )
         setTypes(typeOpts)
-        setTypeId('')
+
+        // Only clear if current typeId is not in new options
+        if (typeId && !typeOpts.find((t) => String(t.id) === String(typeId))) {
+          setTypeId('')
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load property types for selected category.')
@@ -335,7 +382,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         )}&where[isActive][equals]=true`
         const opts = await fetchOptions(url)
         setSubtypes(opts)
-        setSubtypeId('')
+
+        // Only clear if current subtypeId is not in new options
+        if (subtypeId && !opts.find((s) => String(s.id) === String(subtypeId))) {
+          setSubtypeId('')
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load property subtypes.')
@@ -343,6 +394,9 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
     })()
   }, [typeId])
 
+  /**
+   * Validates the fields for the current step before allowing navigation to the next step.
+   */
   const validateCurrentStep = () => {
     if (step === 1) {
       if (!fullAddress || !provinceId || !cityId || !barangayId) {
@@ -372,17 +426,26 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
     return true
   }
 
+  /**
+   * Navigates to the next step if the current step is valid.
+   */
   const goNext = () => {
     if (validateCurrentStep()) {
       setStep((prev) => (prev < 6 ? ((prev + 1) as 2 | 3 | 4 | 5 | 6) : prev))
     }
   }
 
+  /**
+   * Navigates to the previous step.
+   */
   const goBack = () => {
     setError(null)
     setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev))
   }
 
+  /**
+   * Handles form submission, including image uploads and listing creation/update.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -440,7 +503,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
       // Combine existing images (that verify weren't removed) with new uploads
       const finalImageIds = [
-        ...existingImages.map((img) => img.id || img),
+        ...existingImages.map((img) => (typeof img === 'object' && img !== null && 'id' in img ? img.id : img)),
         ...newImageIds
       ]
 

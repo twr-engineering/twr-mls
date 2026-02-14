@@ -4,42 +4,22 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
-import type { Listing } from '@/payload-types'
+import type { Listing, User } from '@/payload-types'
+import { isUser, isCity, isBarangay } from '@/lib/type-guards'
 import Image from 'next/image'
 import { ListingPreviewDialog } from './listing-preview-dialog'
+import { getMediaUrl } from '@/lib/utils'
 
+/**
+ * Component for displaying a single listing in a grid view.
+ * Handles rendering listing details, status badges, and preview dialog.
+ */
 export function ListingGridCard({ listing, readOnly = false }: { listing: Listing, readOnly?: boolean }) {
     const [showPreview, setShowPreview] = useState(false)
 
     // Safe image handling
     const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : null
-
-    let mainImage = 'https://placehold.co/600x400?text=No+Image'
-
-    if (firstImage && typeof firstImage === 'object' && 'url' in firstImage && firstImage.url) {
-        const url = firstImage.url
-        if (url.startsWith('http')) {
-            mainImage = url
-        } else if (url.startsWith('/api/media/file/')) {
-            // If it's a local proxy URL, try to use it, but if S3 is active, this might fail if files aren't local.
-            // Check if we have a filename to construct valid S3 URL
-            const filename = firstImage.filename
-            if (filename) {
-                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
-            } else {
-                mainImage = url.replace('/api/media/file/', '/media/')
-            }
-        } else {
-            // Fallback for relative paths or filenames
-            // Assume S3 if it's just a path/filename
-            if (url.startsWith('/media/')) {
-                const filename = url.replace('/media/', '')
-                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
-            } else {
-                mainImage = `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${url}`
-            }
-        }
-    }
+    const mainImage = getMediaUrl(firstImage)
 
     const statusColors: Record<string, string> = {
         published: 'bg-green-500',
@@ -82,10 +62,10 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                                 className="h-8 w-8 rounded-full shadow-md hover:bg-white"
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    // Assuming createdBy is populated or handled.
-                                    // If strict typing is an issue, we can cast or check.
-                                    // For now, simple alert if no phone, or proper tel link.
-                                    const phone = typeof listing.createdBy === 'object' ? (listing.createdBy as any)?.phone : null
+                                    // Properly check for populated User object
+                                    const phone = isUser(listing.createdBy)
+                                        ? listing.createdBy.phone
+                                        : null
                                     if (phone) {
                                         window.location.href = `tel:${phone}`
                                     } else {
@@ -115,8 +95,8 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         <span className="truncate">
-                            {listing.cityName || (typeof listing.city === 'object' ? (listing.city as any)?.name : null) || 'City N/A'}
-                            {listing.barangayName ? `, ${listing.barangayName}` : (typeof listing.barangay === 'object' ? `, ${(listing.barangay as any)?.name}` : '')}
+                            {listing.cityName || (isCity(listing.city) ? listing.city.name : null) || 'City N/A'}
+                            {listing.barangayName ? `, ${listing.barangayName}` : (isBarangay(listing.barangay) ? `, ${listing.barangay.name}` : '')}
                         </span>
                     </div>
 

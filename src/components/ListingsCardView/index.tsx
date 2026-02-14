@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useAuth, useConfig } from '@payloadcms/ui'
+import { useAuth } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,9 +15,19 @@ import {
 } from '@/components/ui/dialog'
 import { Eye, Edit, Trash2, MapPin, DollarSign, Calendar } from 'lucide-react'
 import type { Listing } from '@/payload-types'
+import { isCity, isBarangay, isTownship, isEstate } from '@/lib/type-guards'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ListingsCardView = (props: any) => {
+interface ListingsCardViewProps {
+  data?: {
+    docs?: Listing[]
+  }
+}
+
+/**
+ * Component for displaying a card view of listings in the admin panel.
+ * Provides quick actions for viewing, editing, and deleting listings.
+ */
+export const ListingsCardView = (props: ListingsCardViewProps) => {
   const { user } = useAuth()
   const router = useRouter()
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
@@ -28,15 +38,24 @@ export const ListingsCardView = (props: any) => {
   const listings = props?.data?.docs || []
   const isAdmin = user?.role === 'admin' || user?.role === 'approver'
 
+  /**
+   * Opens the details modal for the selected listing.
+   */
   const handleViewDetails = (listing: Listing) => {
     setSelectedListing(listing)
     setIsModalOpen(true)
   }
 
+  /**
+   * Navigates to the administrative edit page for the listing.
+   */
   const handleEdit = (listingId: number | string) => {
     router.push(`/admin/collections/listings/${listingId}`)
   }
 
+  /**
+   * Handles soft deletion (or permanent deletion based on API behavior) of a listing.
+   */
   const handleSoftDelete = async (listingId: number | string) => {
     if (!confirm('Are you sure you want to delete this listing? This action can be undone.')) {
       return
@@ -64,6 +83,9 @@ export const ListingsCardView = (props: any) => {
     }
   }
 
+  /**
+   * Formats a numeric price into PHP currency string.
+   */
   const formatPrice = (price: number | null | undefined) => {
     if (!price) return 'N/A'
     return new Intl.NumberFormat('en-PH', {
@@ -73,6 +95,9 @@ export const ListingsCardView = (props: any) => {
     }).format(price)
   }
 
+  /**
+   * Formats a date string into a readable format.
+   */
   const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return 'N/A'
     return new Date(date).toLocaleDateString('en-US', {
@@ -82,6 +107,9 @@ export const ListingsCardView = (props: any) => {
     })
   }
 
+  /**
+   * Returns a Tailwind CSS class string for the listing status badge.
+   */
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       draft: 'bg-gray-100 text-gray-800',
@@ -135,13 +163,11 @@ export const ListingsCardView = (props: any) => {
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {typeof listing.city === 'object' && (listing.city as any).name
-                      ? (listing.city as any).name
+                    {isCity(listing.city)
+                      ? listing.city.name
                       : 'Location N/A'}
-                    {listing.barangay &&
-                      typeof listing.barangay === 'object' &&
-                      (listing.barangay as any).name &&
-                      `, ${(listing.barangay as any).name}`}
+                    {isBarangay(listing.barangay) &&
+                      `, ${listing.barangay.name}`}
                   </span>
                 </div>
               )}
@@ -248,34 +274,29 @@ export const ListingsCardView = (props: any) => {
                       {selectedListing.city && (
                         <p>
                           <strong>City:</strong>{' '}
-                          {typeof selectedListing.city === 'object' && (selectedListing.city as any).name
-                            ? (selectedListing.city as any).name
+                          {isCity(selectedListing.city)
+                            ? selectedListing.city.name
                             : 'N/A'}
                         </p>
                       )}
                       {selectedListing.barangay && (
                         <p>
                           <strong>Barangay:</strong>{' '}
-                          {typeof selectedListing.barangay === 'object' &&
-                            (selectedListing.barangay as any).name
-                            ? (selectedListing.barangay as any).name
+                          {isBarangay(selectedListing.barangay)
+                            ? selectedListing.barangay.name
                             : 'N/A'}
                         </p>
                       )}
-                      {selectedListing.township &&
-                        typeof selectedListing.township === 'object' &&
-                        (selectedListing.township as any).name && (
-                          <p>
-                            <strong>Township:</strong> {(selectedListing.township as any).name}
-                          </p>
-                        )}
-                      {selectedListing.estate &&
-                        typeof selectedListing.estate === 'object' &&
-                        (selectedListing.estate as any).name && (
-                          <p>
-                            <strong>Estate:</strong> {(selectedListing.estate as any).name}
-                          </p>
-                        )}
+                      {isTownship(selectedListing.township) && (
+                        <p>
+                          <strong>Township:</strong> {selectedListing.township.name}
+                        </p>
+                      )}
+                      {isEstate(selectedListing.estate) && (
+                        <p>
+                          <strong>Estate:</strong> {selectedListing.estate.name}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

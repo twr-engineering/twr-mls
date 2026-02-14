@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getListingById } from '@/lib/payload/api'
 import { CreateListingForm } from '@/components/CreateListingForm'
 import { notFound } from 'next/navigation'
@@ -11,6 +10,10 @@ type PageProps = {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Agent-facing page for editing an existing property listing.
+ * Fetches the listing by ID and populates the CreateListingForm with initial data.
+ */
 export default async function EditListingPage({ params }: PageProps) {
   const { id } = await params
   const listing = await getListingById(id)
@@ -52,36 +55,28 @@ export default async function EditListingPage({ params }: PageProps) {
     )
   }
 
+  // Extract location and classification IDs using proper type checks
+  // Note: province, city, and barangay are string (PSGC codes) in the schema
+  const cityId = listing.city
+  const barangayId = listing.barangay
+  const developmentId = typeof listing.development === 'object' ? listing.development?.id : listing.development
 
+  // Related collections
+  const propertyCategoryId = typeof listing.propertyCategory === 'object' ? listing.propertyCategory.id : listing.propertyCategory
+  const propertyTypeId = typeof listing.propertyType === 'object' ? listing.propertyType.id : listing.propertyType
+  const propertySubtypeId = typeof listing.propertySubtype === 'object' ? listing.propertySubtype?.id : listing.propertySubtype
 
-  const cityId = typeof listing.city === 'object' ? (listing.city as any).id : listing.city
-  const barangayId = typeof listing.barangay === 'object' ? (listing.barangay as any).id : listing.barangay
-  const developmentId =
-    typeof listing.development === 'object' ? (listing.development as any)?.id : listing.development
-
-  // Extract property classification IDs
-  const propertyCategoryId =
-    typeof listing.propertyCategory === 'object'
-      ? (listing.propertyCategory as any).id
-      : listing.propertyCategory
-  const propertyTypeId =
-    typeof listing.propertyType === 'object' ? (listing.propertyType as any).id : listing.propertyType
-  const propertySubtypeId =
-    listing.propertySubtype && typeof listing.propertySubtype === 'object'
-      ? (listing.propertySubtype as any).id
-      : listing.propertySubtype
-
-  // Extract full image objects for preview, not just IDs
+  // Extract full image objects for preview with proper typing
   const images = Array.isArray(listing.images)
     ? listing.images.map((img) => {
       if (typeof img === 'object' && img !== null) {
         return {
           id: img.id,
-          url: img.url,
-          alt: img.alt,
+          url: img.url || '',
+          alt: img.alt || '',
         }
       }
-      return { id: img }
+      return { id: img as number }
     })
     : []
 
@@ -89,7 +84,7 @@ export default async function EditListingPage({ params }: PageProps) {
     // Basic fields
     title: listing.title,
     description: (listing.description as any) || undefined,
-    listingType: listing.listingType as 'resale' | 'preselling',
+    listingType: listing.listingType,
 
     // Property classification
     propertyCategoryId: propertyCategoryId || 0,
@@ -97,7 +92,7 @@ export default async function EditListingPage({ params }: PageProps) {
     propertySubtypeId: propertySubtypeId || undefined,
 
     // Transaction
-    transactionType: listing.transactionType as any,
+    transactionType: listing.transactionType,
 
     // Common fields
     bedrooms: listing.bedrooms || undefined,
@@ -124,6 +119,7 @@ export default async function EditListingPage({ params }: PageProps) {
     presellingNotes: listing.presellingNotes || undefined,
 
     // Location
+    provinceId: listing.province,
     cityId,
     barangayId,
     developmentId: developmentId || undefined,

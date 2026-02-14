@@ -680,16 +680,39 @@ export async function getAvailableLocations() {
     `)
 
     // Transform flat rows into a tree structure
-    const tree: Record<string, any> = {}
+    type LocationTree = Record<
+      string,
+      {
+        id: string
+        name: string
+        cities: Record<
+          string,
+          {
+            id: string
+            name: string
+            barangays: { id: string; name: string }[]
+          }
+        >
+      }
+    >
+
+    const tree: LocationTree = {}
 
     for (const row of result.rows) {
-      const r = row as any
-      const province = r.province as string
-      const province_name = r.province_name as string
-      const city = r.city as string
-      const city_name = r.city_name as string
-      const barangay = r.barangay as string
-      const barangay_name = r.barangay_name as string
+      const r = row as {
+        province: string
+        province_name: string
+        city: string
+        city_name: string
+        barangay: string
+        barangay_name: string
+      }
+      const province = r.province
+      const province_name = r.province_name
+      const city = r.city
+      const city_name = r.city_name
+      const barangay = r.barangay
+      const barangay_name = r.barangay_name
 
       if (!province) continue
 

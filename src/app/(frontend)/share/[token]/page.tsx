@@ -10,6 +10,10 @@ type Props = {
   }>
 }
 
+/**
+ * Publicly shareable page for viewing a specific listing.
+ * Validates the share token, checks for expiry, and displays listing details with proper typing.
+ */
 export default async function SharePage({ params }: Props) {
   const { token } = await params
   const payload = await getPayload({ config: configPromise })
@@ -62,15 +66,21 @@ export default async function SharePage({ params }: Props) {
     },
   })
 
-  const listing = shareLink.listing as Listing
+  // Properly handle the relationship which could be a number or a Listing object
+  const listing = shareLink.listing
   if (!listing || typeof listing === 'number') {
     notFound()
   }
 
-  const city = listing.city as unknown as City | null
-  const barangay = listing.barangay as unknown as Barangay | null
-  const development = listing.development as unknown as Development | null
+  // Use optional chaining and proper typing for related fields
+  // Note: city, province, and barangay are text fields in Listing collection
+  const city = typeof listing.city === 'object' ? (listing.city as any).name : listing.cityName
+  const barangay = typeof listing.barangay === 'object' ? (listing.barangay as any).name : listing.barangayName
+  const development = typeof listing.development === 'object' ? listing.development : null
 
+  /**
+   * Formats a numeric price into a PHP currency string.
+   */
   const formatPrice = (price: number | null | undefined) => {
     if (!price) return null
     return new Intl.NumberFormat('en-PH', {
@@ -96,7 +106,6 @@ export default async function SharePage({ params }: Props) {
       <main className="share-content">
         <h1 className="listing-title">{listing.title}</h1>
 
-        { }
         <div className="price-section">
           <span className="price">{formatPrice(listing.price)}</span>
           {listing.pricePerSqm && (
@@ -106,19 +115,17 @@ export default async function SharePage({ params }: Props) {
           )}
         </div>
 
-        { }
         <div className="location-section">
           <p className="location">
-            {development && typeof development === 'object' && development.name && `${development.name}, `}
-            {barangay && typeof barangay === 'object' && barangay.name && `${barangay.name}, `}
-            {city && typeof city === 'object' && city.name}
+            {development && development.name && `${development.name}, `}
+            {barangay && `${barangay}, `}
+            {city}
           </p>
           {listing.fullAddress && (
             <p className="full-address">{listing.fullAddress}</p>
           )}
         </div>
 
-        { }
         {images.length > 0 && (
           <div className="images-section">
             {images.slice(0, 5).map((image, index) => (
@@ -138,7 +145,6 @@ export default async function SharePage({ params }: Props) {
           </div>
         )}
 
-        { }
         <div className="specs-section">
           <h2>Property Details</h2>
           <div className="specs-grid">
@@ -199,12 +205,10 @@ export default async function SharePage({ params }: Props) {
           </div>
         </div>
 
-        { }
         {listing.description && (
           <div className="description-section">
             <h2>Description</h2>
             <div className="description-content">
-              { }
               <p>Contact the agent for more details about this property.</p>
             </div>
           </div>
@@ -384,6 +388,9 @@ export default async function SharePage({ params }: Props) {
   )
 }
 
+/**
+ * Generates metadata for the share page.
+ */
 export async function generateMetadata({ params }: Props) {
   const { token } = await params
   const payload = await getPayload({ config: configPromise })
@@ -403,7 +410,7 @@ export async function generateMetadata({ params }: Props) {
   }
 
   const shareLink = shareLinks.docs[0]
-  const listing = shareLink.listing as Listing
+  const listing = shareLink.listing
 
   if (!listing || typeof listing === 'number') {
     return {
