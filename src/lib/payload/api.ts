@@ -60,6 +60,7 @@ export async function getUserListings(filters?: {
     where,
     limit: filters?.limit || 50,
     sort: '-createdAt',
+    depth: 2,
     overrideAccess: false,
     user,
   })
@@ -83,6 +84,7 @@ export async function getListingById(id: string) {
     const listing = await payload.findByID({
       collection: 'listings',
       id,
+      depth: 2,
       overrideAccess: false,
       user,
     })
@@ -317,6 +319,7 @@ export async function searchListings(filters?: {
     limit: filters?.limit || 20,
     page: filters?.page || 1,
     sort: '-createdAt',
+    depth: 2,
     overrideAccess: false,
     user,
   })
