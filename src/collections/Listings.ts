@@ -105,10 +105,17 @@ const canDeleteListing: Access = ({ req: { user } }) => {
   return false
 }
 
-const listingTypeFieldAccess: FieldAccess = ({ req: { user } }) => {
+const listingTypeFieldAccess: FieldAccess = ({ req: { user }, data, doc }) => {
   if (!user) return false
 
-  if (user.role === 'admin') return true
+  if (user.role === 'admin' || user.role === 'approver') return true
+
+  // For agents, allow the update only if it remains 'resale'
+  // (the Admin Panel sends the field unchanged on Save, which triggers this check)
+  if (user.role === 'agent') {
+    const newValue = data?.listingType || doc?.listingType
+    return newValue === 'resale'
+  }
 
   return false
 }
