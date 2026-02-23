@@ -50,7 +50,7 @@ export const config: Config = {
     meta: {
       titleSuffix: '- TWR MLS',
     },
-
+    theme: 'dark',
   },
   collections: [
     Users,

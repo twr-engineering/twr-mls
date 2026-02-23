@@ -26,27 +26,7 @@ export default async function AgentLayout({
         user={{
           name: user.email.split('@')[0],
           email: user.email,
-          avatar: (() => {
-            const avatar = user.avatar
-            if (!avatar) return '/default.png'
-            if (typeof avatar === 'string') return avatar
-
-            if (typeof avatar === 'object' && 'url' in avatar) {
-              const media = avatar as AvatarMedia
-              const url = media.url
-              if (url && url.startsWith('http')) return url
-
-              // Fallback for S3/Supabase - similar to ListingGridCard fix
-              // Use filename if available, otherwise try to use the URL path
-              const filename = media.filename
-              if (filename) {
-                return `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${filename}`
-              }
-
-              return url || '/default.png' // fallback to relative if no filename
-            }
-            return '/default.png'
-          })(),
+          avatar: (user.avatar as string) || '/default.png',
         }}
       />
       <SidebarInset>

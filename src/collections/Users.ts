@@ -104,14 +104,6 @@ export const Users: CollectionConfig = {
       name: 'avatar',
       type: 'upload',
       relationTo: 'media',
-      access: {
-        update: ({ req: { user }, id }) => {
-          // Allow users to update their own avatar
-          if (!user) return false
-          if (user.role === 'admin') return true
-          return user.id === id
-        }
-      },
       admin: {
         position: 'sidebar',
         description: 'Profile picture',

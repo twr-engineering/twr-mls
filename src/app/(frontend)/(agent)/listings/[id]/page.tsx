@@ -8,7 +8,8 @@ import { RichTextRenderer } from '@/components/ui/rich-text-renderer'
 import { ListingDocumentsWrapper } from '@/components/listing-documents-wrapper'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Edit, ArrowLeft } from 'lucide-react'
+import { Edit, ArrowLeft, MapPin, BedDouble, Bath, Ruler, Car, Calendar, Home } from 'lucide-react'
+import { getMediaUrl } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,26 +32,59 @@ export default async function ViewListingPage({ params }: PageProps) {
 
   const cityName = listing.cityName || 'N/A'
   const barangayName = listing.barangayName || 'N/A'
-  const developmentName =
-    listing.development && typeof listing.development === 'object' ? listing.development.name : null
 
-  const getStatusBadgeVariant = (
-    status: string,
-  ): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  const categoryName =
+    listing.propertyCategory && typeof listing.propertyCategory === 'object'
+      ? listing.propertyCategory.name
+      : null
+  const typeName =
+    listing.propertyType && typeof listing.propertyType === 'object'
+      ? listing.propertyType.name
+      : null
+  const subtypeName =
+    listing.propertySubtype && typeof listing.propertySubtype === 'object'
+      ? (listing.propertySubtype as any).name
+      : null
+  const developmentName =
+    listing.development && typeof listing.development === 'object'
+      ? listing.development.name
+      : null
+
+  // Normalize images
+  const images =
+    listing.images && Array.isArray(listing.images)
+      ? listing.images
+        .map((img) => {
+          const url = getMediaUrl(img)
+          if (url && !url.includes('placehold.co')) {
+            return {
+              url,
+              alt: (typeof img === 'object' && img?.alt) || listing.title,
+            }
+          }
+          return null
+        })
+        .filter(Boolean) as { url: string; alt: string }[]
+      : []
+
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'published':
-        return 'default'
+        return 'bg-green-100 text-green-800 border-green-200'
       case 'submitted':
-        return 'secondary'
+        return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'needs_revision':
-        return 'destructive'
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-200'
       default:
-        return 'outline'
+        return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="icon">
           <Link href="/listings">
@@ -58,12 +92,21 @@ export default async function ViewListingPage({ params }: PageProps) {
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{listing.title}</h1>
-          <div className="flex items-center gap-2 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900">{listing.title}</h1>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <ListingTypeBadge listingType={listing.listingType} />
-            <Badge variant={getStatusBadgeVariant(listing.status)}>
-              {listing.status.replace('_', ' ')}
+            <Badge variant="outline" className={getStatusBadgeClass(listing.status)}>
+              {listing.status.replace('_', ' ').toUpperCase()}
             </Badge>
+            {categoryName && (
+              <Badge variant="secondary" className="text-xs">{categoryName}</Badge>
+            )}
+            {typeName && (
+              <Badge variant="secondary" className="text-xs">{typeName}</Badge>
+            )}
+            {subtypeName && (
+              <Badge variant="secondary" className="text-xs">{subtypeName}</Badge>
+            )}
           </div>
         </div>
         {canEdit ? (
@@ -81,80 +124,179 @@ export default async function ViewListingPage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Images Gallery */}
+      {images.length > 0 && (
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            {/* Cover Image */}
+            <div className="relative aspect-[16/9] md:aspect-[21/9] w-full bg-muted">
+              <img
+                src={images[0].url}
+                alt={images[0].alt}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-3 left-3">
+                <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                  Cover
+                </Badge>
+              </div>
+              {images.length > 1 && (
+                <div className="absolute bottom-3 right-3">
+                  <Badge variant="secondary" className="bg-black/60 text-white border-0 text-xs">
+                    {images.length} photos
+                  </Badge>
+                </div>
+              )}
+            </div>
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="flex gap-1 p-2 overflow-x-auto bg-muted/30">
+                {images.map((img, i) => (
+                  <div
+                    key={i}
+                    className={`relative flex-shrink-0 w-20 h-14 rounded-md overflow-hidden border-2 ${i === 0 ? 'border-primary' : 'border-transparent'
+                      }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Price + Key Stats */}
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Pricing</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-gray-900">Pricing</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             {listing.price && (
               <div>
                 <span className="text-sm text-muted-foreground">Price</span>
-                <p className="text-2xl font-bold">₱{listing.price.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-gray-900">₱{listing.price.toLocaleString()}</p>
               </div>
             )}
             {listing.pricePerSqm && (
               <div>
                 <span className="text-sm text-muted-foreground">Price per sqm</span>
-                <p className="font-medium">₱{listing.pricePerSqm.toLocaleString()}</p>
+                <p className="font-semibold text-gray-900">₱{listing.pricePerSqm.toLocaleString()}</p>
               </div>
             )}
             <div>
               <span className="text-sm text-muted-foreground">Transaction Type</span>
-              <p className="font-medium capitalize">{listing.transactionType}</p>
+              <p className="font-medium capitalize">
+                {Array.isArray(listing.transactionType)
+                  ? listing.transactionType.join(', ')
+                  : listing.transactionType}
+              </p>
             </div>
+            {listing.paymentTerms && listing.paymentTerms.length > 0 && (
+              <div>
+                <span className="text-sm text-muted-foreground">Payment Terms</span>
+                <p className="font-medium capitalize">{listing.paymentTerms.join(', ')}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Property Details</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-gray-900">Property Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {listing.floorAreaSqm && (
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Floor Area</span>
-                <span className="font-medium">{listing.floorAreaSqm} sqm</span>
-              </div>
-            )}
-            {listing.lotAreaSqm && (
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Lot Area</span>
-                <span className="font-medium">{listing.lotAreaSqm} sqm</span>
-              </div>
-            )}
-            {listing.bedrooms && (
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Bedrooms</span>
-                <span className="font-medium">{listing.bedrooms}</span>
-              </div>
-            )}
-            {listing.bathrooms && (
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Bathrooms</span>
-                <span className="font-medium">{listing.bathrooms}</span>
-              </div>
-            )}
-            {listing.parkingSlots && (
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Parking</span>
-                <span className="font-medium">{listing.parkingSlots}</span>
-              </div>
-            )}
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {listing.bedrooms != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-muted p-2">
+                    <BedDouble className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Bedrooms</p>
+                    <p className="font-semibold">{listing.bedrooms}</p>
+                  </div>
+                </div>
+              )}
+              {listing.bathrooms != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-muted p-2">
+                    <Bath className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Bathrooms</p>
+                    <p className="font-semibold">{listing.bathrooms}</p>
+                  </div>
+                </div>
+              )}
+              {listing.floorAreaSqm != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-muted p-2">
+                    <Ruler className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Floor Area</p>
+                    <p className="font-semibold">{listing.floorAreaSqm} sqm</p>
+                  </div>
+                </div>
+              )}
+              {listing.lotAreaSqm != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-muted p-2">
+                    <Home className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Lot Area</p>
+                    <p className="font-semibold">{listing.lotAreaSqm} sqm</p>
+                  </div>
+                </div>
+              )}
+              {listing.parkingSlots != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-muted p-2">
+                    <Car className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Parking</p>
+                    <p className="font-semibold">{listing.parkingSlots}</p>
+                  </div>
+                </div>
+              )}
+              {listing.constructionYear != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-muted p-2">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Built</p>
+                    <p className="font-semibold">{listing.constructionYear}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Location */}
       <Card>
-        <CardHeader>
-          <CardTitle>Location</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <MapPin className="h-4 w-4" />
+            Location
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           <div>
             <span className="text-sm text-muted-foreground">Full Address</span>
             <p className="font-medium">{listing.fullAddress}</p>
           </div>
-          <div className="grid grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-1">
             <div>
               <span className="text-sm text-muted-foreground">City</span>
               <p className="font-medium">{cityName}</p>
@@ -164,7 +306,7 @@ export default async function ViewListingPage({ params }: PageProps) {
               <p className="font-medium">{barangayName}</p>
             </div>
             {developmentName && (
-              <div className="col-span-2">
+              <div>
                 <span className="text-sm text-muted-foreground">Development</span>
                 <p className="font-medium">{developmentName}</p>
               </div>
@@ -173,49 +315,50 @@ export default async function ViewListingPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
+      {/* Description */}
       {listing.description && (
         <Card>
-          <CardHeader>
-            <CardTitle>Description</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-gray-900">Description</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="prose prose-sm max-w-none">
             <RichTextRenderer value={listing.description} />
           </CardContent>
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {listing.furnishing && (
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Furnishing</span>
-              <span className="font-medium capitalize">{listing.furnishing.replace('_', ' ')}</span>
+      {/* Additional Info */}
+      {(listing.furnishing || listing.tenure || listing.titleStatus) && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-gray-900">Additional Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {listing.furnishing && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Furnishing</span>
+                  <p className="font-medium capitalize">{listing.furnishing.replace('_', ' ')}</p>
+                </div>
+              )}
+              {listing.tenure && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Tenure</span>
+                  <p className="font-medium capitalize">{listing.tenure}</p>
+                </div>
+              )}
+              {listing.titleStatus && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Title Status</span>
+                  <p className="font-medium capitalize">{listing.titleStatus}</p>
+                </div>
+              )}
             </div>
-          )}
-          {listing.constructionYear && (
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Construction Year</span>
-              <span className="font-medium">{listing.constructionYear}</span>
-            </div>
-          )}
-          {listing.tenure && (
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Tenure</span>
-              <span className="font-medium capitalize">{listing.tenure}</span>
-            </div>
-          )}
-          {listing.titleStatus && (
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Title Status</span>
-              <span className="font-medium capitalize">{listing.titleStatus}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
+      {/* Documents */}
       <ListingDocumentsWrapper
         listingId={id}
         isOwner={isOwner}

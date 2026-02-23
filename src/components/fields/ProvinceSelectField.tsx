@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, useMemo, useRef } from 'react'
-import { useField, useForm } from '@payloadcms/ui'
+import { useField, useForm, useFormFields } from '@payloadcms/ui'
 
 const PSGC_API = 'https://psgc.cloud/api'
 
@@ -61,7 +61,11 @@ export const ProvinceSelectField: React.FC<Props> = ({ path, field }) => {
         ).slice(0, 100)
     }, [provinces, search])
 
+    // Read sibling provinceName for immediate display
+    const storedName = useFormFields(([fields]) => fields['provinceName']?.value as string | undefined)
+
     const selectedProvince = provinces.find((p) => p.code === value)
+    const displayName = selectedProvince?.name || storedName || null
 
     const handleSelect = (province: Province) => {
         setValue(province.code)
@@ -106,8 +110,11 @@ export const ProvinceSelectField: React.FC<Props> = ({ path, field }) => {
                         border: '1px solid var(--theme-elevation-150)',
                         borderRadius: '4px',
                         background: 'var(--theme-input-bg)',
+                        minHeight: '42px',
+                        display: 'flex',
+                        alignItems: 'center',
                     }}>
-                        Loading provinces...
+                        {displayName || 'Loading provinces...'}
                     </div>
                 ) : (
                     <>
@@ -126,8 +133,8 @@ export const ProvinceSelectField: React.FC<Props> = ({ path, field }) => {
                                 minHeight: '42px',
                             }}
                         >
-                            <span style={{ color: selectedProvince ? 'inherit' : 'var(--theme-elevation-400)' }}>
-                                {selectedProvince ? selectedProvince.name : 'Select a province...'}
+                            <span style={{ color: displayName ? 'inherit' : 'var(--theme-elevation-400)' }}>
+                                {displayName || 'Select a province...'}
                             </span>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 {selectedProvince && (
@@ -212,7 +219,7 @@ export const ProvinceSelectField: React.FC<Props> = ({ path, field }) => {
             </div>
 
             <div className="field-description">
-                {selectedProvince ? `PSGC Code: ${selectedProvince.code}` : 'Select a province from PSGC database'}
+                {displayName ? `PSGC Code: ${value}` : 'Select a province from PSGC database'}
             </div>
         </div>
     )

@@ -44,18 +44,9 @@ const canReadListing: Access = ({ req: { user } }) => {
 
   if (user.role === 'approver') {
     return {
-      or: [
-        {
-          status: {
-            not_equals: 'draft',
-          },
-        },
-        {
-          createdBy: {
-            equals: user.id,
-          },
-        },
-      ],
+      status: {
+        not_equals: 'draft',
+      },
     }
   }
 
@@ -131,6 +122,21 @@ export const Listings: CollectionConfig = {
     defaultColumns: ['title', 'listingType', 'status', 'cityName', 'price', 'createdBy', 'updatedAt'],
     group: 'Listings',
     description: 'Property listings for the MLS system',
+    components: {
+      beforeListTable: ['@/components/admin/ListingStatusFilter'],
+      views: {
+        edit: {
+          preview: {
+            Component: '@/components/admin/ListingPreviewTab',
+            path: '/preview',
+            tab: {
+              label: 'Preview',
+              href: '/preview',
+            },
+          },
+        },
+      },
+    },
   },
   access: {
     read: canReadListing,

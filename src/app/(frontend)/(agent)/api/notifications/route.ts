@@ -25,6 +25,7 @@ export async function GET() {
       },
       sort: '-createdAt',
       limit: 50,
+      depth: 2,
       user,
       overrideAccess: false,
     })

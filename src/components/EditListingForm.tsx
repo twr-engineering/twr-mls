@@ -66,8 +66,12 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   const [titleStatus, setTitleStatus] = useState<string>('')
   const [paymentTerm, setPaymentTerm] = useState<string>('') // single-select in UI; mapped to array in payload
 
-  // Media (images)
-  const [imageFiles, setImageFiles] = useState<FileList | null>(null)
+  // Media (images) — store both the File and its stable blob URL together
+  type ImageItem = { file: File; url: string }
+  const [imageItems, setImageItems] = useState<ImageItem[]>([])
+  const [existingImages, setExistingImages] = useState<any[]>(
+    Array.isArray(listing.images) ? listing.images : []
+  )
 
   // Wizard steps:
   // 1 = Location
@@ -247,8 +251,8 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     try {
       // 1) Upload any newly added images
       const newImageIds: Array<string | number> = []
-      if (imageFiles && imageFiles.length > 0) {
-        for (const file of Array.from(imageFiles)) {
+      if (imageItems.length > 0) {
+        for (const { file } of imageItems) {
           const formData = new FormData()
           formData.append('file', file)
           if (title) {
@@ -278,13 +282,11 @@ export function EditListingForm({ listing }: EditListingFormProps) {
       }
 
       // Existing images (keep them)
-      const existingImageIds: Array<string | number> = Array.isArray(listing.images)
-        ? listing.images
-          .map((img) =>
-            isMedia(img) ? img.id : img,
-          )
-          .filter(Boolean)
-        : []
+      const existingImageIds: Array<string | number> = existingImages
+        .map((img: any) =>
+          typeof img === 'object' && img !== null && 'id' in img ? img.id : img,
+        )
+        .filter(Boolean)
 
       const payloadBody = {
         title,
@@ -749,7 +751,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
           {step === 5 && (
             <div className="space-y-4">
               <p className="text-sm">
-                Upload additional images to attach to this listing. Existing images will be kept.
+                Upload additional images. The <strong>first image</strong> (existing or new) will be the cover.
               </p>
               <div className="space-y-2">
                 <Label htmlFor="images">Listing Images</Label>
@@ -760,19 +762,87 @@ export function EditListingForm({ listing }: EditListingFormProps) {
                   multiple
                   disabled={isLoading}
                   onChange={(e) => {
-                    setImageFiles(e.target.files)
+                    const files = e.target.files
+                    if (files && files.length > 0) {
+                      const newItems = Array.from(files).map((file) => ({
+                        file,
+                        url: URL.createObjectURL(file),
+                      }))
+                      setImageItems((prev) => [...prev, ...newItems])
+                    }
+                    e.target.value = ''
                   }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  You can select multiple image files. They will be uploaded to the <code>media</code>{' '}
-                  collection and linked to this listing.
+                  Select multiple images. They will be uploaded to the <code>media</code> collection and linked to this listing.
                 </p>
-                {imageFiles && imageFiles.length > 0 && (
-                  <ul className="text-xs text-muted-foreground list-disc pl-4">
-                    {Array.from(imageFiles).map((file) => (
-                      <li key={file.name}>{file.name}</li>
-                    ))}
-                  </ul>
+
+                {/* Existing Images */}
+                {existingImages.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Current Images</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {existingImages.map((img: any, i) => (
+                        <div key={img.id || i} className="relative aspect-video rounded-lg overflow-hidden border bg-muted group">
+                          {i === 0 && (
+                            <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full z-10 font-medium">Cover</div>
+                          )}
+                          <img
+                            src={img.url ? (img.url.startsWith('/api') ? img.url.replace('/api/media/file', '/media') : img.url) : 'https://placehold.co/400'}
+                            alt={img.alt || 'Listing image'}
+                            className="object-cover w-full h-full"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newImages = [...existingImages]
+                              newImages.splice(i, 1)
+                              setExistingImages(newImages)
+                            }}
+                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 18 18" /></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Image Previews */}
+                {imageItems.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground pt-4 border-t w-full block">
+                      New Uploads ({imageItems.length})
+                    </Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imageItems.map((item, i) => (
+                        <div key={i} className="relative aspect-video rounded-lg overflow-hidden border bg-muted group">
+                          {existingImages.length === 0 && i === 0 && (
+                            <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full z-10 font-medium">Cover</div>
+                          )}
+                          <img
+                            src={item.url}
+                            alt={item.file.name}
+                            className="object-cover w-full h-full"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              URL.revokeObjectURL(item.url)
+                              setImageItems((prev) => prev.filter((_, idx) => idx !== i))
+                            }}
+                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 18 18" /></svg>
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 truncate z-10">
+                            {item.file.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
