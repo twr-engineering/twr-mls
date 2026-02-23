@@ -79,7 +79,11 @@ export const BarangaySelectField: React.FC<Props> = ({ path, field }) => {
         )
     }, [barangays, search])
 
+    // Read sibling barangayName for immediate display
+    const storedName = useFormFields(([fields]) => fields['barangayName']?.value as string | undefined)
+
     const selectedBarangay = barangays.find((b) => b.code === value)
+    const displayName = selectedBarangay?.name || storedName || null
 
     const handleSelect = (bgy: Barangay) => {
         setValue(bgy.code)
@@ -138,8 +142,10 @@ export const BarangaySelectField: React.FC<Props> = ({ path, field }) => {
                         borderRadius: '4px',
                         background: 'var(--theme-input-bg)',
                         minHeight: '42px',
+                        display: 'flex',
+                        alignItems: 'center',
                     }}>
-                        Loading barangays...
+                        {displayName || 'Loading barangays...'}
                     </div>
                 ) : (
                     <>
@@ -158,8 +164,8 @@ export const BarangaySelectField: React.FC<Props> = ({ path, field }) => {
                                 minHeight: '42px',
                             }}
                         >
-                            <span style={{ color: selectedBarangay ? 'inherit' : 'var(--theme-elevation-400)' }}>
-                                {selectedBarangay ? selectedBarangay.name : 'Select a barangay...'}
+                            <span style={{ color: displayName ? 'inherit' : 'var(--theme-elevation-400)' }}>
+                                {displayName || 'Select a barangay...'}
                             </span>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 {selectedBarangay && (
@@ -244,7 +250,7 @@ export const BarangaySelectField: React.FC<Props> = ({ path, field }) => {
             </div>
 
             <div className="field-description">
-                {selectedBarangay ? `PSGC Code: ${selectedBarangay.code}` : 'Select a barangay from PSGC database'}
+                {displayName ? `PSGC Code: ${value}` : 'Select a barangay from PSGC database'}
             </div>
         </div>
     )
