@@ -145,10 +145,11 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
   )
 
 
-  // Media (images)
-  const [imageFiles, setImageFiles] = useState<FileList | null>(null)
+  // Media (images) — store both the File and its stable blob URL together
+  type ImageItem = { file: File; url: string }
+  const [imageItems, setImageItems] = useState<ImageItem[]>([])
 
-  const [existingImages, setExistingImages] = useState<(number | string | (Media & { id: number | string }))[]>(
+  const [existingImages, setExistingImages] = useState<any[]>(
     Array.isArray(initialData?.images) ? initialData.images : []
   )
 
@@ -458,8 +459,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
       // 1) Upload images to media collection (if any selected)
       const newImageIds: Array<string | number> = []
-      if (imageFiles && imageFiles.length > 0) {
-        for (const file of Array.from(imageFiles)) {
+      if (imageItems.length > 0) {
+        for (const { file } of imageItems) {
           const formData = new FormData()
 
           // Append alt text FIRST (good practice for some parsers)
@@ -1048,21 +1049,32 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                   multiple
                   disabled={isLoading}
                   onChange={(e) => {
-                    setImageFiles(e.target.files)
+                    const files = e.target.files
+                    if (files && files.length > 0) {
+                      const newItems = Array.from(files).map((file) => ({
+                        file,
+                        url: URL.createObjectURL(file),
+                      }))
+                      setImageItems((prev) => [...prev, ...newItems])
+                    }
+                    // reset so the same file can be re-picked
+                    e.target.value = ''
                   }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  You can select multiple image files. They will be uploaded to the <code>media</code>{' '}
-                  collection and linked to this listing.
+                  Select multiple images. The <strong>first image</strong> will be the cover photo.
                 </p>
 
-                {/* Existing Images */}
+                {/* Existing Images (for edit mode) */}
                 {existingImages.length > 0 && (
                   <div className="space-y-2 mt-4">
                     <Label className="text-xs font-semibold uppercase text-muted-foreground">Current Images</Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {existingImages.map((img: any, i) => (
                         <div key={img.id || i} className="relative aspect-video rounded-lg overflow-hidden border bg-muted group">
+                          {i === 0 && (
+                            <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full z-10 font-medium">Cover</div>
+                          )}
                           <img
                             src={img.url ? (img.url.startsWith('/api') ? img.url.replace('/api/media/file', '/media') : img.url) : 'https://placehold.co/400'}
                             alt={img.alt || 'Listing image'}
@@ -1075,7 +1087,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                               newImages.splice(i, 1)
                               setExistingImages(newImages)
                             }}
-                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 18 18" /></svg>
                           </button>
@@ -1085,20 +1097,35 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                   </div>
                 )}
 
-                {imageFiles && imageFiles.length > 0 && (
+                {/* New Image Previews */}
+                {imageItems.length > 0 && (
                   <div className="space-y-2 mt-4">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground pt-4 border-t w-full block">New Uploads</Label>
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground pt-4 border-t w-full block">
+                      Selected Images ({imageItems.length})
+                    </Label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {Array.from(imageFiles).map((file, i) => (
+                      {imageItems.map((item, i) => (
                         <div key={i} className="relative aspect-video rounded-lg overflow-hidden border bg-muted group">
+                          {existingImages.length === 0 && i === 0 && (
+                            <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full z-10 font-medium">Cover</div>
+                          )}
                           <img
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
+                            src={item.url}
+                            alt={item.file.name}
                             className="object-cover w-full h-full"
-                            onLoad={(e) => URL.revokeObjectURL(e.currentTarget.src)}
                           />
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 truncate">
-                            {file.name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              URL.revokeObjectURL(item.url)
+                              setImageItems((prev) => prev.filter((_, idx) => idx !== i))
+                            }}
+                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 18 18" /></svg>
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 truncate z-10">
+                            {item.file.name}
                           </div>
                         </div>
                       ))}
@@ -1158,15 +1185,15 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                   </div>
                 )}
 
-                {imageFiles && imageFiles.length > 0 && (
+                {imageItems.length > 0 && (
                   <div className="pt-2">
-                    <p className="mb-1"><strong>New Images ({imageFiles.length}):</strong></p>
+                    <p className="mb-1"><strong>New Images ({imageItems.length}):</strong></p>
                     <div className="flex gap-2 overflow-x-auto pb-2">
-                      {Array.from(imageFiles).map((file, i) => (
+                      {imageItems.map((item, i) => (
                         <div key={i} className="relative h-16 w-24 flex-shrink-0 rounded overflow-hidden border">
                           <img
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
+                            src={item.url}
+                            alt={item.file.name}
                             className="object-cover w-full h-full"
                           />
                         </div>
