@@ -267,7 +267,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         const isMunicipality = selectedCity?.type === 'Mun'
 
         // Primary Endpoint
-        let endpoint = isMunicipality
+        const endpoint = isMunicipality
           ? `https://psgc.cloud/api/municipalities/${cityId}/barangays`
           : `https://psgc.cloud/api/cities/${cityId}/barangays`
 
