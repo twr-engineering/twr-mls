@@ -63,9 +63,46 @@ export async function getUser(): Promise<AuthUser | null> {
 
     if (user) {
       // Resolve avatar URL
-      let avatarUrl = null
-      if (user.avatar && typeof user.avatar === 'object' && 'url' in user.avatar) {
-        avatarUrl = user.avatar.url
+      let avatarUrl: string | null = null
+
+      if (user.avatar) {
+        if (typeof user.avatar === 'object' && 'url' in user.avatar) {
+          // Avatar is already populated as a Media object
+          const media = user.avatar as { url?: string; filename?: string }
+          if (media.url && media.url.startsWith('http')) {
+            avatarUrl = media.url
+          } else if (media.filename) {
+            const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+            if (projectId) {
+              avatarUrl = `https://${projectId}.supabase.co/storage/v1/object/public/media/${media.filename}`
+            }
+          } else if (media.url) {
+            avatarUrl = media.url
+          }
+        } else if (typeof user.avatar === 'number' || typeof user.avatar === 'string') {
+          // Avatar is just an ID - fetch the media record
+          try {
+            const media = await payload.findByID({
+              collection: 'media',
+              id: user.avatar,
+              depth: 0,
+            })
+            if (media) {
+              if (media.url && media.url.startsWith('http')) {
+                avatarUrl = media.url
+              } else if (media.filename) {
+                const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+                if (projectId) {
+                  avatarUrl = `https://${projectId}.supabase.co/storage/v1/object/public/media/${media.filename}`
+                }
+              } else if (media.url) {
+                avatarUrl = media.url
+              }
+            }
+          } catch {
+            // Media not found, leave as null
+          }
+        }
       }
 
       return {
