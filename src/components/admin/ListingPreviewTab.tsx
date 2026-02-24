@@ -67,6 +67,7 @@ export const ListingPreviewTab: React.FC = () => {
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState(false)
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
     const handleStatusChange = async (newStatus: string) => {
         if (!id || !listing) return
@@ -305,23 +306,45 @@ export const ListingPreviewTab: React.FC = () => {
             {/* Images Gallery */}
             {images.length > 0 && (
                 <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--theme-elevation-100)' }}>
+                    {/* Main image */}
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
                         <img
-                            src={images[0].url}
-                            alt={images[0].alt}
+                            src={images[currentImageIndex].url}
+                            alt={images[currentImageIndex].alt}
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
                         {images.length > 1 && (
-                            <div style={{
-                                position: 'absolute', bottom: '12px', right: '12px',
-                                background: 'rgba(0,0,0,0.65)', color: '#fff',
-                                padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
-                                backdropFilter: 'blur(4px)',
-                            }}>
-                                {images.length} photos
-                            </div>
+                            <>
+                                <button
+                                    onClick={() => setCurrentImageIndex((i) => (i - 1 + images.length) % images.length)}
+                                    style={{
+                                        position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+                                        background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%',
+                                        width: '32px', height: '32px', color: '#fff', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
+                                    }}
+                                >‹</button>
+                                <button
+                                    onClick={() => setCurrentImageIndex((i) => (i + 1) % images.length)}
+                                    style={{
+                                        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                        background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%',
+                                        width: '32px', height: '32px', color: '#fff', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
+                                    }}
+                                >›</button>
+                                <div style={{
+                                    position: 'absolute', bottom: '12px', right: '12px',
+                                    background: 'rgba(0,0,0,0.65)', color: '#fff',
+                                    padding: '4px 10px', borderRadius: '20px', fontSize: '12px',
+                                    backdropFilter: 'blur(4px)',
+                                }}>
+                                    {currentImageIndex + 1} / {images.length}
+                                </div>
+                            </>
                         )}
                     </div>
+                    {/* Thumbnails */}
                     {images.length > 1 && (
                         <div style={{ display: 'flex', gap: '4px', padding: '6px', background: 'var(--theme-elevation-50)', overflowX: 'auto' }}>
                             {images.map((img, i) => (
@@ -329,10 +352,11 @@ export const ListingPreviewTab: React.FC = () => {
                                     key={i}
                                     src={img.url}
                                     alt={img.alt}
+                                    onClick={() => setCurrentImageIndex(i)}
                                     style={{
                                         width: '80px', height: '56px', objectFit: 'cover', borderRadius: '6px',
-                                        border: i === 0 ? '2px solid var(--theme-elevation-800)' : '2px solid transparent',
-                                        flexShrink: 0,
+                                        border: i === currentImageIndex ? '2px solid var(--theme-elevation-800)' : '2px solid transparent',
+                                        flexShrink: 0, cursor: 'pointer',
                                     }}
                                 />
                             ))}

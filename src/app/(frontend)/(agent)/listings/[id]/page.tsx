@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Edit, ArrowLeft, MapPin, BedDouble, Bath, Ruler, Car, Calendar, Home } from 'lucide-react'
 import { getMediaUrl } from '@/lib/utils'
+import { ListingImageGallery } from '@/components/listing-image-gallery'
 
 export const dynamic = 'force-dynamic'
 
@@ -134,50 +135,7 @@ export default async function ViewListingPage({ params }: PageProps) {
       </div>
 
       {/* Images Gallery */}
-      {images.length > 0 && (
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            {/* Cover Image */}
-            <div className="relative aspect-[16/9] md:aspect-[21/9] w-full bg-muted">
-              <img
-                src={images[0].url}
-                alt={images[0].alt}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-3 left-3">
-                <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
-                  Cover
-                </Badge>
-              </div>
-              {images.length > 1 && (
-                <div className="absolute bottom-3 right-3">
-                  <Badge variant="secondary" className="bg-black/60 text-white border-0 text-xs">
-                    {images.length} photos
-                  </Badge>
-                </div>
-              )}
-            </div>
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex gap-1 p-2 overflow-x-auto bg-muted/30">
-                {images.map((img, i) => (
-                  <div
-                    key={i}
-                    className={`relative flex-shrink-0 w-20 h-14 rounded-md overflow-hidden border-2 ${i === 0 ? 'border-primary' : 'border-transparent'
-                      }`}
-                  >
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <ListingImageGallery images={images} />
 
       {/* Price + Key Stats */}
       <div className="grid gap-4 md:grid-cols-2">
