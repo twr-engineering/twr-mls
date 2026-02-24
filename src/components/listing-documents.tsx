@@ -37,7 +37,7 @@ export function ListingDocuments({ listingId, isOwner, _userRole }: ListingDocum
   const loadDocuments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`/api/listings/${listingId}/documents`)
+      const response = await fetch(`/api/listings/${listingId}/documents`, { credentials: 'include' })
       if (!response.ok) throw new Error('Failed to load documents')
       const data = await response.json()
       setDocuments(data)
@@ -55,7 +55,7 @@ export function ListingDocuments({ listingId, isOwner, _userRole }: ListingDocum
     const load = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/listings/${listingId}/documents`)
+        const response = await fetch(`/api/listings/${listingId}/documents`, { credentials: 'include' })
         if (!response.ok) throw new Error('Failed to load documents')
         const data = await response.json()
         if (isMounted) setDocuments(data)
@@ -81,6 +81,7 @@ export function ListingDocuments({ listingId, isOwner, _userRole }: ListingDocum
     try {
       const response = await fetch(`/api/documents/${documentId}/visibility`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ visibility: newVisibility }),
       })
@@ -101,6 +102,7 @@ export function ListingDocuments({ listingId, isOwner, _userRole }: ListingDocum
     try {
       const response = await fetch(`/api/documents/${documentId}`, {
         method: 'DELETE',
+        credentials: 'include',
       })
 
       if (!response.ok) throw new Error('Failed to delete document')

@@ -113,6 +113,9 @@ export const Users: CollectionConfig = {
       name: 'isActive',
       type: 'checkbox',
       defaultValue: true,
+      access: {
+        update: adminOnlyField,
+      },
       admin: {
         position: 'sidebar',
         description: 'Inactive users cannot log in',

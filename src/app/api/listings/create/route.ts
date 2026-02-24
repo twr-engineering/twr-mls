@@ -53,16 +53,16 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // Create the listing
+        // Create the listing — access control enforced via overrideAccess: false
         const listing = await payload.create({
             collection: 'listings',
             data: {
                 ...body,
                 createdBy: user.id,
-                status: 'draft', // Always start as draft for agent submissions
+                status: 'draft',
             },
-            user, // Pass user for access control
-            overrideAccess: true, // Bypass Payload internal access control since we verified auth above
+            user,
+            overrideAccess: false,
         })
 
         return NextResponse.json(listing, { status: 201 })

@@ -35,7 +35,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 10 }: ImageUploa
       setIsLoading(true)
       try {
         const imagePromises = value.map(async (id) => {
-          const response = await fetch(`/api/media/${id}`)
+          const response = await fetch(`/api/media/${id}`, { credentials: 'include' })
           if (!response.ok) throw new Error(`Failed to fetch image ${id}`)
           const data = await response.json()
           return {
@@ -80,6 +80,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 10 }: ImageUploa
 
         const response = await fetch('/api/agent/media', {
           method: 'POST',
+          credentials: 'include',
           body: formData,
         })
 

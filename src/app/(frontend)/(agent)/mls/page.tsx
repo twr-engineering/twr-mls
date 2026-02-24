@@ -1,4 +1,5 @@
 import { searchListings, getAvailableLocations } from '@/lib/payload/api'
+import { requireAuth } from '@/lib/auth/actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SearchFilters } from '@/components/search-filters'
@@ -26,6 +27,8 @@ export default async function MLSSearchPage({
 }: {
   searchParams: SearchParams
 }) {
+  await requireAuth()
+
   const params = await searchParams
 
   const filters = {
@@ -42,9 +45,30 @@ export default async function MLSSearchPage({
     page: params.page ? parseInt(params.page) : 1,
   }
 
-  const listings = await searchListings(filters)
-  // Fetch available locations instead of raw cities
-  const availableLocations = await getAvailableLocations()
+  let listings: Awaited<ReturnType<typeof searchListings>> = {
+    docs: [],
+    totalDocs: 0,
+    totalPages: 0,
+    page: 1,
+    hasPrevPage: false,
+    hasNextPage: false,
+    limit: 20,
+    pagingCounter: 1,
+    prevPage: null,
+    nextPage: null,
+  }
+  let availableLocations: Awaited<ReturnType<typeof getAvailableLocations>> = {}
+
+  try {
+    const [fetchedListings, fetchedLocations] = await Promise.all([
+      searchListings(filters),
+      getAvailableLocations(),
+    ])
+    listings = fetchedListings
+    availableLocations = fetchedLocations
+  } catch (error) {
+    console.error('Failed to load MLS data:', error)
+  }
 
   return (
     <div className="space-y-6">

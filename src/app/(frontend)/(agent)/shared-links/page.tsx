@@ -1,4 +1,5 @@
 import { getUserCuratedLinks } from '@/lib/payload/api'
+import { requireAuth } from '@/lib/auth/actions'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
@@ -7,7 +8,14 @@ import { CuratedLinksList } from '@/components/curated-links-list'
 export const dynamic = 'force-dynamic'
 
 export default async function SharedLinksPage() {
-  const curatedLinks = await getUserCuratedLinks()
+  await requireAuth()
+
+  let curatedLinks: Awaited<ReturnType<typeof getUserCuratedLinks>> = { docs: [], totalDocs: 0, totalPages: 0, page: 1, hasPrevPage: false, hasNextPage: false, limit: 100, pagingCounter: 1, prevPage: null, nextPage: null }
+  try {
+    curatedLinks = await getUserCuratedLinks()
+  } catch (error) {
+    console.error('Failed to load shared links:', error)
+  }
 
   return (
     <div className="space-y-6">

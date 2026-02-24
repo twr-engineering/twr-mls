@@ -199,6 +199,7 @@ export function ListingForm({ cities, initialData, listingId }: ListingFormProps
 
       const response = await fetch(endpoint, {
         method,
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,

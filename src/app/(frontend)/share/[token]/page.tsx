@@ -58,15 +58,14 @@ export default async function SharePage({ params }: Props) {
     }
   }
 
-  await payload.update({
-    collection: 'external-share-links',
-    id: shareLink.id,
-    data: {
-      viewCount: (shareLink.viewCount || 0) + 1,
-      lastViewedAt: new Date().toISOString(),
-    },
-    overrideAccess: true,
-  })
+  // Atomic increment — avoids lost-update race under concurrent serverless requests
+  const { sql } = await import('@payloadcms/db-postgres')
+  await payload.db.drizzle.execute(sql`
+    UPDATE external_share_links
+    SET view_count = COALESCE(view_count, 0) + 1,
+        last_viewed_at = NOW()
+    WHERE id = ${shareLink.id}
+  `)
 
   // Properly handle the relationship which could be a number or a Listing object
   const listing = shareLink.listing

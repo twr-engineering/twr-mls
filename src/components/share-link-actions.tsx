@@ -44,6 +44,7 @@ export function ShareLinkActions({ linkId, token, isActive }: ShareLinkActionsPr
     try {
       const response = await fetch(`/api/share-links/${linkId}/revoke`, {
         method: 'POST',
+        credentials: 'include',
       })
 
       if (!response.ok) {

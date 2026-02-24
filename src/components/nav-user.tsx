@@ -51,11 +51,16 @@ export function NavUser({
     try {
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
+        credentials: 'include',
       })
 
       if (!response.ok) {
         throw new Error('Failed to logout')
       }
+
+      // Clear any lingering client-side state
+      localStorage.clear()
+      sessionStorage.clear()
 
       toast.success('Logged out successfully')
       router.push('/')

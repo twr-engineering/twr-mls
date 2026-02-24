@@ -65,6 +65,11 @@ export async function getUser(): Promise<AuthUser | null> {
     const { user } = await payload.auth({ headers })
 
     if (user) {
+      // Reject deactivated accounts even if their JWT is still valid
+      if (user.isActive === false) {
+        return null
+      }
+
       // Resolve avatar URL
       let avatarUrl: string | null = null
 

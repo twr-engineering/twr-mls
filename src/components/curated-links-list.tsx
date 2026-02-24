@@ -57,6 +57,7 @@ export function CuratedLinksList({ initialLinks }: CuratedLinksListProps) {
         try {
             const response = await fetch(`/api/shared-links/${id}`, {
                 method: 'DELETE',
+                credentials: 'include',
             })
 
             if (!response.ok) {
@@ -89,6 +90,7 @@ export function CuratedLinksList({ initialLinks }: CuratedLinksListProps) {
         try {
             const response = await fetch(`/api/shared-links/${editingLink.id}`, {
                 method: 'PATCH',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },

@@ -181,6 +181,7 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     try {
       const response = await fetch('/api/shared-links', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: linkName.trim(), filters }),
       })

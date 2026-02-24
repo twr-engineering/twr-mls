@@ -1,5 +1,5 @@
 import { getListingById } from '@/lib/payload/api'
-import { getUser } from '@/lib/auth/actions'
+import { requireAuth } from '@/lib/auth/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,15 +19,24 @@ type PageProps = {
 
 export default async function ViewListingPage({ params }: PageProps) {
   const { id } = await params
-  const listing = await getListingById(id)
-  const user = await getUser()
+  const user = await requireAuth()
+
+  let listing;
+  try {
+    listing = await getListingById(id)
+  } catch (error) {
+    console.error('Failed to get listing:', error)
+  }
 
   if (!listing) {
     notFound()
   }
 
   const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
-  const isOwner = !!(user && listing.createdBy === user.id)
+  const createdById = typeof listing.createdBy === 'object' && listing.createdBy !== null
+    ? listing.createdBy.id
+    : listing.createdBy
+  const isOwner = !!(user && createdById === user.id)
   const userRole = user?.role || 'agent'
 
   const cityName = listing.cityName || 'N/A'

@@ -8,9 +8,14 @@ export async function POST() {
     // Use Payload's logout server function
     await logout({ config })
 
-    // Explicitly remove the cookie to ensure it's cleared
+    // Explicitly remove the cookie to ensure it's cleared with exact matching production flags
     const cookieStore = await cookies()
-    cookieStore.delete('payload-token')
+    cookieStore.set('payload-token', '', {
+      expires: new Date(0),
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    })
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {

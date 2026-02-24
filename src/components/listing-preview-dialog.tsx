@@ -72,6 +72,7 @@ export function ListingPreviewDialog({
             try {
                 const res = await fetch(`/api/listings/${listing.id}`, {
                     method: 'DELETE',
+                    credentials: 'include',
                 })
                 if (res.ok) {
                     onOpenChange(false)
@@ -91,6 +92,7 @@ export function ListingPreviewDialog({
             try {
                 const res = await fetch(`/api/listings/${listing.id}`, {
                     method: 'PATCH',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },
