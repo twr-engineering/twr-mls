@@ -363,7 +363,7 @@ export async function getBarangaysByCity(cityId: number) {
 /**
  * Get developments filtered by barangay
  */
-export async function getDevelopmentsByBarangay(barangayId: number) {
+export async function getDevelopmentsByBarangay(barangayPsgcCode: string) {
   const payload = await getPayloadInstance()
   const user = await getAuthUser()
 
@@ -374,7 +374,8 @@ export async function getDevelopmentsByBarangay(barangayId: number) {
   const result = await payload.find({
     collection: 'developments',
     where: {
-      barangay: { equals: barangayId },
+      // barangay is stored as a PSGC code string, not an integer ID
+      barangay: { equals: barangayPsgcCode },
       isActive: { equals: true },
     },
     limit: 1000,

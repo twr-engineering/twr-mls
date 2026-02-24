@@ -36,11 +36,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const imgObjRef = useRef<HTMLImageElement | null>(null)
 
-    // Profile fields
+    // Profile fields — editing state
     const [firstName, setFirstName] = useState(user.firstName || '')
     const [lastName, setLastName] = useState(user.lastName || '')
     const [phone, setPhone] = useState(user.phone || '')
     const [isEditingInfo, setIsEditingInfo] = useState(false)
+
+    // Last successfully saved values — used for read-only display and cancel-reset
+    const [savedFirstName, setSavedFirstName] = useState(user.firstName || '')
+    const [savedLastName, setSavedLastName] = useState(user.lastName || '')
+    const [savedPhone, setSavedPhone] = useState(user.phone || '')
+
+    // Avatar URL — updated immediately after upload so display doesn't wait for router.refresh()
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatar || null)
 
     // State
     const [isUploading, setIsUploading] = useState(false)
@@ -56,9 +64,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
     const hasProfileChanges =
-        firstName !== (user.firstName || '') ||
-        lastName !== (user.lastName || '') ||
-        phone !== (user.phone || '')
+        firstName !== savedFirstName ||
+        lastName !== savedLastName ||
+        phone !== savedPhone
 
     // Draw the canvas preview
     const drawCanvas = useCallback(() => {
@@ -226,6 +234,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 throw new Error(errorData.error || 'Failed to update profile picture')
             }
 
+            const uploadData = await uploadRes.json()
+            if (uploadData.avatarUrl) {
+                setAvatarUrl(uploadData.avatarUrl)
+            }
+
             toast.success('Avatar updated!')
             setCropDialogOpen(false)
             setImgSrc('')
@@ -254,6 +267,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
             if (!updateRes.ok) throw new Error('Failed to update profile')
 
+            setSavedFirstName(firstName.trim())
+            setSavedLastName(lastName.trim())
+            setSavedPhone(phone.trim())
             toast.success('Profile updated!')
             setIsEditingInfo(false)
             router.refresh()
@@ -266,13 +282,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
     }
 
     const handleCancelEdit = () => {
-        setFirstName(user.firstName || '')
-        setLastName(user.lastName || '')
-        setPhone(user.phone || '')
+        setFirstName(savedFirstName)
+        setLastName(savedLastName)
+        setPhone(savedPhone)
         setIsEditingInfo(false)
     }
 
-    const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email.split('@')[0]
+    const displayName = [savedFirstName, savedLastName].filter(Boolean).join(' ') || user.email.split('@')[0]
 
     return (
         <>
@@ -288,9 +304,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                     className="h-28 w-28 rounded-full border-4 border-background bg-muted overflow-hidden shadow-xl cursor-pointer transition-transform duration-200 hover:scale-105"
                                     onClick={handleAvatarClick}
                                 >
-                                    {user.avatar ? (
+                                    {avatarUrl ? (
                                         <Image
-                                            src={user.avatar}
+                                            src={avatarUrl}
                                             alt="Avatar"
                                             width={112}
                                             height={112}
@@ -418,7 +434,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                         </div>
                                         <div className="space-y-0.5 min-w-0">
                                             <p className="text-xs text-muted-foreground">First Name</p>
-                                            <p className="text-sm font-medium truncate">{user.firstName || '—'}</p>
+                                            <p className="text-sm font-medium truncate">{savedFirstName || '—'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
@@ -427,7 +443,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                         </div>
                                         <div className="space-y-0.5 min-w-0">
                                             <p className="text-xs text-muted-foreground">Last Name</p>
-                                            <p className="text-sm font-medium truncate">{user.lastName || '—'}</p>
+                                            <p className="text-sm font-medium truncate">{savedLastName || '—'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -437,7 +453,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                     </div>
                                     <div className="space-y-0.5 min-w-0">
                                         <p className="text-xs text-muted-foreground">Phone</p>
-                                        <p className="text-sm font-medium">{user.phone || '—'}</p>
+                                        <p className="text-sm font-medium">{savedPhone || '—'}</p>
                                     </div>
                                 </div>
                             </div>

@@ -97,7 +97,15 @@ export const config: Config = {
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
-      max: 10,
+      // Serverless (Vercel): keep pool small — the Supabase connection pooler
+      // (Supavisor, port 6543) handles real connection multiplexing.
+      // A high max here × many concurrent function instances = connection exhaustion.
+      max: 2,
+      // Release idle connections quickly so serverless instances don't hold
+      // connections open after a request finishes.
+      idleTimeoutMillis: 20_000,
+      // Fail fast rather than queuing indefinitely when the DB is unreachable.
+      connectionTimeoutMillis: 10_000,
     },
     migrationDir: path.resolve(dirname, 'migrations'),
     push: false, // Temporarily enabled to sync schema changes
@@ -126,7 +134,7 @@ export const config: Config = {
         const endpoint = process.env.S3_ENDPOINT || ''
 
         // Extract project ref from environment if available, otherwise extract from endpoint
-        let projectRef = process.env.SUPABASE_PROJECT_ID
+        let projectRef = process.env.SUPABASE_PROJECT_ID || process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
 
         // Check for project ref
         if (!projectRef) {

@@ -322,11 +322,17 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
     void (async () => {
       try {
-        // Use barangayId (which is the PSGC code) to filter developments
-        const devOpts = await fetchOptions(
-          `/api/developments?where[barangay][equals]=${encodeURIComponent(barangayId)}&limit=100&where[isActive][equals]=true`,
-          'name'
+        // Use the server-side PSGC route which queries by PSGC barangay code string
+        const res = await fetch(
+          `/api/psgc/developments?barangayCode=${encodeURIComponent(barangayId)}`,
+          { credentials: 'include' }
         )
+        if (!res.ok) throw new Error(`Failed to fetch developments (${res.status})`)
+        const data: { id: number | string; name?: string }[] = await res.json()
+        const devOpts: ListingOption[] = data.map((dev) => ({
+          id: dev.id,
+          label: dev.name || `Development ${dev.id}`,
+        }))
         setDevelopments(devOpts)
 
         // Only clear if current developmentId is not in new options

@@ -58,7 +58,7 @@ export async function POST(req: Request) {
             user,
         })
 
-        return NextResponse.json({ success: true, avatarId: mediaDoc.id }, { status: 200 })
+        return NextResponse.json({ success: true, avatarId: mediaDoc.id, avatarUrl: mediaDoc.url || null }, { status: 200 })
     } catch (error) {
         console.error('Avatar upload error:', error)
         return NextResponse.json(
