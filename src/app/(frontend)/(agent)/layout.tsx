@@ -23,7 +23,7 @@ export default async function AgentLayout({
         user={{
           name: displayName,
           email: user.email,
-          avatar: (user.avatar as string) || '/favicon.ico',
+          avatar: (user.avatar as string) || '',
         }}
       />
       <SidebarInset>

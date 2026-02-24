@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   description: 'Internal Listing Management System',
   title: 'TWR MLS',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
