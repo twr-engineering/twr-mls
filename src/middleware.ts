@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const publicPaths = ['/login', '/share']
+const publicPaths = ['/login', '/share', '/shared']
 
 const agentPaths = ['/dashboard', '/listings', '/profile']
 

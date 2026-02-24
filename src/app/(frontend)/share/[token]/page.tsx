@@ -24,6 +24,7 @@ export default async function SharePage({ params }: Props) {
       token: { equals: token },
     },
     depth: 2,
+    overrideAccess: true,
   })
 
   if (shareLinks.docs.length === 0) {
@@ -64,6 +65,7 @@ export default async function SharePage({ params }: Props) {
       viewCount: (shareLink.viewCount || 0) + 1,
       lastViewedAt: new Date().toISOString(),
     },
+    overrideAccess: true,
   })
 
   // Properly handle the relationship which could be a number or a Listing object
@@ -401,6 +403,7 @@ export async function generateMetadata({ params }: Props) {
       token: { equals: token },
     },
     depth: 1,
+    overrideAccess: true,
   })
 
   if (shareLinks.docs.length === 0) {

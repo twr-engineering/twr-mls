@@ -67,11 +67,13 @@ export default async function SharedListingsPage({ params }: SharedPageProps) {
     }
 
     // Fetch listings based on filters
+    // Use overrideAccess since this is a public page and we already filter to published only
     const listings = await payload.find({
         collection: 'listings',
         where,
         limit: 100,
         depth: 2,
+        overrideAccess: true,
     })
 
     return (
