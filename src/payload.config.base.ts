@@ -1,3 +1,6 @@
+// Validate required environment variables at startup — throws if misconfigured
+import '@/lib/env'
+
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'

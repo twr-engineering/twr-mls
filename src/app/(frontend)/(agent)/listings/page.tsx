@@ -1,4 +1,5 @@
 import { getUserListings, getUserListingStats } from '@/lib/payload/api'
+import { requireAuth } from '@/lib/auth/actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -13,19 +14,30 @@ export const dynamic = 'force-dynamic'
 type SearchParams = Promise<{ status?: string; q?: string }>
 
 export default async function ListingsPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAuth()
+
   const params = await searchParams
   const statusFilter = params.status || 'all'
   const searchQuery = params.q || ''
 
-  // Parallel fetch: Stats + Filtered Listings
-  const [stats, listingsData] = await Promise.all([
-    getUserListingStats(),
-    getUserListings({
-      status: statusFilter,
-      search: searchQuery,
-      limit: 50,
-    }),
-  ])
+  let stats = { total: 0, draft: 0, submitted: 0, published: 0, needsRevision: 0 }
+  let listingsData = { docs: [] as Awaited<ReturnType<typeof getUserListings>>['docs'] }
+
+  try {
+    // Parallel fetch: Stats + Filtered Listings
+    const [fetchedStats, fetchedListings] = await Promise.all([
+      getUserListingStats(),
+      getUserListings({
+        status: statusFilter,
+        search: searchQuery,
+        limit: 50,
+      }),
+    ])
+    stats = fetchedStats
+    listingsData = fetchedListings
+  } catch (error) {
+    console.error('Failed to load listings data:', error)
+  }
 
   const listings = listingsData.docs
 

@@ -91,10 +91,19 @@ const canUpdateListing: Access = ({ req: { user } }) => {
 const canDeleteListing: Access = ({ req: { user } }) => {
   if (!user) return false
 
-  if (user.role === 'admin' || user.role === 'approver') {
+  if (user.role === 'admin') {
     return true
   }
 
+  // Approvers can delete any non-published listing
+  if (user.role === 'approver') {
+    const query: Where = {
+      status: { not_equals: 'published' },
+    }
+    return query
+  }
+
+  // Agents can only delete their own drafts
   if (user.role === 'agent') {
     const query: Where = {
       and: [{ createdBy: { equals: user.id } }, { status: { equals: 'draft' } }],

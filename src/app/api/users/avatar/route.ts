@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server'
+import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { getUser } from '@/lib/auth/actions'
 
 export async function POST(req: Request) {
     try {
-        // 1. Authenticate user from Next.js server context
-        const user = await getUser()
+        // 1. Authenticate via Payload Local API (same auth source as the rest of the app)
+        const payload = await getPayload({ config })
+        const headersList = await getHeaders()
+        const { user } = await payload.auth({ headers: headersList })
 
         if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        if (user.isActive === false) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
@@ -21,15 +27,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 })
         }
 
-        // 3. Initialize Payload Local API
-        const payload = await getPayload({ config })
-
         // Convert Web File to Node Buffer for Payload Local API
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
 
-        // 4. Create Media Document using Local API
-        // Local API bypasses external CSRF checks natively
+        // 3. Create Media Document — passes user so the uploadedBy hook fires correctly
         const mediaDoc = await payload.create({
             collection: 'media',
             data: {
@@ -41,18 +43,19 @@ export async function POST(req: Request) {
                 mimetype: file.type,
                 size: file.size,
             },
-            // Manually set uploadedBy since Local API doesn't have a req.user context implicitly
-            overrideAccess: true,
+            overrideAccess: false,
+            user,
         })
 
-        // 5. Update the User's avatar reference locally
+        // 4. Link the new media record to the authenticated user's avatar field
         await payload.update({
             collection: 'users',
             id: user.id,
             data: {
                 avatar: mediaDoc.id,
             },
-            overrideAccess: true,
+            overrideAccess: false,
+            user,
         })
 
         return NextResponse.json({ success: true, avatarId: mediaDoc.id }, { status: 200 })

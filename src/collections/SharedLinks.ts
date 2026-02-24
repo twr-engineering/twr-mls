@@ -3,7 +3,12 @@ import { authenticated, isAdmin } from '@/access'
 
 /**
  * SharedLinks Collection
- * Stores curated search links that can be shared with non-authenticated users
+ * Stores curated search links that can be shared with non-authenticated users.
+ *
+ * Read access: restricted to the creator and admins.
+ * The public-facing /shared/[id] page uses overrideAccess: true, so it is
+ * NOT affected by this access rule — unauthenticated visitors can still view
+ * shared listing pages normally.
  */
 export const SharedLinks: CollectionConfig = {
     slug: 'shared-links',
@@ -15,8 +20,13 @@ export const SharedLinks: CollectionConfig = {
         hidden: true, // Hidden from nav - managed via MLS Search share button
     },
     access: {
-        // Public read access for viewing shared listings
-        read: () => true,
+        // Restricted: only the creator and admins can read via the Payload REST API.
+        // The public /shared/[id] page bypasses this with overrideAccess: true.
+        read: ({ req: { user } }) => {
+            if (!user) return false
+            if (isAdmin(user)) return true
+            return { createdBy: { equals: user.id } }
+        },
         // Only authenticated users can create shared links
         create: authenticated,
         // Users can update/delete their own links, admins can do all

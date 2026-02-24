@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getListingById } from '@/lib/payload/api'
+import { requireAuth } from '@/lib/auth/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ListingTypeBadge } from '@/components/listing-type-badge'
 import { ShareLinkForm } from '@/components/share-link-form'
@@ -14,6 +15,8 @@ export default async function NewShareLinkPage({
 }: {
   searchParams: SearchParams
 }) {
+  await requireAuth()
+
   const params = await searchParams
   const listingId = params.listingId
 
@@ -21,7 +24,12 @@ export default async function NewShareLinkPage({
     redirect('/mls')
   }
 
-  const listing = await getListingById(listingId)
+  let listing: Awaited<ReturnType<typeof getListingById>> = null
+  try {
+    listing = await getListingById(listingId)
+  } catch (error) {
+    console.error('Failed to load listing:', error)
+  }
 
   if (!listing || listing.status !== 'published') {
     notFound()

@@ -1,4 +1,5 @@
 import { getListingById } from '@/lib/payload/api'
+import { requireAuth } from '@/lib/auth/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,8 +15,16 @@ type PageProps = {
 }
 
 export default async function MLSListingDetailPage({ params }: PageProps) {
+  await requireAuth()
+
   const { id } = await params
-  const listing = await getListingById(id)
+
+  let listing: Awaited<ReturnType<typeof getListingById>> = null
+  try {
+    listing = await getListingById(id)
+  } catch (error) {
+    console.error('Failed to load listing:', error)
+  }
 
   if (!listing || listing.status !== 'published') {
     notFound()

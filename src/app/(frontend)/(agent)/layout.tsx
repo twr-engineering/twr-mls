@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { Separator } from '@/components/ui/separator'
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbPage } from '@/components/ui/breadcrumb'
 import { NotificationBell } from '@/components/notification-bell'
+import { SessionGuard } from '@/components/session-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +43,7 @@ export default async function AgentLayout({
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
+        <SessionGuard />
       </SidebarInset>
     </SidebarProvider>
   )

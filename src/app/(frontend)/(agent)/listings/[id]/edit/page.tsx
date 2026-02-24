@@ -1,4 +1,5 @@
 import { getListingById } from '@/lib/payload/api'
+import { requireAuth } from '@/lib/auth/actions'
 import { CreateListingForm } from '@/components/CreateListingForm'
 import { notFound } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,8 +16,16 @@ type PageProps = {
  * Fetches the listing by ID and populates the CreateListingForm with initial data.
  */
 export default async function EditListingPage({ params }: PageProps) {
+  await requireAuth()
+
   const { id } = await params
-  const listing = await getListingById(id)
+
+  let listing: Awaited<ReturnType<typeof getListingById>> = null
+  try {
+    listing = await getListingById(id)
+  } catch (error) {
+    console.error('Failed to load listing for edit:', error)
+  }
 
   if (!listing) {
     notFound()

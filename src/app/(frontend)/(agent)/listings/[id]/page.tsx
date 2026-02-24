@@ -33,7 +33,10 @@ export default async function ViewListingPage({ params }: PageProps) {
   }
 
   const canEdit = listing.status === 'draft' || listing.status === 'needs_revision'
-  const isOwner = !!(user && listing.createdBy === user.id)
+  const createdById = typeof listing.createdBy === 'object' && listing.createdBy !== null
+    ? listing.createdBy.id
+    : listing.createdBy
+  const isOwner = !!(user && createdById === user.id)
   const userRole = user?.role || 'agent'
 
   const cityName = listing.cityName || 'N/A'
