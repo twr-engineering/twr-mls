@@ -297,19 +297,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                     className="h-28 w-28 rounded-full border-4 border-background bg-muted overflow-hidden shadow-xl cursor-pointer transition-transform duration-200 hover:scale-105"
                                     onClick={handleAvatarClick}
                                 >
-                                    {user.avatar ? (
-                                        <Image
-                                            src={user.avatar}
-                                            alt="Avatar"
-                                            width={112}
-                                            height={112}
-                                            className="object-cover w-full h-full"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                                            <User className="h-12 w-12 text-primary/60" />
-                                        </div>
-                                    )}
+                                    <Image
+                                        src={user.avatar || '/favicon.ico'}
+                                        alt="Avatar"
+                                        width={112}
+                                        height={112}
+                                        className={`w-full h-full ${user.avatar ? 'object-cover' : 'object-contain p-4 opacity-60'}`}
+                                    />
                                     {/* Hover overlay */}
                                     <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
                                         <Camera className="h-6 w-6 text-white" />
