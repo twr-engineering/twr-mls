@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Filter, X, Share, Check } from 'lucide-react'
+import { Filter, X, Share, Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Development } from '@/payload-types'
 
@@ -61,6 +61,7 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [linkName, setLinkName] = useState('')
   const [isCreatingLink, setIsCreatingLink] = useState(false)
+  const [isApplying, setIsApplying] = useState(false)
 
   const [listingType, setListingType] = useState(currentFilters.listingType || 'both')
   const [transactionType, setTransactionType] = useState(currentFilters.transactionType || '')
@@ -107,6 +108,7 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
    * Applies the current filter state by updating the URL search parameters.
    */
   const handleApplyFilters = () => {
+    setIsApplying(true)
     const params = new URLSearchParams()
 
     if (listingType && listingType !== 'both') params.set('listingType', listingType)
@@ -121,6 +123,8 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
     if (bathrooms) params.set('bathrooms', bathrooms)
 
     router.push(`/mls?${params.toString()}`)
+    // Reset after a short delay to allow navigation to complete
+    setTimeout(() => setIsApplying(false), 3000)
   }
 
   /**
@@ -396,10 +400,24 @@ export function SearchFilters({ availableLocations = {}, currentFilters }: Searc
             </div>
 
             <div className="flex items-end gap-2">
-              <Button onClick={handleApplyFilters} className="flex-1">
-                Apply
+              <Button
+                onClick={handleApplyFilters}
+                className="flex-1 gap-2 transition-all"
+                disabled={isApplying}
+              >
+                {isApplying ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Applying...
+                  </>
+                ) : (
+                  <>
+                    <Filter className="h-4 w-4" />
+                    Apply Filters
+                  </>
+                )}
               </Button>
-              <Button onClick={handleClearFilters} variant="outline" size="icon">
+              <Button onClick={handleClearFilters} variant="outline" size="icon" disabled={isApplying}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
