@@ -71,6 +71,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     avatar: mediaId,
                 }),
