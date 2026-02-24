@@ -12,21 +12,18 @@ export default async function AgentLayout({
 }: {
   children: React.ReactNode
 }) {
-  type AvatarMedia = {
-    url?: string
-    filename?: string
-  }
-
   // Ensure only agents (and admins/approvers) can access this layout
   const user = await requireAuth(['agent', 'admin', 'approver'])
+
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email.split('@')[0]
 
   return (
     <SidebarProvider>
       <AgentSidebar
         user={{
-          name: user.email.split('@')[0],
+          name: displayName,
           email: user.email,
-          avatar: (user.avatar as string) || '/default.png',
+          avatar: (user.avatar as string) || '/favicon.ico',
         }}
       />
       <SidebarInset>
