@@ -565,14 +565,16 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
       const saved = await res.json()
       const id = saved?.doc?.id ?? saved?.id ?? listingId
 
-      // After creation/update, send them to Payload admin edit view or back to listings
-      if (id) {
-        // If updated, maybe just go back to listings or show success
-        router.push('/listings')
-      } else {
-        router.push('/listings')
-      }
+      // Force router to refresh before pushing to avoid Next.js caching stale lists
       router.refresh()
+
+      setTimeout(() => {
+        if (id) {
+          router.push('/listings')
+        } else {
+          router.push('/listings')
+        }
+      }, 100)
     } catch (err) {
       console.error(err)
       setError(err instanceof Error ? err.message : 'Failed to create listing')

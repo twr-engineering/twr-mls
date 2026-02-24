@@ -14,28 +14,30 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
     return data
   }
 
-  const listingType = data.listingType || originalDoc?.listingType
+  // Merge original document with incoming data to validate the full picture
+  const mergedDoc = { ...originalDoc, ...data }
+  const listingType = mergedDoc.listingType
 
   // ========================================
   // PRESELLING LISTING VALIDATIONS
   // ========================================
   if (listingType === 'preselling') {
     // Required fields for preselling
-    if (!data.development) {
+    if (!mergedDoc.development) {
       throw new Error('Preselling listings must have a Development selected')
     }
 
-    if (!data.modelName) {
+    if (!mergedDoc.modelName) {
       throw new Error('Preselling listings must have a Model Name')
     }
 
     // Validate pricing: must have indicativePrice OR (min AND max)
-    const hasIndicativePrice = data.indicativePrice && data.indicativePrice > 0
+    const hasIndicativePrice = mergedDoc.indicativePrice && mergedDoc.indicativePrice > 0
     const hasPriceRange =
-      data.indicativePriceMin &&
-      data.indicativePriceMax &&
-      data.indicativePriceMin > 0 &&
-      data.indicativePriceMax > 0
+      mergedDoc.indicativePriceMin &&
+      mergedDoc.indicativePriceMax &&
+      mergedDoc.indicativePriceMin > 0 &&
+      mergedDoc.indicativePriceMax > 0
 
     if (!hasIndicativePrice && !hasPriceRange) {
       throw new Error(
@@ -44,13 +46,13 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
     }
 
     // Validate price range if both are provided
-    if (hasPriceRange && data.indicativePriceMin! > data.indicativePriceMax!) {
+    if (hasPriceRange && mergedDoc.indicativePriceMin! > mergedDoc.indicativePriceMax!) {
       throw new Error('Indicative Price Min cannot be greater than Indicative Price Max')
     }
 
     // Validate minimum size: must have minLotAreaSqm OR minFloorAreaSqm
-    const hasMinLotArea = data.minLotAreaSqm && data.minLotAreaSqm > 0
-    const hasMinFloorArea = data.minFloorAreaSqm && data.minFloorAreaSqm > 0
+    const hasMinLotArea = mergedDoc.minLotAreaSqm && mergedDoc.minLotAreaSqm > 0
+    const hasMinFloorArea = mergedDoc.minFloorAreaSqm && mergedDoc.minFloorAreaSqm > 0
 
     if (!hasMinLotArea && !hasMinFloorArea) {
       throw new Error(
@@ -73,7 +75,7 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
     ]
 
     const invalidFields = resaleOnlyFields.filter((field) => {
-      const value = data[field]
+      const value = data[field] // We only care if they are TRVING to set these fields in this request
       return value !== undefined && value !== null && value !== ''
     })
 
@@ -89,15 +91,16 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
   // ========================================
   if (listingType === 'resale') {
     // Required fields for resale
-    if (!data.price || data.price <= 0) {
+    // During an update, price might not be in the incoming data, but must exist in mergedDoc
+    if (!mergedDoc.price || mergedDoc.price <= 0) {
       throw new Error('Resale listings must have a valid Price')
     }
 
     // Validate lot area requirement for lot properties
-    if (data.propertyType) {
+    if (mergedDoc.propertyType) {
       const propertyType = await req.payload.findByID({
         collection: 'property-types',
-        id: data.propertyType,
+        id: typeof mergedDoc.propertyType === 'object' ? mergedDoc.propertyType.id : mergedDoc.propertyType,
         depth: 0,
         req,
       })
@@ -108,7 +111,7 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
         (propertyType.name.toLowerCase().includes('lot') ||
           propertyType.name.toLowerCase().includes('land'))
 
-      if (isLotType && (!data.lotAreaSqm || data.lotAreaSqm <= 0)) {
+      if (isLotType && (!mergedDoc.lotAreaSqm || mergedDoc.lotAreaSqm <= 0)) {
         throw new Error(
           `Lot/Land properties must have a valid Lot Area (sqm) for price per sqm calculation`,
         )
@@ -128,7 +131,7 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
     ]
 
     const invalidFields = presellingOnlyFields.filter((field) => {
-      const value = data[field]
+      const value = data[field] // Only check if they are explicitly trying to set them
       return value !== undefined && value !== null && value !== ''
     })
 

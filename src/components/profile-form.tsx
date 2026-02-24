@@ -211,7 +211,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
             // Upload and link avatar in one secure server-side call
             const formData = new FormData()
-            formData.append('file', croppedBlob, 'avatar.jpg')
+            formData.append('file', croppedBlob, `avatar-${Date.now()}.jpg`)
             formData.append('alt', `${user.email} avatar`)
 
             // Using custom route handler to bypass CSRF blocks on direct payload POSTs

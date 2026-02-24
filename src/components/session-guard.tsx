@@ -40,16 +40,6 @@ export function SessionGuard() {
   const [secondsLeft, setSecondsLeft] = useState(WARN_THRESHOLD_SECS)
   const [extending, setExtending] = useState(false)
 
-  // Register passive activity listeners to detect if the user is still present
-  useEffect(() => {
-    const recordActivity = () => {
-      lastActivityAt.current = Date.now()
-    }
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const
-    events.forEach((ev) => window.addEventListener(ev, recordActivity, { passive: true }))
-    return () => events.forEach((ev) => window.removeEventListener(ev, recordActivity))
-  }, [])
-
   const goToLogin = useCallback(() => {
     router.push('/login?reason=session_expired')
   }, [router])
@@ -76,38 +66,59 @@ export function SessionGuard() {
     return false
   }, [goToLogin])
 
+  // On mount, immediately refresh the token so lastRefreshAt reflects a known-fresh state.
+  // Without this, if the token was issued before this component mounted (e.g., user logged in
+  // 50 minutes ago then opened a new tab), the guard would miscalculate remaining time
+  // and never trigger a proactive refresh, causing an unexpected server-side logout.
+  useEffect(() => {
+    doRefresh()
+  }, [doRefresh])
+
+  // Register passive activity listeners to detect if the user is still present
+  useEffect(() => {
+    const recordActivity = () => {
+      lastActivityAt.current = Date.now()
+    }
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const
+    events.forEach((ev) => window.addEventListener(ev, recordActivity, { passive: true }))
+    return () => events.forEach((ev) => window.removeEventListener(ev, recordActivity))
+  }, [])
+
   // Heartbeat: runs every 30 seconds, checks session state and triggers
   // silent refreshes or the warning dialog as needed
   useEffect(() => {
     const id = setInterval(async () => {
-      const elapsedSec = (Date.now() - lastRefreshAt.current) / 1000
+      const now = Date.now()
+      const elapsedSec = (now - lastRefreshAt.current) / 1000
+      const remaining = TOKEN_EXPIRY_SECS - elapsedSec
 
       // Session fully expired server-side
-      if (elapsedSec >= TOKEN_EXPIRY_SECS) {
+      if (remaining <= 0) {
         clearInterval(id)
         goToLogin()
         return
       }
 
-      const remaining = TOKEN_EXPIRY_SECS - elapsedSec
-
       // Enter warning zone — show countdown dialog
-      if (remaining <= WARN_THRESHOLD_SECS) {
+      if (remaining <= WARN_THRESHOLD_SECS && !warningOpen) {
         setSecondsLeft(Math.round(remaining))
         setWarningOpen(true)
         return
       }
 
-      // Silent refresh: only if user has been active in the last 60 seconds
-      // and enough time has passed since the last refresh
-      const recentlyActive = (Date.now() - lastActivityAt.current) / 1000 < 60
-      if (recentlyActive && elapsedSec >= REFRESH_INTERVAL_SECS) {
-        await doRefresh()
+      // Silent refresh: if not in warning zone, check if we need to refresh based on activity
+      if (!warningOpen && elapsedSec >= REFRESH_INTERVAL_SECS) {
+        // User is considered active if they interacted in the last 5 minutes
+        const recentlyActive = (now - lastActivityAt.current) / 1000 < 300
+        if (recentlyActive) {
+          await doRefresh()
+        }
       }
+
     }, HEARTBEAT_MS)
 
     return () => clearInterval(id)
-  }, [doRefresh, goToLogin])
+  }, [doRefresh, goToLogin, warningOpen])
 
   // Countdown: 1-second tick only while the warning dialog is open
   useEffect(() => {
@@ -131,7 +142,7 @@ export function SessionGuard() {
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
   return (
-    <Dialog open={warningOpen} onOpenChange={() => {}}>
+    <Dialog open={warningOpen} onOpenChange={() => { }}>
       <DialogContent
         className="sm:max-w-md"
         onInteractOutside={(e) => e.preventDefault()}

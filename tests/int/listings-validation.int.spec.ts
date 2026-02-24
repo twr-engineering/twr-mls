@@ -118,6 +118,7 @@ beforeAll(async () => {
       barangay: testBarangay.psgcCode!,
       isActive: true,
     },
+    draft: true,
   })
 })
 

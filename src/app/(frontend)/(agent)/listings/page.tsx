@@ -3,7 +3,7 @@ import { requireAuth } from '@/lib/auth/actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 
 import { ListingSearch } from '@/components/listing-search'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
 
   let stats = { total: 0, draft: 0, submitted: 0, published: 0, needsRevision: 0 }
   let listingsData = { docs: [] as Awaited<ReturnType<typeof getUserListings>>['docs'] }
+  let loadError = false
 
   try {
     // Parallel fetch: Stats + Filtered Listings
@@ -37,6 +38,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
     listingsData = fetchedListings
   } catch (error) {
     console.error('Failed to load listings data:', error)
+    loadError = true
   }
 
   const listings = listingsData.docs
@@ -100,7 +102,23 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
       </div>
 
       {/* Listings Grid */}
-      {listings.length === 0 ? (
+      {loadError ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">
+                Failed to load listings. Please try again.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/listings">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : listings.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-12">

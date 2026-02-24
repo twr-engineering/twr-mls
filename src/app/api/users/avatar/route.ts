@@ -43,7 +43,7 @@ export async function POST(req: Request) {
                 mimetype: file.type,
                 size: file.size,
             },
-            overrideAccess: false,
+            overrideAccess: true,
             user,
         })
 
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
             data: {
                 avatar: mediaDoc.id,
             },
-            overrideAccess: false,
+            overrideAccess: true,
             user,
         })
 
