@@ -131,7 +131,7 @@ export function AgentSidebar({ user, ...props }: AgentSidebarProps) {
                                     asChild
                                     isActive={isSubActive}
                                   >
-                                    <Link href={subItem.url}>
+                                    <Link href={subItem.url} prefetch={false}>
                                       <span>{subItem.title}</span>
                                     </Link>
                                   </SidebarMenuSubButton>
@@ -148,7 +148,7 @@ export function AgentSidebar({ user, ...props }: AgentSidebarProps) {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-                      <Link href={item.url}>
+                      <Link href={item.url} prefetch={false}>
                         <Icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>

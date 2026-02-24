@@ -80,7 +80,7 @@ export async function getUser(): Promise<AuthUser | null> {
           if (media.url && media.url.startsWith('http')) {
             avatarUrl = media.url
           } else if (media.filename) {
-            const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+            const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID || process.env.SUPABASE_PROJECT_ID
             if (projectId) {
               avatarUrl = `https://${projectId}.supabase.co/storage/v1/object/public/media/${media.filename}`
             }
@@ -99,7 +99,7 @@ export async function getUser(): Promise<AuthUser | null> {
               if (media.url && media.url.startsWith('http')) {
                 avatarUrl = media.url
               } else if (media.filename) {
-                const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+                const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID || process.env.SUPABASE_PROJECT_ID
                 if (projectId) {
                   avatarUrl = `https://${projectId}.supabase.co/storage/v1/object/public/media/${media.filename}`
                 }

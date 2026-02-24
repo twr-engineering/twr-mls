@@ -286,6 +286,7 @@ describe('Critical Workflows E2E', () => {
         fullAddress: '456 E2E Avenue',
         status: 'draft',
       },
+      draft: true,
       user: testAgent,
       overrideAccess: false,
     })
@@ -423,6 +424,7 @@ describe('Critical Workflows E2E', () => {
         fullAddress: '321 E2E Boulevard',
         status: 'published',
       },
+      draft: true,
       user: testAgent,
       overrideAccess: false,
     })
