@@ -89,11 +89,11 @@ export const migrations = [
   {
     up: migration_20260207_152018_add_shared_links_table.up,
     down: migration_20260207_152018_add_shared_links_table.down,
-    name: '20260207_152018_add_shared_links_table'
+    name: '20260207_152018_add_shared_links_table',
   },
   {
     up: migration_20260210_223000_add_avatar_to_users.up,
     down: migration_20260210_223000_add_avatar_to_users.down,
-    name: '20260210_223000_add_avatar_to_users'
+    name: '20260210_223000_add_avatar_to_users',
   },
 ];

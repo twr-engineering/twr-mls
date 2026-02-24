@@ -7,13 +7,14 @@ import { getDevelopmentsByBarangay } from '@/lib/payload/api'
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const barangayId = searchParams.get('barangayId')
+    // Accept either 'barangayCode' (PSGC code string, preferred) or legacy 'barangayId'
+    const barangayCode = searchParams.get('barangayCode') || searchParams.get('barangayId')
 
-    if (!barangayId) {
-      return NextResponse.json({ error: 'Barangay ID is required' }, { status: 400 })
+    if (!barangayCode) {
+      return NextResponse.json({ error: 'Barangay code is required' }, { status: 400 })
     }
 
-    const developments = await getDevelopmentsByBarangay(parseInt(barangayId))
+    const developments = await getDevelopmentsByBarangay(barangayCode)
     return NextResponse.json(developments)
   } catch (error) {
     console.error('[PSGC API] Error fetching developments:', error)

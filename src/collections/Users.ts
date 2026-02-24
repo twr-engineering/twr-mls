@@ -41,8 +41,14 @@ export const Users: CollectionConfig = {
     hidden: ({ user }) => !isAdmin(user),
   },
   auth: {
-    // Token expires after 1 hour of inactivity
-    tokenExpiration: 3600,
+    // 30-day sliding expiration: SessionGuard refreshes on every page mount,
+    // so visiting any page within 30 days extends the session by another 30 days.
+    // This eliminates the forced 1-hour hard logout while keeping the token
+    // bounded — a token genuinely unused for 30 days expires naturally.
+    tokenExpiration: 2592000, // 30 days in seconds
+    // Disable Payload's built-in session tracking — SessionGuard handles token
+    // refresh client-side and requireAuth() handles expiry server-side.
+    useSessions: false,
     cookies: {
       // Ensure secure cookies in production
       secure: process.env.NODE_ENV === 'production',
