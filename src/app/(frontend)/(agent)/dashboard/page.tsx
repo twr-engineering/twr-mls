@@ -1,4 +1,4 @@
-import { getUser } from '@/lib/auth/actions'
+import { requireAuth } from '@/lib/auth/actions'
 import { getUserListingStats, getUserListings } from '@/lib/payload/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -28,16 +28,27 @@ function getStatusBadgeClass(status: string): string {
 }
 
 export default async function DashboardPage() {
-  const user = await getUser()
-  const stats = await getUserListingStats()
-  const recentListings = await getUserListings({ limit: 5 })
+  const user = await requireAuth()
+
+  let stats;
+  let recentListings;
+
+  try {
+    stats = await getUserListingStats()
+    recentListings = await getUserListings({ limit: 5 })
+  } catch (error) {
+    console.error('Failed to load dashboard data:', error)
+    // Fallback data in case of unexpected errors
+    stats = { total: 0, draft: 0, submitted: 0, published: 0, needsRevision: 0 }
+    recentListings = { docs: [] }
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.email}
+          Welcome back, {user.email}
         </p>
       </div>
 

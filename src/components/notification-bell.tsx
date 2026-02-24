@@ -40,12 +40,12 @@ function getImageUrl(img: ListingImage | string | number): string | null {
   if (img.url) {
     if (img.url.startsWith('http')) return img.url
     if (img.filename) {
-      return `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${img.filename}`
+      return `https://${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/media/${img.filename}`
     }
     return img.url
   }
   if (img.filename) {
-    return `https://mxjqvqqtjjvfcimfzoxs.supabase.co/storage/v1/object/public/media/${img.filename}`
+    return `https://${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/media/${img.filename}`
   }
   return null
 }
@@ -57,7 +57,7 @@ export function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications')
+      const response = await fetch('/api/notifications', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setNotifications(data.docs || [])
@@ -83,6 +83,7 @@ export function NotificationBell() {
     try {
       const response = await fetch('/api/notifications/mark-read', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId }),
       })
@@ -101,6 +102,7 @@ export function NotificationBell() {
     try {
       const response = await fetch('/api/notifications/mark-read', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId: 'all' }),
       })
@@ -219,8 +221,8 @@ export function NotificationBell() {
                   <div
                     key={notification.id}
                     className={`border-b last:border-b-0 transition-colors ${!notification.read
-                        ? 'bg-blue-50/50'
-                        : 'hover:bg-muted/40'
+                      ? 'bg-blue-50/50'
+                      : 'hover:bg-muted/40'
                       }`}
                   >
                     <div className="p-3">

@@ -5,7 +5,10 @@ import React from 'react'
 export const LogoutButton: React.FC = () => {
     const handleLogout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' })
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            // Clear any lingering client-side state
+            localStorage.clear()
+            sessionStorage.clear()
             window.location.href = '/'
         } catch (error) {
             console.error('Logout failed', error)

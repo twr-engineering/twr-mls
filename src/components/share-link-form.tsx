@@ -31,6 +31,7 @@ export function ShareLinkForm({ listingId }: ShareLinkFormProps) {
 
       const response = await fetch('/api/share-links', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           listingId,

@@ -32,6 +32,7 @@ export function ListingActions({ listingId, status }: ListingActionsProps) {
     try {
       const response = await fetch(`/api/listings/${listingId}`, {
         method: 'DELETE',
+        credentials: 'include',
       })
 
       if (!response.ok) {
@@ -53,6 +54,7 @@ export function ListingActions({ listingId, status }: ListingActionsProps) {
     try {
       const response = await fetch(`/api/listings/${listingId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'submitted' }),
       })
