@@ -13,12 +13,14 @@ export default async function SharedListingsPage({ params }: SharedPageProps) {
     const payload = await getPayload({ config })
 
     // Find the shared link by slug
+    // Use overrideAccess since this is a public page
     const sharedLinks = await payload.find({
         collection: 'shared-links',
         where: {
             slug: { equals: id },
         },
         limit: 1,
+        overrideAccess: true,
     })
 
     if (!sharedLinks.docs || sharedLinks.docs.length === 0) {
@@ -67,11 +69,13 @@ export default async function SharedListingsPage({ params }: SharedPageProps) {
     }
 
     // Fetch listings based on filters
+    // Use overrideAccess since this is a public page and we already filter to published only
     const listings = await payload.find({
         collection: 'listings',
         where,
         limit: 100,
         depth: 2,
+        overrideAccess: true,
     })
 
     return (

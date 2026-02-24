@@ -19,13 +19,14 @@ export function getMediaUrl(media: Media | string | number | null | undefined): 
 
   const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
   if (!projectId) {
-    console.error('NEXT_PUBLIC_SUPABASE_PROJECT_ID is not defined')
-    return 'https://placehold.co/600x400?text=Missing+Project+ID'
+    console.warn('[getMediaUrl] NEXT_PUBLIC_SUPABASE_PROJECT_ID is not defined — image URLs may not resolve correctly')
   }
 
-  const baseUrl = `https://${projectId}.supabase.co/storage/v1/object/public/media`
+  const baseUrl = projectId
+    ? `https://${projectId}.supabase.co/storage/v1/object/public/media`
+    : null
 
-  // If it's a number (unpopulated ID), we can't easily resolve the URL without the filename
+  // If it's a number (unpopulated ID), we can't resolve the URL without the filename
   if (typeof media === 'number') {
     return `https://placehold.co/600x400?text=Image+ID+${media}`
   }
@@ -35,24 +36,29 @@ export function getMediaUrl(media: Media | string | number | null | undefined): 
     if (media.startsWith('http')) return media
     if (media.startsWith('/api/media/file/')) {
       const filename = media.split('/').pop()
-      if (filename) return `${baseUrl}/${filename}`
+      if (filename && baseUrl) return `${baseUrl}/${filename}`
       return media
     }
     if (media.startsWith('/media/')) {
       const filename = media.replace('/media/', '')
-      return `${baseUrl}/${filename}`
+      if (baseUrl) return `${baseUrl}/${filename}`
+      return media
     }
     // Assume filename if no path
-    return `${baseUrl}/${media}`
+    if (baseUrl) return `${baseUrl}/${media}`
+    return media
   }
 
   // If it's a Media object
   if (typeof media === 'object') {
     if (media.url) {
-      return media.url.startsWith('http') ? media.url : getMediaUrl(media.url)
+      // Already a full URL — return directly
+      if (media.url.startsWith('http')) return media.url
+      // Relative URL — resolve via recursive call
+      return getMediaUrl(media.url)
     }
     if (media.filename) {
-      return `${baseUrl}/${media.filename}`
+      if (baseUrl) return `${baseUrl}/${media.filename}`
     }
   }
 

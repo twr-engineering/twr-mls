@@ -11,6 +11,9 @@ export type AuthUser = {
   id: number
   email: string
   role: User['role']
+  firstName?: string | null
+  lastName?: string | null
+  phone?: string | null
   avatar?: string | null
 }
 
@@ -109,6 +112,9 @@ export async function getUser(): Promise<AuthUser | null> {
         id: user.id,
         email: user.email as string,
         role: user.role,
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+        phone: user.phone || null,
         avatar: avatarUrl,
       }
     }
