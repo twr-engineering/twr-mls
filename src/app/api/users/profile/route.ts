@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { refresh } from '@payloadcms/next/auth'
 
 /**
  * PATCH /api/users/profile
@@ -44,6 +45,9 @@ export async function PATCH(req: Request) {
             // Local API update failures in some Payload 3.x builds when overrideAccess: false
             overrideAccess: true,
         })
+
+        // Force a token refresh so the client's cookie receives the updated fields immediately
+        await refresh({ config })
 
         return NextResponse.json({ success: true }, { status: 200 })
     } catch (error) {

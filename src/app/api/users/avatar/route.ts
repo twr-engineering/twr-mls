@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { cookies } from 'next/headers'
+import { refresh } from '@payloadcms/next/auth'
 
 export async function POST(req: Request) {
     try {
@@ -57,6 +59,9 @@ export async function POST(req: Request) {
             overrideAccess: true,
             user,
         })
+
+        // 5. Force a token refresh so the client's cookie receives the updated avatar ID immediately
+        await refresh({ config })
 
         return NextResponse.json({ success: true, avatarId: mediaDoc.id, avatarUrl: mediaDoc.url || null }, { status: 200 })
     } catch (error) {
