@@ -422,6 +422,16 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         setError('Property Category and Type are required.')
         return false
       }
+      // Warn early if user picked a lot/land type but hasn't filled in lot area
+      const selectedType = types.find((t) => String(t.id) === String(typeId))
+      const isLotType =
+        selectedType &&
+        (selectedType.label.toLowerCase().includes('lot') ||
+          selectedType.label.toLowerCase().includes('land'))
+      if (isLotType && !lotAreaSqm) {
+        setError('Lot Area (sqm) is required for Lot/Land type properties.')
+        return false
+      }
     }
     if (step === 4) {
       if (!price) {

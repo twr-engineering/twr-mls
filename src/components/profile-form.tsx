@@ -49,6 +49,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
     // Avatar URL — updated immediately after upload so display doesn't wait for router.refresh()
     const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatar || null)
+    // Track image load failure so we fall back to the User icon instead of a broken image
+    const [avatarLoadError, setAvatarLoadError] = useState(false)
 
     // State
     const [isUploading, setIsUploading] = useState(false)
@@ -119,6 +121,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
     useEffect(() => {
         drawCanvas()
     }, [drawCanvas])
+
+    // Reset avatar error whenever the URL is replaced (e.g. after a successful upload)
+    useEffect(() => {
+        setAvatarLoadError(false)
+    }, [avatarUrl])
 
     // Load image when source changes
     useEffect(() => {
@@ -254,7 +261,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
     const handleSaveInfo = async () => {
         setIsSavingInfo(true)
         try {
-            const updateRes = await fetch(`/api/users/${user.id}`, {
+            // Using custom route handler to bypass CSRF blocks on direct Payload REST API PATCHes
+            const updateRes = await fetch('/api/users/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -265,7 +273,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 }),
             })
 
-            if (!updateRes.ok) throw new Error('Failed to update profile')
+            if (!updateRes.ok) {
+                const errorData = await updateRes.json().catch(() => null)
+                throw new Error(errorData?.error || 'Failed to update profile')
+            }
 
             setSavedFirstName(firstName.trim())
             setSavedLastName(lastName.trim())
@@ -304,13 +315,14 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                     className="h-28 w-28 rounded-full border-4 border-background bg-muted overflow-hidden shadow-xl cursor-pointer transition-transform duration-200 hover:scale-105"
                                     onClick={handleAvatarClick}
                                 >
-                                    {avatarUrl ? (
+                                    {avatarUrl && !avatarLoadError ? (
                                         <Image
                                             src={avatarUrl}
                                             alt="Avatar"
                                             width={112}
                                             height={112}
                                             className="object-cover w-full h-full"
+                                            onError={() => setAvatarLoadError(true)}
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-primary/10 flex items-center justify-center">

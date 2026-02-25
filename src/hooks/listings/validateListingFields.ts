@@ -112,9 +112,18 @@ export const validateListingFields: CollectionBeforeChangeHook = async ({
           propertyType.name.toLowerCase().includes('land'))
 
       if (isLotType && (!mergedDoc.lotAreaSqm || mergedDoc.lotAreaSqm <= 0)) {
-        throw new Error(
-          `Lot/Land properties must have a valid Lot Area (sqm) for price per sqm calculation`,
-        )
+        if (operation === 'create') {
+          // New listings must always have a lot area
+          throw new Error(
+            `Lot/Land properties must have a valid Lot Area (sqm) for price per sqm calculation`,
+          )
+        } else if (originalDoc?.lotAreaSqm && originalDoc.lotAreaSqm > 0) {
+          // Editing an existing listing that already had a valid lot area — don't allow removing it
+          throw new Error(
+            `Lot/Land properties must have a valid Lot Area (sqm) for price per sqm calculation`,
+          )
+        }
+        // Editing a legacy listing that never had lotAreaSqm set — allow through gracefully
       }
     }
 

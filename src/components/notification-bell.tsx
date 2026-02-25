@@ -37,17 +37,38 @@ type Notification = {
 
 function getImageUrl(img: ListingImage | string | number): string | null {
   if (typeof img === 'string' || typeof img === 'number') return null
-  if (img.url) {
-    if (img.url.startsWith('http')) return img.url
-    if (img.filename) {
-      return `https://${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/media/${img.filename}`
-    }
-    return img.url
+  // Prefer the fully-qualified URL set by Payload's S3 generateFileURL
+  if (img.url && img.url.startsWith('http')) return img.url
+  // Fallback: construct from filename only when the project ID is available
+  const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+  if (img.filename && projectId) {
+    return `https://${projectId}.supabase.co/storage/v1/object/public/media/${img.filename}`
   }
-  if (img.filename) {
-    return `https://${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/media/${img.filename}`
-  }
+  // Never return relative URLs or undefined-based URLs — they always break
   return null
+}
+
+// Per-notification thumbnail with its own error state so a failed load
+// falls back to the emoji icon instead of showing a broken image.
+function NotificationThumbnail({ url, icon }: { url: string; icon: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) {
+    return (
+      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg">
+        {icon}
+      </div>
+    )
+  }
+  return (
+    <div className="flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border bg-muted">
+      <img
+        src={url}
+        alt=""
+        className="w-full h-full object-cover"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  )
 }
 
 export function NotificationBell() {
@@ -229,13 +250,10 @@ export function NotificationBell() {
                       <div className="flex gap-3">
                         {/* Thumbnail or icon */}
                         {thumbnail ? (
-                          <div className="flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border bg-muted">
-                            <img
-                              src={thumbnail}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                          <NotificationThumbnail
+                            url={thumbnail}
+                            icon={getNotificationIcon(notification.type)}
+                          />
                         ) : (
                           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg">
                             {getNotificationIcon(notification.type)}
