@@ -13,6 +13,7 @@ import { MultiSelect, Option } from './ui/multi-select'
 
 import type { Media } from '@/payload-types'
 import { isMedia } from '@/lib/type-guards'
+import { getMediaUrl } from '@/lib/utils'
 
 /**
  * Interface for listing options used in select fields.
@@ -1094,7 +1095,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                             <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full z-10 font-medium">Cover</div>
                           )}
                           <img
-                            src={img.url ? (img.url.startsWith('/api') ? img.url.replace('/api/media/file', '/media') : img.url) : 'https://placehold.co/400'}
+                            src={getMediaUrl(img)}
                             alt={img.alt || 'Listing image'}
                             className="object-cover w-full h-full"
                           />
@@ -1193,7 +1194,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                       {existingImages.map((img: any, i) => (
                         <div key={img.id || i} className="relative h-16 w-24 flex-shrink-0 rounded overflow-hidden border">
                           <img
-                            src={img.url ? (img.url.startsWith('/api') ? img.url.replace('/api/media/file', '/media') : img.url) : 'https://placehold.co/400'}
+                            src={getMediaUrl(img)}
                             alt={img.alt || 'Listing image'}
                             className="object-cover w-full h-full"
                           />

@@ -82,6 +82,7 @@ export default async function EditListingPage({ params }: PageProps) {
         return {
           id: img.id,
           url: img.url || '',
+          filename: img.filename || '',
           alt: img.alt || '',
         }
       }
