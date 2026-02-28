@@ -55,7 +55,8 @@ function getImageUrl(img: MediaObj | number | string): string | null {
     if (typeof img === 'number' || typeof img === 'string') return null
     if (img.url && img.url.startsWith('http')) return img.url
     if (img.filename) {
-        const projectId = (typeof window !== 'undefined' && (window as any).__PAYLOAD_CONFIG__?.projectId) || 'mxjqvqqtjjvfcimfzoxs'
+        const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+        if (!projectId) return null
         return `https://${projectId}.supabase.co/storage/v1/object/public/media/${img.filename}`
     }
     return img.url || null
@@ -86,6 +87,7 @@ export const ListingPreviewTab: React.FC = () => {
         try {
             const res = await fetch(`/api/listings/${id}`, {
                 method: 'PATCH',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
             })
@@ -114,7 +116,7 @@ export const ListingPreviewTab: React.FC = () => {
 
         const fetchListing = async () => {
             try {
-                const res = await fetch(`/api/listings/${id}?depth=2`)
+                const res = await fetch(`/api/listings/${id}?depth=2`, { credentials: 'include' })
                 if (res.ok) {
                     const data = await res.json()
                     setListing(data)
