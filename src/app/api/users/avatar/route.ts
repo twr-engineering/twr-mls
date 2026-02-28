@@ -1,16 +1,13 @@
-import { NextResponse } from 'next/server'
-import { headers as getHeaders } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { cookies } from 'next/headers'
 import { refresh } from '@payloadcms/next/auth'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
         // 1. Authenticate via Payload Local API (same auth source as the rest of the app)
         const payload = await getPayload({ config })
-        const headersList = await getHeaders()
-        const { user } = await payload.auth({ headers: headersList })
+        const { user } = await payload.auth({ headers: req.headers })
 
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -61,7 +58,11 @@ export async function POST(req: Request) {
         })
 
         // 5. Force a token refresh so the client's cookie receives the updated avatar ID immediately
-        await refresh({ config })
+        try {
+            await refresh({ config })
+        } catch {
+            // Non-fatal: the avatar is saved; the cookie will refresh on the next request
+        }
 
         return NextResponse.json({ success: true, avatarId: mediaDoc.id, avatarUrl: mediaDoc.url || null }, { status: 200 })
     } catch (error) {
