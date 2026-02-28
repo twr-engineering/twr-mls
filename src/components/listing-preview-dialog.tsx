@@ -240,7 +240,7 @@ export function ListingPreviewDialog({
                         {/* Actions Footer - Only show if not readOnly */}
                         {!readOnly && (
                             <div className="mt-auto flex flex-col gap-3 pt-4 border-t">
-                                {listing.status === 'draft' && (
+                                {(listing.status === 'draft' || listing.status === 'needs_revision') && (
                                     <Button
                                         onClick={handleSubmit}
                                         className="w-full bg-green-600 hover:bg-green-700 text-white"
