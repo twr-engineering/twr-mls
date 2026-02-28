@@ -47,6 +47,17 @@ export const validateStatusTransition: CollectionBeforeChangeHook<Listing> = asy
     throw new Error(`Invalid status transition: ${oldStatus} → ${newStatus}`)
   }
 
+  if (req.user?.role === 'approver') {
+    // Approvers can only act on submitted listings: approve, reject, or request revision
+    if (oldStatus !== 'submitted') {
+      throw new Error('Approvers can only act on submitted listings')
+    }
+    const approverAllowed = ['published', 'needs_revision', 'rejected']
+    if (!approverAllowed.includes(newStatus)) {
+      throw new Error('Approvers can only publish, reject, or request revision on submitted listings')
+    }
+  }
+
   if (req.user?.role === 'agent') {
     if (newStatus !== 'submitted') {
       throw new Error('Agents can only submit listings for review')

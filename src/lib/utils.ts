@@ -18,13 +18,13 @@ export function getMediaUrl(media: Media | string | number | null | undefined): 
   if (!media) return 'https://placehold.co/600x400?text=No+Image'
 
   const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
-  if (!projectId) {
-    console.warn('[getMediaUrl] NEXT_PUBLIC_SUPABASE_PROJECT_ID is not defined — image URLs may not resolve correctly')
-  }
-
   const baseUrl = projectId
     ? `https://${projectId}.supabase.co/storage/v1/object/public/media`
     : null
+
+  const warnMissing = () => {
+    console.warn('[getMediaUrl] NEXT_PUBLIC_SUPABASE_PROJECT_ID is not defined — image URLs may not resolve correctly')
+  }
 
   // If it's a number (unpopulated ID), we can't resolve the URL without the filename
   if (typeof media === 'number') {
@@ -37,15 +37,18 @@ export function getMediaUrl(media: Media | string | number | null | undefined): 
     if (media.startsWith('/api/media/file/')) {
       const filename = media.split('/').pop()
       if (filename && baseUrl) return `${baseUrl}/${filename}`
+      warnMissing()
       return media
     }
     if (media.startsWith('/media/')) {
       const filename = media.replace('/media/', '')
       if (baseUrl) return `${baseUrl}/${filename}`
+      warnMissing()
       return media
     }
     // Assume filename if no path
     if (baseUrl) return `${baseUrl}/${media}`
+    warnMissing()
     return media
   }
 
@@ -59,6 +62,7 @@ export function getMediaUrl(media: Media | string | number | null | undefined): 
     }
     if (media.filename) {
       if (baseUrl) return `${baseUrl}/${media.filename}`
+      warnMissing()
     }
   }
 
