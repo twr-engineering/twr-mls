@@ -64,7 +64,18 @@ export async function POST(req: NextRequest) {
             // Non-fatal: the avatar is saved; the cookie will refresh on the next request
         }
 
-        return NextResponse.json({ success: true, avatarId: mediaDoc.id, avatarUrl: mediaDoc.url || null }, { status: 200 })
+        // Resolve the avatar URL — in production with S3, mediaDoc.url from payload.create
+        // may be a relative path rather than the full S3 URL. Construct it from the filename
+        // using the same logic as getUser() in actions.ts.
+        let avatarUrl = mediaDoc.url || null
+        if (avatarUrl && !avatarUrl.startsWith('http') && mediaDoc.filename) {
+            const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID || process.env.SUPABASE_PROJECT_ID
+            if (projectId) {
+                avatarUrl = `https://${projectId}.supabase.co/storage/v1/object/public/media/${mediaDoc.filename}`
+            }
+        }
+
+        return NextResponse.json({ success: true, avatarId: mediaDoc.id, avatarUrl }, { status: 200 })
     } catch (error) {
         console.error('Avatar upload error:', error)
         return NextResponse.json(
