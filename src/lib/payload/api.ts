@@ -26,7 +26,9 @@ async function getAuthUser() {
 }
 
 /**
- * Get listings for the current user (agent)
+ * Get listings visible to the current user.
+ * - Agents: only their own listings (createdBy = user.id)
+ * - Approvers/Admins: all accessible listings (Payload access control handles visibility)
  * IMPORTANT: Always uses overrideAccess: false to enforce access control
  */
 export async function getUserListings(filters?: {
@@ -42,8 +44,11 @@ export async function getUserListings(filters?: {
     throw new Error('Not authenticated')
   }
 
+  const isReviewer = user.role === 'approver' || user.role === 'admin'
+
   const where: Where = {
-    createdBy: { equals: user.id },
+    // Agents see only their own listings; approvers/admins rely on Payload access control
+    ...(!isReviewer && { createdBy: { equals: user.id } }),
     ...(filters?.status && filters.status !== 'all' && { status: { equals: filters.status } }),
     ...(filters?.listingType && { listingType: { equals: filters.listingType } }),
   }
@@ -197,7 +202,9 @@ export async function getUserProfile() {
 }
 
 /**
- * Get listing statistics for the current user
+ * Get listing statistics for the current user.
+ * - Agents: counts only their own listings
+ * - Approvers/Admins: counts all accessible listings
  */
 export async function getUserListingStats() {
   const payload = await getPayloadInstance()
@@ -207,28 +214,31 @@ export async function getUserListingStats() {
     throw new Error('Not authenticated')
   }
 
+  const isReviewer = user.role === 'approver' || user.role === 'admin'
+  const ownerFilter: Where = isReviewer ? {} : { createdBy: { equals: user.id } }
+
   const [draft, submitted, published, needsRevision] = await Promise.all([
     payload.count({
       collection: 'listings',
-      where: { createdBy: { equals: user.id }, status: { equals: 'draft' } },
+      where: { ...ownerFilter, status: { equals: 'draft' } },
       overrideAccess: false,
       user,
     }),
     payload.count({
       collection: 'listings',
-      where: { createdBy: { equals: user.id }, status: { equals: 'submitted' } },
+      where: { ...ownerFilter, status: { equals: 'submitted' } },
       overrideAccess: false,
       user,
     }),
     payload.count({
       collection: 'listings',
-      where: { createdBy: { equals: user.id }, status: { equals: 'published' } },
+      where: { ...ownerFilter, status: { equals: 'published' } },
       overrideAccess: false,
       user,
     }),
     payload.count({
       collection: 'listings',
-      where: { createdBy: { equals: user.id }, status: { equals: 'needs_revision' } },
+      where: { ...ownerFilter, status: { equals: 'needs_revision' } },
       overrideAccess: false,
       user,
     }),

@@ -13,8 +13,8 @@ export default async function AgentLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Ensure only agents (and admins/approvers) can access this layout
-  const user = await requireAuth(['agent', 'admin', 'approver'])
+  // Only agents can access the frontend portal; admins/approvers use the Payload admin panel
+  const user = await requireAuth(['agent'])
 
   const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email.split('@')[0]
 

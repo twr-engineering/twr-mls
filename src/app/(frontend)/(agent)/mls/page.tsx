@@ -27,7 +27,7 @@ export default async function MLSSearchPage({
 }: {
   searchParams: SearchParams
 }) {
-  await requireAuth()
+  const user = await requireAuth()
 
   const params = await searchParams
 
@@ -106,7 +106,7 @@ export default async function MLSSearchPage({
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {listings.docs.map((listing) => (
-              <ListingGridCard key={listing.id} listing={listing} readOnly={true} />
+              <ListingGridCard key={listing.id} listing={listing} readOnly={true} userRole={user.role as 'agent' | 'approver' | 'admin'} />
             ))}
           </div>
         )}
