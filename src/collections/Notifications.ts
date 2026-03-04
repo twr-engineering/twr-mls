@@ -44,6 +44,11 @@ export const Notifications: CollectionConfig = {
     defaultColumns: ['type', 'recipient', 'message', 'read', 'createdAt'],
     group: 'System',
     description: 'System notifications for users',
+    components: {
+      beforeListTable: [
+        '/components/admin/ReviewPendingButton#ReviewPendingButton'
+      ]
+    }
   },
   access: {
     read: canReadNotification,
