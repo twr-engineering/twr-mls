@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation'
 import { Edit, ArrowLeft, MapPin, BedDouble, Bath, Ruler, Car, Calendar, Home } from 'lucide-react'
 import { getMediaUrl } from '@/lib/utils'
 import { ListingImageGallery } from '@/components/listing-image-gallery'
+import { ListingReviewActions } from '@/components/listing-review-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +40,7 @@ export default async function ViewListingPage({ params }: PageProps) {
   const isOwner = !!(user && createdById === user.id)
   const canEdit = isOwner && (listing.status === 'draft' || listing.status === 'needs_revision')
   const userRole = user?.role || 'agent'
+  const isReviewer = userRole === 'approver' || userRole === 'admin'
 
   const cityName = listing.cityName || 'N/A'
   const barangayName = listing.barangayName || 'N/A'
@@ -133,6 +135,11 @@ export default async function ViewListingPage({ params }: PageProps) {
           </Button>
         )}
       </div>
+
+      {/* Review Actions for Approvers/Admins */}
+      {isReviewer && listing.status === 'submitted' && (
+        <ListingReviewActions listingId={listing.id} currentStatus={listing.status} />
+      )}
 
       {/* Images Gallery */}
       <ListingImageGallery images={images} />

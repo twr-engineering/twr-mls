@@ -93,7 +93,7 @@ export const ListingPreviewTab: React.FC = () => {
             })
             if (res.ok) {
                 const updated = await res.json()
-                setListing({ ...listing, status: updated.doc?.status || newStatus })
+                setListing({ ...listing, status: updated.status || updated.doc?.status || newStatus })
                 setStatusMessage({ type: 'success', text: `Listing ${labels[newStatus]?.toLowerCase() || 'updated'} successfully! Reloading...` })
 
                 // Force reload to sync outer Payload Form State and prevent stale data override

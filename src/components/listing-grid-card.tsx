@@ -14,7 +14,7 @@ import { getMediaUrl } from '@/lib/utils'
  * Component for displaying a single listing in a grid view.
  * Handles rendering listing details, status badges, and preview dialog.
  */
-export function ListingGridCard({ listing, readOnly = false }: { listing: Listing, readOnly?: boolean }) {
+export function ListingGridCard({ listing, readOnly = false, userRole = 'agent' }: { listing: Listing, readOnly?: boolean, userRole?: 'agent' | 'approver' | 'admin' }) {
     const [showPreview, setShowPreview] = useState(false)
 
     // Safe image handling
@@ -122,6 +122,7 @@ export function ListingGridCard({ listing, readOnly = false }: { listing: Listin
                 open={showPreview}
                 onOpenChange={setShowPreview}
                 readOnly={readOnly}
+                userRole={userRole}
             />
         </>
     )

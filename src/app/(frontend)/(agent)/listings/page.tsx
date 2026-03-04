@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 type SearchParams = Promise<{ status?: string; q?: string }>
 
 export default async function ListingsPage({ searchParams }: { searchParams: SearchParams }) {
-  await requireAuth()
+  const user = await requireAuth()
 
   const params = await searchParams
   const statusFilter = params.status || 'all'
@@ -137,7 +137,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((listing) => (
-            <ListingGridCard key={listing.id} listing={listing} />
+            <ListingGridCard key={listing.id} listing={listing} userRole={user.role as 'agent' | 'approver' | 'admin'} />
           ))}
         </div>
       )}

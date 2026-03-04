@@ -13,7 +13,10 @@ import {
     ChevronRight,
     Edit,
     Trash2,
-    CheckCircle
+    CheckCircle,
+    ShieldCheck,
+    RotateCcw,
+    XCircle
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type { Listing } from '@/payload-types'
@@ -25,6 +28,7 @@ interface ListingPreviewDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     readOnly?: boolean
+    userRole?: 'agent' | 'approver' | 'admin'
 }
 
 export function ListingPreviewDialog({
@@ -32,9 +36,11 @@ export function ListingPreviewDialog({
     open,
     onOpenChange,
     readOnly = false,
+    userRole = 'agent',
 }: ListingPreviewDialogProps) {
     const router = useRouter()
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [reviewUpdating, setReviewUpdating] = useState(false)
 
     // Normalize images
     const images =
@@ -125,6 +131,42 @@ export function ListingPreviewDialog({
             case 'rejected': return 'bg-red-500'
             case 'draft':
             default: return 'bg-slate-500'
+        }
+    }
+
+    const isReviewer = userRole === 'approver' || userRole === 'admin'
+    const canReview = isReviewer && listing.status === 'submitted'
+
+    const handleReviewAction = async (newStatus: string) => {
+        const labels: Record<string, string> = {
+            published: 'Publish',
+            needs_revision: 'Request Revision',
+            rejected: 'Reject',
+        }
+
+        if (!confirm(`Are you sure you want to ${labels[newStatus]?.toLowerCase() || 'update'} this listing?`)) return
+
+        setReviewUpdating(true)
+        try {
+            const res = await fetch(`/api/listings/${listing.id}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            })
+
+            if (res.ok) {
+                onOpenChange(false)
+                router.refresh()
+            } else {
+                const data = await res.json().catch(() => ({}))
+                alert(data.errors?.[0]?.message || `Failed to ${labels[newStatus]?.toLowerCase()}.`)
+            }
+        } catch (error) {
+            console.error('Review action failed:', error)
+            alert('Network error. Please try again.')
+        } finally {
+            setReviewUpdating(false)
         }
     }
 
@@ -238,7 +280,7 @@ export function ListingPreviewDialog({
 
                         {/* Actions Footer */}
                         {/* Actions Footer - Only show if not readOnly */}
-                        {!readOnly && (
+                        {!readOnly && !isReviewer && (
                             <div className="mt-auto flex flex-col gap-3 pt-4 border-t">
                                 {(listing.status === 'draft' || listing.status === 'needs_revision') && (
                                     <Button
@@ -267,6 +309,43 @@ export function ListingPreviewDialog({
                                     >
                                         <Trash2 className="h-4 w-4 mr-2" />
                                         Delete Listing
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Review Actions - For approvers/admins reviewing submitted listings */}
+                        {canReview && (
+                            <div className="mt-auto flex flex-col gap-3 pt-4 border-t">
+                                <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase mb-1">
+                                    Review Actions
+                                </div>
+                                <Button
+                                    onClick={() => handleReviewAction('published')}
+                                    disabled={reviewUpdating}
+                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    <ShieldCheck className="h-4 w-4 mr-2" />
+                                    {reviewUpdating ? 'Processing...' : 'Approve & Publish'}
+                                </Button>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => handleReviewAction('needs_revision')}
+                                        disabled={reviewUpdating}
+                                        className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                                    >
+                                        <RotateCcw className="h-4 w-4 mr-2" />
+                                        Needs Revision
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => handleReviewAction('rejected')}
+                                        disabled={reviewUpdating}
+                                        className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                    >
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Reject
                                     </Button>
                                 </div>
                             </div>
