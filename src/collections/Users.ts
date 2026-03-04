@@ -49,6 +49,10 @@ export const Users: CollectionConfig = {
     // Disable Payload's built-in session tracking — SessionGuard handles token
     // refresh client-side and requireAuth() handles expiry server-side.
     useSessions: false,
+    // Disable login-attempt lockout entirely — agents can log out and
+    // immediately log back in without restriction. Setting to 0 bypasses
+    // Payload's default (5 attempts → 10-minute lock).
+    maxLoginAttempts: 0,
     cookies: {
       // Ensure secure cookies in production
       secure: process.env.NODE_ENV === 'production',

@@ -46,8 +46,16 @@ export async function PATCH(req: Request) {
             overrideAccess: true,
         })
 
-        // Force a token refresh so the client's cookie receives the updated fields immediately
-        await refresh({ config })
+        // Force a token refresh so the client's cookie receives the updated fields immediately.
+        // Wrapped in try/catch because refresh() may fail in production environments
+        // (e.g. Vercel) where the request cookies aren't accessible from Next.js headers
+        // context in a custom route handler. The profile update already succeeded above;
+        // a failed refresh just means the cookie updates on the next navigation.
+        try {
+            await refresh({ config })
+        } catch {
+            // Non-fatal: profile is saved; the cookie will refresh on the next request
+        }
 
         return NextResponse.json({ success: true }, { status: 200 })
     } catch (error) {
