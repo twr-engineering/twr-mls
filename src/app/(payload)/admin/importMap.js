@@ -31,6 +31,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { default as default_c5fb5c23790b8f0b2b81fa1623af22b5 } from '@/components/admin/ListingStatusFilter'
 import { default as default_7b33918f3bbf50cfbd08ee7b243173b3 } from '@/components/admin/ListingPreviewTab'
+import { ReviewPendingButton as ReviewPendingButton_84fd71e0561398ec31171201d9f575d7 } from '../../../components/admin/ReviewPendingButton'
 import { LogoutButton as LogoutButton_8f8437271bb1185a7d11b63d7e5de4b9 } from '../../../components/LogoutButton'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_ab83ff7e88da8d3530831f296ec4756a } from '@payloadcms/ui/rsc'
@@ -69,6 +70,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/ListingStatusFilter#default": default_c5fb5c23790b8f0b2b81fa1623af22b5,
   "@/components/admin/ListingPreviewTab#default": default_7b33918f3bbf50cfbd08ee7b243173b3,
+  "/components/admin/ReviewPendingButton#ReviewPendingButton": ReviewPendingButton_84fd71e0561398ec31171201d9f575d7,
   "/components/LogoutButton#LogoutButton": LogoutButton_8f8437271bb1185a7d11b63d7e5de4b9,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/ui/rsc#CollectionCards": CollectionCards_ab83ff7e88da8d3530831f296ec4756a

@@ -10,6 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { SearchableSelect } from './ui/searchable-select'
 import { MultiSelect, Option } from './ui/multi-select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 import type { Media } from '@/payload-types'
 import { isMedia } from '@/lib/type-guards'
@@ -464,8 +475,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
   /**
    * Handles form submission, including image uploads and listing creation/update.
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault()
     setError(null)
     setIsLoading(true)
 
@@ -1249,12 +1260,32 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
               )}
 
               {step === 6 && (
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading
-                    ? (listingId ? 'Updating...' : 'Creating...')
-                    : (listingId ? 'Update Listing' : 'Create Listing')
-                  }
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" disabled={isLoading}>
+                      {isLoading
+                        ? (listingId ? 'Updating...' : 'Creating...')
+                        : (listingId ? 'Update Listing' : 'Create Listing')
+                      }
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{listingId ? 'Update Listing?' : 'Create Listing?'}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {listingId
+                          ? 'Are you sure you want to save these changes to your listing?'
+                          : 'Are you sure you want to create this listing?'}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSubmit}>
+                        {listingId ? 'Update' : 'Create'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           </div>

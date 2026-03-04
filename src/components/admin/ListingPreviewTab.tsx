@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useDocumentInfo } from '@payloadcms/ui'
+import { useDocumentInfo, toast } from '@payloadcms/ui'
+import { useRouter } from 'next/navigation'
+
 
 interface MediaObj {
     id: number | string
@@ -53,37 +55,28 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
 
 function getImageUrl(img: MediaObj | number | string): string | null {
     if (typeof img === 'number' || typeof img === 'string') return null
-    if (img.url && img.url.startsWith('http')) return img.url
-    if (img.filename) {
-        const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
-        if (!projectId) return null
-        return `https://${projectId}.supabase.co/storage/v1/object/public/media/${img.filename}`
-    }
     return img.url || null
 }
 
 export const ListingPreviewTab: React.FC = () => {
     const { id } = useDocumentInfo()
+    const router = useRouter()
     const [listing, setListing] = useState<ListingData | null>(null)
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState(false)
-    const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+    const labels: Record<string, string> = {
+        published: 'Publish',
+        needs_revision: 'Request Revision',
+        rejected: 'Reject',
+    }
 
     const handleStatusChange = async (newStatus: string) => {
         if (!id || !listing) return
-
-        const labels: Record<string, string> = {
-            published: 'Publish',
-            needs_revision: 'Request Revision',
-            rejected: 'Reject',
-        }
-
-        const confirmed = window.confirm(`Are you sure you want to ${labels[newStatus]?.toLowerCase() || 'update'} this listing?`)
-        if (!confirmed) return
+        if (!window.confirm(`Are you sure you want to ${labels[newStatus]?.toLowerCase() || 'update'} this listing?`)) return
 
         setUpdating(true)
-        setStatusMessage(null)
         try {
             const res = await fetch(`/api/listings/${id}`, {
                 method: 'PATCH',
@@ -94,18 +87,14 @@ export const ListingPreviewTab: React.FC = () => {
             if (res.ok) {
                 const updated = await res.json()
                 setListing({ ...listing, status: updated.status || updated.doc?.status || newStatus })
-                setStatusMessage({ type: 'success', text: `Listing ${labels[newStatus]?.toLowerCase() || 'updated'} successfully! Reloading...` })
-
-                // Force reload to sync outer Payload Form State and prevent stale data override
-                setTimeout(() => {
-                    window.location.reload()
-                }, 1500)
+                toast.success(`Listing ${labels[newStatus]?.toLowerCase() || 'updated'} successfully!`)
+                router.refresh()
             } else {
                 const err = await res.json().catch(() => ({}))
-                setStatusMessage({ type: 'error', text: err.errors?.[0]?.message || `Failed to update status.` })
+                toast.error(err.errors?.[0]?.message || `Failed to update status.`)
             }
         } catch (err) {
-            setStatusMessage({ type: 'error', text: 'Network error. Please try again.' })
+            toast.error('Network error. Please try again.')
         } finally {
             setUpdating(false)
         }
@@ -172,6 +161,7 @@ export const ListingPreviewTab: React.FC = () => {
 
     return (
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 20px' }}>
+
             {/* Header */}
             <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
@@ -238,6 +228,7 @@ export const ListingPreviewTab: React.FC = () => {
                     </div>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button
+                            type="button"
                             onClick={() => handleStatusChange('published')}
                             disabled={updating || listing.status === 'published'}
                             style={{
@@ -255,6 +246,7 @@ export const ListingPreviewTab: React.FC = () => {
                             ✓ Publish
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleStatusChange('needs_revision')}
                             disabled={updating || listing.status === 'needs_revision'}
                             style={{
@@ -272,6 +264,7 @@ export const ListingPreviewTab: React.FC = () => {
                             ↻ Needs Revision
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleStatusChange('rejected')}
                             disabled={updating || listing.status === 'rejected'}
                             style={{
@@ -290,19 +283,6 @@ export const ListingPreviewTab: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                {statusMessage && (
-                    <div style={{
-                        marginTop: '12px',
-                        padding: '10px 14px',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        background: statusMessage.type === 'success' ? '#dcfce7' : '#fee2e2',
-                        color: statusMessage.type === 'success' ? '#15803d' : '#b91c1c',
-                    }}>
-                        {statusMessage.text}
-                    </div>
-                )}
             </div>
 
             {/* Images Gallery */}

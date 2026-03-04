@@ -8,6 +8,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import type { Listing } from '@/payload-types'
 import { isCity, isBarangay, isPropertyCategory, isPropertyType, isMedia } from '@/lib/type-guards'
 
@@ -243,8 +254,8 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   /**
    * Handles the submission of the edited listing data.
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault()
     setError(null)
     setIsLoading(true)
 
@@ -888,9 +899,27 @@ export function EditListingForm({ listing }: EditListingFormProps) {
               )}
 
               {step === 6 && (
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" disabled={isLoading}>
+                      {isLoading ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Save Changes?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to save these changes to your listing?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSubmit}>
+                        Save Changes
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           </div>

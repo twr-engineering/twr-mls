@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, BedDouble, Bath, Ruler, Phone } from 'lucide-react'
+import { MapPin, BedDouble, Bath, Ruler, Phone, Home } from 'lucide-react'
 import type { Listing, User } from '@/payload-types'
 import { isUser, isCity, isBarangay } from '@/lib/type-guards'
 import Image from 'next/image'
@@ -16,10 +16,12 @@ import { getMediaUrl } from '@/lib/utils'
  */
 export function ListingGridCard({ listing, readOnly = false, userRole = 'agent' }: { listing: Listing, readOnly?: boolean, userRole?: 'agent' | 'approver' | 'admin' }) {
     const [showPreview, setShowPreview] = useState(false)
+    const [imgError, setImgError] = useState(false)
 
     // Safe image handling
     const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : null
     const mainImage = getMediaUrl(firstImage)
+    const hasValidImage = !!firstImage && !imgError && !mainImage.includes('placehold.co')
 
     const statusColors: Record<string, string> = {
         published: 'bg-green-500',
@@ -39,12 +41,20 @@ export function ListingGridCard({ listing, readOnly = false, userRole = 'agent' 
             >
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                    <Image
-                        src={mainImage}
-                        alt={listing.title}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
+                    {hasValidImage ? (
+                        <Image
+                            src={mainImage}
+                            alt={listing.title}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={() => setImgError(true)}
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                            <Home className="h-10 w-10 text-slate-400 mb-2" />
+                            <span className="text-xs text-slate-400 font-medium">No Image</span>
+                        </div>
+                    )}
 
                     {/* Status Badge */}
                     <div className="absolute left-3 top-3">
