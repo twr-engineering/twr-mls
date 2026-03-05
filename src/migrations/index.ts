@@ -14,6 +14,8 @@ import * as migration_20260204_075237_fix_missing_preselling_columns from './202
 import * as migration_20260207_121858 from './20260207_121858';
 import * as migration_20260207_152018_add_shared_links_table from './20260207_152018_add_shared_links_table';
 import * as migration_20260210_223000_add_avatar_to_users from './20260210_223000_add_avatar_to_users';
+import * as migration_20260305_000343_add_rent_price from './20260305_000343_add_rent_price';
+import * as migration_20260305_004434_price_conditionally_required from './20260305_004434_price_conditionally_required';
 
 export const migrations = [
   {
@@ -95,5 +97,15 @@ export const migrations = [
     up: migration_20260210_223000_add_avatar_to_users.up,
     down: migration_20260210_223000_add_avatar_to_users.down,
     name: '20260210_223000_add_avatar_to_users',
+  },
+  {
+    up: migration_20260305_000343_add_rent_price.up,
+    down: migration_20260305_000343_add_rent_price.down,
+    name: '20260305_000343_add_rent_price',
+  },
+  {
+    up: migration_20260305_004434_price_conditionally_required.up,
+    down: migration_20260305_004434_price_conditionally_required.down,
+    name: '20260305_004434_price_conditionally_required'
   },
 ];

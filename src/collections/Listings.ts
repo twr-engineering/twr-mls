@@ -579,11 +579,14 @@ export const Listings: CollectionConfig = {
                 {
                   name: 'price',
                   type: 'number',
-                  required: true,
                   min: 0,
                   admin: {
                     placeholder: 'Base price',
                     width: '33%',
+                    condition: (data) => {
+                      if (!data?.transactionType) return true
+                      return data.transactionType.includes('sale')
+                    },
                   },
                 },
                 {
@@ -594,6 +597,20 @@ export const Listings: CollectionConfig = {
                     placeholder: 'Price per sqm (for lots)',
                     width: '33%',
                     description: 'Required for lot-type properties',
+                  },
+                },
+                {
+                  name: 'rentPrice',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Monthly rent price (PHP)',
+                    width: '33%',
+                    description: 'Required when listing is for rent',
+                    condition: (data) => {
+                      const tx = data?.transactionType
+                      return Array.isArray(tx) && tx.includes('rent')
+                    },
                   },
                 },
               ],
@@ -797,6 +814,9 @@ export const Listings: CollectionConfig = {
     },
     {
       fields: ['price'],
+    },
+    {
+      fields: ['rentPrice'],
     },
     {
       fields: ['createdBy'],

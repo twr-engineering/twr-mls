@@ -62,13 +62,22 @@ export async function getUser(): Promise<AuthUser | null> {
   try {
     const payload = await getPayload({ config })
     const headers = await getHeaders()
-    const { user } = await payload.auth({ headers })
+    const { user: authUser } = await payload.auth({ headers })
 
-    if (user) {
+    if (authUser) {
       // Reject deactivated accounts even if their JWT is still valid
-      if (user.isActive === false) {
+      if (authUser.isActive === false) {
         return null
       }
+
+      // Fetch fresh user from the database to prevent stale JWT profile data in production
+      const user = await payload.findByID({
+        collection: 'users',
+        id: authUser.id,
+        depth: 0,
+      })
+
+      if (!user) return null
 
       // Resolve avatar URL
       let avatarUrl: string | null = null
