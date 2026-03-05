@@ -19,6 +19,7 @@ interface ListingData {
     listingType: string
     transactionType: string | string[]
     price?: number
+    rentPrice?: number
     pricePerSqm?: number
     fullAddress?: string
     provinceName?: string
@@ -367,6 +368,11 @@ export const ListingPreviewTab: React.FC = () => {
                     <div style={{ fontSize: '13px', color: 'var(--theme-elevation-400)', textTransform: 'capitalize' }}>
                         {transactionDisplay}
                     </div>
+                    {listing.rentPrice && (
+                        <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--theme-elevation-600)', marginTop: '8px' }}>
+                            ₱{listing.rentPrice.toLocaleString()}/mo <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--theme-elevation-400)' }}>rent</span>
+                        </div>
+                    )}
                     {listing.paymentTerms && listing.paymentTerms.length > 0 && (
                         <div style={{ fontSize: '13px', color: 'var(--theme-elevation-400)', marginTop: '4px', textTransform: 'capitalize' }}>
                             Terms: {listing.paymentTerms.join(', ')}

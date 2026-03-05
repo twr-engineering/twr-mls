@@ -174,6 +174,11 @@ export const ListingsCardView = (props: ListingsCardViewProps) => {
               <div className="flex items-center gap-2 text-sm">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span className="font-semibold">{formatPrice(listing.price)}</span>
+                {listing.rentPrice && (
+                  <span className="text-muted-foreground text-xs">
+                    ({formatPrice(listing.rentPrice)}/mo)
+                  </span>
+                )}
                 {listing.pricePerSqm && (
                   <span className="text-muted-foreground">
                     ({formatPrice(listing.pricePerSqm)}/sqm)
@@ -311,6 +316,11 @@ export const ListingsCardView = (props: ListingsCardViewProps) => {
                     {selectedListing.pricePerSqm && (
                       <p>
                         <strong>Price per sqm:</strong> {formatPrice(selectedListing.pricePerSqm)}
+                      </p>
+                    )}
+                    {selectedListing.rentPrice && (
+                      <p>
+                        <strong>Rent Price:</strong> {formatPrice(selectedListing.rentPrice)}/mo
                       </p>
                     )}
                     {selectedListing.paymentTerms &&

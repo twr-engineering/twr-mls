@@ -596,6 +596,20 @@ export const Listings: CollectionConfig = {
                     description: 'Required for lot-type properties',
                   },
                 },
+                {
+                  name: 'rentPrice',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    placeholder: 'Monthly rent price (PHP)',
+                    width: '33%',
+                    description: 'Required when listing is for rent',
+                    condition: (data) => {
+                      const tx = data?.transactionType
+                      return Array.isArray(tx) && tx.includes('rent')
+                    },
+                  },
+                },
               ],
             },
             {
@@ -797,6 +811,9 @@ export const Listings: CollectionConfig = {
     },
     {
       fields: ['price'],
+    },
+    {
+      fields: ['rentPrice'],
     },
     {
       fields: ['createdBy'],

@@ -99,6 +99,11 @@ export function ListingGridCard({ listing, readOnly = false, userRole = 'agent' 
                         </h3>
                         <div className="font-bold text-sm whitespace-nowrap">
                             ₱{listing.price?.toLocaleString()}
+                            {listing.rentPrice && (
+                                <div className="text-xs font-semibold text-muted-foreground">
+                                    ₱{listing.rentPrice.toLocaleString()}/mo
+                                </div>
+                            )}
                         </div>
                     </div>
 

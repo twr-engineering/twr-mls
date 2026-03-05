@@ -580,6 +580,10 @@ export interface Listing {
    * Required for lot-type properties
    */
   pricePerSqm?: number | null;
+  /**
+   * Required when listing is for rent
+   */
+  rentPrice?: number | null;
   paymentTerms?: ('cash' | 'bank' | 'pagibig' | 'deferred')[] | null;
   /**
    * Unit model or type name
@@ -1119,6 +1123,7 @@ export interface ListingsSelect<T extends boolean = true> {
   transactionType?: T;
   price?: T;
   pricePerSqm?: T;
+  rentPrice?: T;
   paymentTerms?: T;
   modelName?: T;
   indicativePriceMin?: T;

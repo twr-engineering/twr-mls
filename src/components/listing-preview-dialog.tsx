@@ -255,6 +255,11 @@ export function ListingPreviewDialog({
                                 <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                     ₱{listing.price?.toLocaleString() || '—'}
                                 </div>
+                                {listing.rentPrice && (
+                                    <div className="text-base font-semibold text-muted-foreground">
+                                        ₱{listing.rentPrice.toLocaleString()}/mo <span className="text-xs font-normal">rent</span>
+                                    </div>
+                                )}
 
                                 <div className="flex items-center text-muted-foreground gap-2 text-sm">
                                     <MapPin className="h-4 w-4 flex-shrink-0" />

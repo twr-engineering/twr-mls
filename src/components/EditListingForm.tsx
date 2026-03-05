@@ -48,6 +48,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   const [title, setTitle] = useState('')
   const [fullAddress, setFullAddress] = useState('')
   const [price, setPrice] = useState('')
+  const [rentPrice, setRentPrice] = useState('')
   const [description, setDescription] = useState('')
 
   // Relationships / options
@@ -115,6 +116,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     setTitle(listing.title || '')
     setFullAddress(listing.fullAddress || '')
     setPrice(listing.price ? String(listing.price) : '')
+    setRentPrice(listing.rentPrice ? String(listing.rentPrice) : '')
     setDescription(
       typeof listing.description === 'string'
         ? listing.description
@@ -303,6 +305,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
         title,
         fullAddress,
         price: price ? Number(price) : null,
+        rentPrice: rentPrice ? Number(rentPrice) : null,
         description,
         city: cityId || null,
         barangay: barangayId || null,
@@ -711,6 +714,22 @@ export function EditListingForm({ listing }: EditListingFormProps) {
                     disabled={isLoading}
                   />
                 </div>
+                {transactionTypes.includes('rent') && (
+                  <div>
+                    <Label htmlFor="rentPrice">Rent Price (PHP/month)</Label>
+                    <Input
+                      id="rentPrice"
+                      type="number"
+                      min={0}
+                      step={1000}
+                      value={rentPrice}
+                      onChange={(e) => setRentPrice(e.target.value)}
+                      disabled={isLoading}
+                      placeholder="Monthly rent price"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Monthly rental price for this property</p>
+                  </div>
+                )}
               </div>
 
               {/* Title Status & Payment Terms */}

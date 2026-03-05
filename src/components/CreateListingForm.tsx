@@ -53,6 +53,7 @@ export type ListingFormData = {
   title?: string
   fullAddress?: string
   price?: number
+  rentPrice?: number
   description?: string
   provinceId?: string | number
   cityId?: string | number
@@ -102,6 +103,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
   const [fullAddress, setFullAddress] = useState(initialData?.fullAddress || '')
   // Store price as string with commas for display
   const [price, setPrice] = useState(initialData?.price ? initialData.price.toLocaleString() : '')
+  const [rentPrice, setRentPrice] = useState(initialData?.rentPrice ? initialData.rentPrice.toLocaleString() : '')
   const [description, setDescription] = useState(initialData?.description || '')
 
   // Relationships / options
@@ -450,6 +452,10 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         setError('Price is required.')
         return false
       }
+      if (transactionTypes.includes('rent') && !rentPrice) {
+        setError('Rent Price is required when listing is for rent.')
+        return false
+      }
     }
     setError(null)
     return true
@@ -541,6 +547,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
         title,
         fullAddress,
         price: price ? Number(price.replace(/,/g, '')) : null,
+        rentPrice: rentPrice ? Number(rentPrice.replace(/,/g, '')) : null,
         description,
         city: cityPsgc, // Send PSGC Code
         cityName: cities.find((c) => String(c.id) === String(cityId))?.label || '',
@@ -1036,6 +1043,39 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                       placeholder="Base price"
                     />
                   </div>
+                  {transactionTypes.includes('rent') && (
+                    <div>
+                      <Label htmlFor="rentPrice">Rent Price (PHP/month) <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="rentPrice"
+                        type="text"
+                        value={rentPrice}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, '')
+                          if (rawValue === '') {
+                            setRentPrice('')
+                            return
+                          }
+                          const number = parseFloat(rawValue)
+                          if (!isNaN(number)) {
+                            if (rawValue.endsWith('.')) {
+                              setRentPrice(number.toLocaleString() + '.')
+                            } else if (rawValue.includes('.') && rawValue.endsWith('0')) {
+                              setRentPrice(rawValue)
+                            } else {
+                              setRentPrice(number.toLocaleString())
+                            }
+                          } else {
+                            setRentPrice(rawValue)
+                          }
+                        }}
+                        required
+                        disabled={isLoading}
+                        placeholder="Monthly rent price"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Monthly rental price for this property</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
