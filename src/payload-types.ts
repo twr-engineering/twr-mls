@@ -575,7 +575,7 @@ export interface Listing {
   tenure?: ('freehold' | 'leasehold') | null;
   titleStatus?: ('clean' | 'mortgaged') | null;
   transactionType: ('sale' | 'rent')[];
-  price: number;
+  price?: number | null;
   /**
    * Required for lot-type properties
    */

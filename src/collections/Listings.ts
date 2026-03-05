@@ -579,11 +579,14 @@ export const Listings: CollectionConfig = {
                 {
                   name: 'price',
                   type: 'number',
-                  required: true,
                   min: 0,
                   admin: {
                     placeholder: 'Base price',
                     width: '33%',
+                    condition: (data) => {
+                      if (!data?.transactionType) return true
+                      return data.transactionType.includes('sale')
+                    },
                   },
                 },
                 {

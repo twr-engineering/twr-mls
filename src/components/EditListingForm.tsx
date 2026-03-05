@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import type { Listing } from '@/payload-types'
 import { isCity, isBarangay, isPropertyCategory, isPropertyType, isMedia } from '@/lib/type-guards'
+import { getMediaUrl } from '@/lib/utils'
+import { toast } from 'sonner'
 
 type Option = {
   id: string | number
@@ -61,6 +63,8 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   const [barangayId, setBarangayId] = useState<string>('')
   const [categoryId, setCategoryId] = useState<string>('')
   const [typeId, setTypeId] = useState<string>('')
+  const [subtypeId, setSubtypeId] = useState<string>('')
+  const [subtypes, setSubtypes] = useState<Option[]>([])
   // Allow selecting one or both transaction types (sale, rent)
   const [transactionTypes, setTransactionTypes] = useState<string[]>([])
 
@@ -150,10 +154,17 @@ export function EditListingForm({ listing }: EditListingFormProps) {
         ? String(listing.propertyType)
         : ''
 
+    const subtypeVal = listing.propertySubtype && typeof listing.propertySubtype === 'object' && 'id' in listing.propertySubtype
+      ? String(listing.propertySubtype.id)
+      : listing.propertySubtype
+        ? String(listing.propertySubtype)
+        : ''
+
     setCityId(cityVal)
     setBarangayId(barangayVal)
     setCategoryId(categoryVal)
     setTypeId(typeVal)
+    setSubtypeId(subtypeVal)
 
     setTransactionTypes(
       Array.isArray(listing.transactionType) ? (listing.transactionType as string[]) : [],
@@ -221,6 +232,8 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     if (!categoryId) {
       setTypes([])
       setTypeId('')
+      setSubtypes([])
+      setSubtypeId('')
       return
     }
 
@@ -238,6 +251,33 @@ export function EditListingForm({ listing }: EditListingFormProps) {
       }
     })()
   }, [categoryId])
+
+  // Load property subtypes when type changes
+  useEffect(() => {
+    if (!typeId) {
+      setSubtypes([])
+      setSubtypeId('')
+      return
+    }
+
+    void (async () => {
+      try {
+        const url = `/api/property-subtypes?limit=200&where[propertyType][equals]=${encodeURIComponent(
+          typeId,
+        )}&where[isActive][equals]=true`
+        const opts = await fetchOptions(url)
+        setSubtypes(opts)
+
+        // Only clear if current subtypeId is not in new options
+        if (subtypeId && !opts.find((s) => String(s.id) === String(subtypeId))) {
+          setSubtypeId('')
+        }
+      } catch (e) {
+        console.error(e)
+        setError('Failed to load property subtypes.')
+      }
+    })()
+  }, [typeId])
 
   /**
    * Navigates to the next step.
@@ -311,6 +351,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
         barangay: barangayId || null,
         propertyCategory: categoryId || null,
         propertyType: typeId || null,
+        propertySubtype: subtypeId ? Number(subtypeId) : null,
         transactionType: transactionTypes,
         floorAreaSqm: floorAreaSqm ? Number(floorAreaSqm) : null,
         lotAreaSqm: lotAreaSqm ? Number(lotAreaSqm) : null,
@@ -335,14 +376,14 @@ export function EditListingForm({ listing }: EditListingFormProps) {
       })
 
       if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        const msg =
-          (data && (data.message || data.error)) ||
-          `Failed to update listing (status ${res.status})`
-        throw new Error(msg)
+        const errorData = await res.json().catch(() => null)
+        const errorMessage = errorData?.errors?.[0]?.message || errorData?.message || `Error ${res.status}: Failed to update listing`
+        throw new Error(errorMessage)
       }
 
-      // After update, go back to listings
+      toast.success('Listing updated successfully!')
+
+      router.refresh()
       router.push('/listings')
     } catch (err) {
       console.error(err)
@@ -461,17 +502,16 @@ export function EditListingForm({ listing }: EditListingFormProps) {
 
               {/* Property Classification */}
               <div className="space-y-4">
-                <h2 className="text-sm font-semibold">Property Classification</h2>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-3">
                   <div>
-                    <Label>Category</Label>
+                    <Label>Property Category</Label>
                     <Select
                       value={categoryId}
                       onValueChange={(val) => setCategoryId(val)}
                       disabled={isLoading || categories.length === 0}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder="Select a value" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((c) => (
@@ -484,19 +524,37 @@ export function EditListingForm({ listing }: EditListingFormProps) {
                   </div>
 
                   <div>
-                    <Label>Type</Label>
+                    <Label>Property Type</Label>
                     <Select
                       value={typeId}
                       onValueChange={(val) => setTypeId(val)}
                       disabled={isLoading || !categoryId || types.length === 0}
                     >
                       <SelectTrigger>
-                        <SelectValue
-                          placeholder={categoryId ? 'Select type' : 'Select category first'}
-                        />
+                        <SelectValue placeholder="Select a value" />
                       </SelectTrigger>
                       <SelectContent>
                         {types.map((t) => (
+                          <SelectItem key={t.id} value={String(t.id)}>
+                            {t.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Property Subtype</Label>
+                    <Select
+                      value={subtypeId}
+                      onValueChange={(val) => setSubtypeId(val)}
+                      disabled={isLoading || !typeId || subtypes.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a value" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subtypes.map((t) => (
                           <SelectItem key={t.id} value={String(t.id)}>
                             {t.label}
                           </SelectItem>
@@ -701,19 +759,21 @@ export function EditListingForm({ listing }: EditListingFormProps) {
           {step === 4 && (
             <div className="space-y-6">
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="price">Price (PHP)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    min={0}
-                    step={1000}
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
+                {transactionTypes.includes('sale') && (
+                  <div>
+                    <Label htmlFor="price">Price (PHP)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      min={0}
+                      step={1000}
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
                 {transactionTypes.includes('rent') && (
                   <div>
                     <Label htmlFor="rentPrice">Rent Price (PHP/month)</Label>
@@ -924,16 +984,19 @@ export function EditListingForm({ listing }: EditListingFormProps) {
                       {isLoading ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Save Changes?</AlertDialogTitle>
-                      <AlertDialogDescription>
+                  <AlertDialogContent className="sm:max-w-md">
+                    <AlertDialogHeader className="flex flex-col items-center justify-center space-y-3 pb-4 pt-2">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-2">
+                        <svg className="h-7 w-7 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                      </div>
+                      <AlertDialogTitle className="text-xl font-semibold text-center">Save Changes?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-center text-base">
                         Are you sure you want to save these changes to your listing?
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSubmit}>
+                    <AlertDialogFooter className="sm:justify-between pt-2 gap-2 sm:gap-0">
+                      <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSubmit} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
                         Save Changes
                       </AlertDialogAction>
                     </AlertDialogFooter>

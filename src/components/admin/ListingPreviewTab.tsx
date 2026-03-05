@@ -66,6 +66,8 @@ export const ListingPreviewTab: React.FC = () => {
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState(false)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [confirmAction, setConfirmAction] = useState<string | null>(null)
+    const [actionError, setActionError] = useState<{ title: string; message: string } | null>(null)
 
     const labels: Record<string, string> = {
         published: 'Publish',
@@ -75,7 +77,6 @@ export const ListingPreviewTab: React.FC = () => {
 
     const handleStatusChange = async (newStatus: string) => {
         if (!id || !listing) return
-        if (!window.confirm(`Are you sure you want to ${labels[newStatus]?.toLowerCase() || 'update'} this listing?`)) return
 
         setUpdating(true)
         try {
@@ -92,12 +93,20 @@ export const ListingPreviewTab: React.FC = () => {
                 router.refresh()
             } else {
                 const err = await res.json().catch(() => ({}))
-                toast.error(err.errors?.[0]?.message || `Failed to update status.`)
+                const errorMessage = err.errors?.[0]?.message || err.message || `Failed to update status.`
+                setActionError({
+                    title: 'Action Failed',
+                    message: errorMessage
+                })
             }
         } catch (err) {
-            toast.error('Network error. Please try again.')
+            setActionError({
+                title: 'Network Error',
+                message: 'Failed to communicate with the server. Please check your connection and try again.'
+            })
         } finally {
             setUpdating(false)
+            setConfirmAction(null)
         }
     }
 
@@ -230,7 +239,7 @@ export const ListingPreviewTab: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button
                             type="button"
-                            onClick={() => handleStatusChange('published')}
+                            onClick={() => setConfirmAction('published')}
                             disabled={updating || listing.status === 'published'}
                             style={{
                                 padding: '8px 20px',
@@ -248,7 +257,7 @@ export const ListingPreviewTab: React.FC = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => handleStatusChange('needs_revision')}
+                            onClick={() => setConfirmAction('needs_revision')}
                             disabled={updating || listing.status === 'needs_revision'}
                             style={{
                                 padding: '8px 20px',
@@ -266,7 +275,7 @@ export const ListingPreviewTab: React.FC = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => handleStatusChange('rejected')}
+                            onClick={() => setConfirmAction('rejected')}
                             disabled={updating || listing.status === 'rejected'}
                             style={{
                                 padding: '8px 20px',
@@ -451,6 +460,120 @@ export const ListingPreviewTab: React.FC = () => {
                     <div>Updated: {new Date(listing.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                 )}
             </div>
+
+            {/* Confirm Modal Overlay */}
+            {confirmAction && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                }}>
+                    <div style={{
+                        background: 'var(--theme-elevation-0)',
+                        padding: '24px',
+                        borderRadius: '8px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}>
+                        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600 }}>
+                            {labels[confirmAction] || 'Confirm Action'}
+                        </h3>
+                        <p style={{ margin: '0 0 24px 0', fontSize: '14px', color: 'var(--theme-elevation-400)' }}>
+                            Are you sure you want to {labels[confirmAction]?.toLowerCase() || 'update'} this listing?
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button
+                                onClick={() => setConfirmAction(null)}
+                                disabled={updating}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    border: '1px solid var(--theme-elevation-200)',
+                                    background: 'transparent',
+                                    color: 'var(--theme-elevation-800)',
+                                    cursor: updating ? 'not-allowed' : 'pointer',
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleStatusChange(confirmAction)}
+                                disabled={updating}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: confirmAction === 'rejected' ? '#dc2626' : confirmAction === 'needs_revision' ? '#d97706' : '#16a34a',
+                                    color: '#fff',
+                                    cursor: updating ? 'not-allowed' : 'pointer',
+                                    opacity: updating ? 0.7 : 1,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                {updating ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Modal Overlay */}
+            {actionError && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10000,
+                }}>
+                    <div style={{
+                        background: 'var(--theme-elevation-0)',
+                        padding: '24px',
+                        borderRadius: '8px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0', color: '#dc2626' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
+                                {actionError.title}
+                            </h3>
+                        </div>
+                        <p style={{ margin: '0 0 24px 0', fontSize: '14px', color: 'var(--theme-elevation-400)', lineHeight: '1.5' }}>
+                            {actionError.message}
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => setActionError(null)}
+                                style={{
+                                    padding: '8px 24px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: '#f3f4f6',
+                                    color: '#374151',
+                                    cursor: 'pointer',
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

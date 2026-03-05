@@ -25,6 +25,7 @@ import {
 import type { Media } from '@/payload-types'
 import { isMedia } from '@/lib/type-guards'
 import { getMediaUrl } from '@/lib/utils'
+import { toast } from 'sonner'
 
 /**
  * Interface for listing options used in select fields.
@@ -448,8 +449,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
       }
     }
     if (step === 4) {
-      if (!price) {
-        setError('Price is required.')
+      if (transactionTypes.includes('sale') && !price) {
+        setError('Price is required when listing is for sale.')
         return false
       }
       if (transactionTypes.includes('rent') && !rentPrice) {
@@ -599,6 +600,8 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
       const saved = await res.json()
       const id = saved?.doc?.id ?? saved?.id ?? listingId
+
+      toast.success(listingId ? 'Listing updated successfully!' : 'Listing created successfully!')
 
       // Force router to refresh before pushing to avoid Next.js caching stale lists
       router.refresh()
@@ -1009,40 +1012,42 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="price">Price (PHP) <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="price"
-                      type="text"
-                      value={price}
-                      onChange={(e) => {
-                        // Remove non-numeric chars except decimal
-                        const rawValue = e.target.value.replace(/[^0-9.]/g, '')
-                        if (rawValue === '') {
-                          setPrice('')
-                          return
-                        }
-                        // Parse and format
-                        const number = parseFloat(rawValue)
-                        if (!isNaN(number)) {
-                          // Allow typing decimal point
-                          if (rawValue.endsWith('.')) {
-                            setPrice(number.toLocaleString() + '.')
-                          } else if (rawValue.includes('.') && rawValue.endsWith('0')) {
-                            // Handle cases like "1.0"
-                            setPrice(rawValue)
-                          } else {
-                            setPrice(number.toLocaleString())
+                  {transactionTypes.includes('sale') && (
+                    <div>
+                      <Label htmlFor="price">Price (PHP) <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="price"
+                        type="text"
+                        value={price}
+                        onChange={(e) => {
+                          // Remove non-numeric chars except decimal
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, '')
+                          if (rawValue === '') {
+                            setPrice('')
+                            return
                           }
-                        } else {
-                          setPrice(rawValue)
-                        }
-                      }}
-                      required
-                      disabled={isLoading}
-                      placeholder="Base price"
-                    />
-                  </div>
+                          // Parse and format
+                          const number = parseFloat(rawValue)
+                          if (!isNaN(number)) {
+                            // Allow typing decimal point
+                            if (rawValue.endsWith('.')) {
+                              setPrice(number.toLocaleString() + '.')
+                            } else if (rawValue.includes('.') && rawValue.endsWith('0')) {
+                              // Handle cases like "1.0"
+                              setPrice(rawValue)
+                            } else {
+                              setPrice(number.toLocaleString())
+                            }
+                          } else {
+                            setPrice(rawValue)
+                          }
+                        }}
+                        required
+                        disabled={isLoading}
+                        placeholder="Base price"
+                      />
+                    </div>
+                  )}
                   {transactionTypes.includes('rent') && (
                     <div>
                       <Label htmlFor="rentPrice">Rent Price (PHP/month) <span className="text-destructive">*</span></Label>
@@ -1309,19 +1314,22 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                       }
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{listingId ? 'Update Listing?' : 'Create Listing?'}</AlertDialogTitle>
-                      <AlertDialogDescription>
+                  <AlertDialogContent className="sm:max-w-md">
+                    <AlertDialogHeader className="flex flex-col items-center justify-center space-y-3 pb-4 pt-2">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-2">
+                        <svg className="h-7 w-7 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                      </div>
+                      <AlertDialogTitle className="text-xl font-semibold text-center">{listingId ? 'Save Changes?' : 'Create Listing?'}</AlertDialogTitle>
+                      <AlertDialogDescription className="text-center text-base">
                         {listingId
                           ? 'Are you sure you want to save these changes to your listing?'
                           : 'Are you sure you want to create this listing?'}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSubmit}>
-                        {listingId ? 'Update' : 'Create'}
+                    <AlertDialogFooter className="sm:justify-between pt-2 gap-2 sm:gap-0">
+                      <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSubmit} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+                        {listingId ? 'Save Changes' : 'Create Listing'}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
