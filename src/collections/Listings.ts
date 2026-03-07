@@ -184,21 +184,7 @@ export const Listings: CollectionConfig = {
       // Validate location hierarchy (City -> Barangay -> Development)
       validateLocationHierarchy,
 
-      async ({ data, operation, originalDoc }) => {
-        if (operation === 'create' || operation === 'update') {
-          // Reset property type and subtype when category changes
-          if (operation === 'update' && originalDoc) {
-            if (data.propertyCategory && originalDoc.propertyCategory !== data.propertyCategory) {
-              data.propertyType = null
-              data.propertySubtype = null
-            }
-            if (data.propertyType && originalDoc.propertyType !== data.propertyType) {
-              data.propertySubtype = null
-            }
-          }
-        }
-        return data
-      },
+
 
       // Validate property classification hierarchy
       validatePropertyClassification,
@@ -314,10 +300,14 @@ export const Listings: CollectionConfig = {
                   relationTo: 'developments',
                   hasMany: false,
                   filterOptions: ({ siblingData }) => {
+                    const barangayVal = (siblingData as Record<string, unknown>)?.barangay
+                    if (!barangayVal) {
+                      return { id: { in: [] } } as Where
+                    }
                     return {
                       isActive: { equals: true },
-                      barangay: { equals: (siblingData as Record<string, unknown>)?.barangay || 'none' },
-                    }
+                      barangay: { equals: barangayVal },
+                    } as Where
                   },
                   admin: {
                     width: '33%',
@@ -422,7 +412,7 @@ export const Listings: CollectionConfig = {
                       data?.propertyCategory
 
                     if (!categoryVal) {
-                      return { id: { equals: 'none' } } as Where
+                      return { id: { in: [] } } as Where
                     }
 
                     const categoryId =
@@ -450,7 +440,7 @@ export const Listings: CollectionConfig = {
                       (siblingData as Record<string, unknown>)?.propertyType || data?.propertyType
 
                     if (!typeVal) {
-                      return { id: { equals: 'none' } } as Where
+                      return { id: { in: [] } } as Where
                     }
 
                     const typeId =

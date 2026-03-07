@@ -668,30 +668,37 @@ export async function deleteDocument(documentId: string) {
 
 /**
  * Get available locations (provinces, cities, barangays) that have published listings
+ * Optional filters (listingType, transactionType) narrow down the locations returned
  * Returns a hierarchical tree structure
  */
-export async function getAvailableLocations() {
+export async function getAvailableLocations(filters?: {
+  listingType?: string
+  transactionType?: string
+}) {
   const payload = await getPayloadInstance()
 
-  // Use raw SQL for efficient aggregation of distinct locations
-  // payload.db.drizzle is available in the postgres adapter
-  const { sql } = await import('@payloadcms/db-postgres')
+  // Use the standard payload find API to leverage built-in type safety and hasMany filtering
+  const where: Where = {
+    status: { equals: 'published' },
+    province: { exists: true },
+  }
+
+  if (filters?.listingType && filters.listingType !== 'both') {
+    where.listingType = { equals: filters.listingType }
+  }
+
+  if (filters?.transactionType) {
+    where.transactionType = { equals: filters.transactionType }
+  }
 
   try {
-    // db.drizzle is available in postgres adapter
-    const result = await payload.db.drizzle.execute(sql`
-      SELECT DISTINCT
-        province,
-        province_name,
-        city,
-        city_name,
-        barangay,
-        barangay_name
-      FROM listings
-      WHERE status = 'published'
-      AND province IS NOT NULL
-      ORDER BY province_name, city_name, barangay_name
-    `)
+    const result = await payload.find({
+      collection: 'listings',
+      where,
+      limit: 5000, // Fetch up to 5k locations (sufficient for most regional platforms)
+      overrideAccess: true,
+      depth: 0 // Only flat ID/Name data needed
+    })
 
     // Transform flat rows into a tree structure
     type LocationTree = Record<
@@ -712,21 +719,13 @@ export async function getAvailableLocations() {
 
     const tree: LocationTree = {}
 
-    for (const row of result.rows) {
-      const r = row as {
-        province: string
-        province_name: string
-        city: string
-        city_name: string
-        barangay: string
-        barangay_name: string
-      }
-      const province = r.province
-      const province_name = r.province_name
-      const city = r.city
-      const city_name = r.city_name
-      const barangay = r.barangay
-      const barangay_name = r.barangay_name
+    for (const row of result.docs) {
+      const province = row.province as string
+      const province_name = row.provinceName || province
+      const city = row.city as string
+      const city_name = row.cityName || city
+      const barangay = row.barangay as string
+      const barangay_name = row.barangayName || barangay
 
       if (!province) continue
 
@@ -748,10 +747,14 @@ export async function getAvailableLocations() {
         }
 
         if (barangay) {
-          tree[province].cities[city].barangays.push({
-            id: barangay,
-            name: barangay_name || barangay
-          })
+          // Prevent duplicates
+          const hasBarangay = tree[province].cities[city].barangays.some(b => b.id === barangay)
+          if (!hasBarangay) {
+            tree[province].cities[city].barangays.push({
+              id: barangay,
+              name: barangay_name || barangay
+            })
+          }
         }
       }
     }

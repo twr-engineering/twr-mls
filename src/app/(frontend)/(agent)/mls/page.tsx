@@ -62,7 +62,10 @@ export default async function MLSSearchPage({
   try {
     const [fetchedListings, fetchedLocations] = await Promise.all([
       searchListings(filters),
-      getAvailableLocations(),
+      getAvailableLocations({
+        listingType: filters.listingType,
+        transactionType: filters.transactionType
+      }),
     ])
     listings = fetchedListings
     availableLocations = fetchedLocations
