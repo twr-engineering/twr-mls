@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { refresh } from '@payloadcms/next/auth'
+import { revalidatePath } from 'next/cache'
 
 export async function POST(req: NextRequest) {
     try {
@@ -63,6 +64,9 @@ export async function POST(req: NextRequest) {
         } catch {
             // Non-fatal: the avatar is saved; the cookie will refresh on the next request
         }
+
+        // Force Next.js to purge its static/dynamic caches so Server Components reflect new avatar
+        revalidatePath('/', 'layout')
 
         // Resolve the avatar URL — in production with S3, mediaDoc.url from payload.create
         // may be a relative path rather than the full S3 URL. Construct it from the filename

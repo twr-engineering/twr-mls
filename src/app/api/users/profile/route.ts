@@ -3,6 +3,7 @@ import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { refresh } from '@payloadcms/next/auth'
+import { revalidatePath } from 'next/cache'
 
 /**
  * PATCH /api/users/profile
@@ -56,6 +57,9 @@ export async function PATCH(req: Request) {
         } catch {
             // Non-fatal: profile is saved; the cookie will refresh on the next request
         }
+
+        // Force Next.js to purge its static/dynamic caches so Server Components reflect new profile info
+        revalidatePath('/', 'layout')
 
         return NextResponse.json({ success: true }, { status: 200 })
     } catch (error) {

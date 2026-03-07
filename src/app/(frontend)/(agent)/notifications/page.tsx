@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Bell, CheckCheck, Loader2, ExternalLink } from 'lucide-react'
+import { CheckCheck, Loader2, ExternalLink, Bell } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Notification = {
     id: string
@@ -17,6 +18,7 @@ type Notification = {
     listing?: {
         id: string
         title: string
+        images?: { url?: string;[key: string]: unknown }[]
     }
 }
 
@@ -26,7 +28,8 @@ export default function NotificationsPage() {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const response = await fetch('/api/notifications', { credentials: 'include' })
+            // Added select constraints to prevent massive object overfetching at depth 2
+            const response = await fetch('/api/notifications?depth=2&select[listing]=id,title,images', { credentials: 'include' })
             if (response.ok) {
                 const data = await response.json()
                 setNotifications(data.docs || [])
@@ -149,8 +152,8 @@ export default function NotificationsPage() {
                         <Card
                             key={notification.id}
                             className={`transition-colors ${!notification.read
-                                    ? 'border-blue-200 bg-blue-50/30 shadow-sm'
-                                    : 'hover:bg-muted/30'
+                                ? 'border-blue-200 bg-blue-50/30 shadow-sm'
+                                : 'hover:bg-muted/30'
                                 }`}
                         >
                             <CardContent className="p-4">
@@ -182,13 +185,26 @@ export default function NotificationsPage() {
                                         </p>
 
                                         {notification.listing && (
-                                            <Link
-                                                href={`/listings/${notification.listing.id}`}
-                                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                                            >
-                                                <ExternalLink className="h-3 w-3" />
-                                                {notification.listing.title}
-                                            </Link>
+                                            <div className="flex items-center gap-3 pt-1">
+                                                {notification.listing.images && notification.listing.images.length > 0 && typeof notification.listing.images[0] === 'object' && notification.listing.images[0]?.url && (
+                                                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 bg-muted">
+                                                        <Image
+                                                            src={notification.listing.images[0].url}
+                                                            alt={notification.listing.title}
+                                                            fill
+                                                            className="object-cover"
+                                                            sizes="40px"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <Link
+                                                    href={`/listings/${notification.listing.id}`}
+                                                    className="inline-flex items-center gap-1 text-sm text-primary font-medium hover:underline"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    {notification.listing.title}
+                                                </Link>
+                                            </div>
                                         )}
                                     </div>
 

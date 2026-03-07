@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import type { Listing, City, Barangay, Development, Media } from '@/payload-types'
+import type { Media } from '@/payload-types'
 
 type Props = {
   params: Promise<{
@@ -75,8 +75,8 @@ export default async function SharePage({ params }: Props) {
 
   // Use optional chaining and proper typing for related fields
   // Note: city, province, and barangay are text fields in Listing collection
-  const city = typeof listing.city === 'object' ? (listing.city as any).name : listing.cityName
-  const barangay = typeof listing.barangay === 'object' ? (listing.barangay as any).name : listing.barangayName
+  const city = typeof listing.city === 'object' ? (listing.city as { name?: string }).name : listing.cityName
+  const barangay = typeof listing.barangay === 'object' ? (listing.barangay as { name?: string }).name : listing.barangayName
   const development = typeof listing.development === 'object' ? listing.development : null
 
   /**
