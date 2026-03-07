@@ -55,7 +55,7 @@ export default async function ViewListingPage({ params }: PageProps) {
       : null
   const subtypeName =
     listing.propertySubtype && typeof listing.propertySubtype === 'object'
-      ? (listing.propertySubtype as any).name
+      ? ((listing.propertySubtype as { title?: string, name?: string }).title || (listing.propertySubtype as { title?: string, name?: string }).name)
       : null
   const developmentName =
     listing.development && typeof listing.development === 'object'

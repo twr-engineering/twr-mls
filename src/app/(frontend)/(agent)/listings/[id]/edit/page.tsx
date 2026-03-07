@@ -93,7 +93,7 @@ export default async function EditListingPage({ params }: PageProps) {
   const initialData = {
     // Basic fields
     title: listing.title,
-    description: (listing.description as any) || undefined,
+    description: (listing.description as unknown as string) || undefined,
     listingType: listing.listingType,
 
     // Property classification

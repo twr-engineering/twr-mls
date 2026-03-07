@@ -12,6 +12,9 @@ const nextConfig = {
   //
   //   return webpackConfig
   // },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {

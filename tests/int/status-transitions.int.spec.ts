@@ -18,8 +18,8 @@ let admin: User
 let testCategory: PropertyCategory
 let testType: PropertyType
 let testCity: City
-let testBarangay: Barangay
-let testProvince: Province
+let _testBarangay: Barangay
+let _testProvince: Province
 
 describe('Status Transition Validation', () => {
   beforeAll(async () => {
@@ -37,7 +37,7 @@ describe('Status Transition Validation', () => {
       await payload.delete({ collection: 'barangays', where: { slug: { contains: 'status-test' } } })
       await payload.delete({ collection: 'cities', where: { slug: { contains: 'status-test' } } })
       await payload.delete({ collection: 'provinces', where: { slug: { contains: 'status-test' } } })
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
 
@@ -100,7 +100,7 @@ describe('Status Transition Validation', () => {
       draft: true,
     })
 
-    testProvince = await payload.create({
+    _testProvince = await payload.create({
       collection: 'provinces',
       data: {
         name: `Status Test Province ${timestamp}`,
@@ -123,7 +123,7 @@ describe('Status Transition Validation', () => {
       draft: true,
     })
 
-    testBarangay = await payload.create({
+    _testBarangay = await payload.create({
       collection: 'barangays',
       data: {
         name: `Status Test Barangay ${timestamp}`,

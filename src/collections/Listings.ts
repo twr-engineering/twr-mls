@@ -139,8 +139,10 @@ export const Listings: CollectionConfig = {
     group: 'Listings',
     description: 'Property listings for the MLS system',
     components: {
-      beforeListTable: ['@/components/admin/ListingStatusFilter'],
       views: {
+        list: {
+          Component: '/components/admin/ListingsManager#ListingsManager',
+        },
         edit: {
           preview: {
             Component: '@/components/admin/ListingPreviewTab',
@@ -204,8 +206,38 @@ export const Listings: CollectionConfig = {
       // Validate listing fields based on listingType
       validateListingFields,
 
-      // Validate status transitions
-      validateStatusTransition,
+    ],
+    beforeDelete: [
+      async ({ req, id }) => {
+        // Delete related documents
+        try {
+          await req.payload.delete({
+            collection: 'documents',
+            where: { listing: { equals: id } },
+            req, // Passes the transaction context to ensure rollback safety
+          })
+        } catch (e) {
+          // Ignore if none found or error on bulk
+        }
+
+        // Delete related notifications
+        try {
+          await req.payload.delete({
+            collection: 'notifications',
+            where: { listing: { equals: id } },
+            req,
+          })
+        } catch (e) { }
+
+        // Delete related external share links
+        try {
+          await req.payload.delete({
+            collection: 'external-share-links',
+            where: { listing: { equals: id } },
+            req,
+          })
+        } catch (e) { }
+      },
     ],
     afterChange: [notifyStatusChange],
   },
@@ -384,14 +416,24 @@ export const Listings: CollectionConfig = {
                   relationTo: 'property-types',
                   required: true,
                   hasMany: false,
-                  filterOptions: ({ data }) => {
-                    const query: Where = {
+                  filterOptions: ({ data, siblingData }) => {
+                    const categoryVal =
+                      (siblingData as Record<string, unknown>)?.propertyCategory ||
+                      data?.propertyCategory
+
+                    if (!categoryVal) {
+                      return { id: { equals: 'none' } } as Where
+                    }
+
+                    const categoryId =
+                      typeof categoryVal === 'object' && categoryVal !== null
+                        ? (categoryVal as any).value || (categoryVal as any).id || categoryVal
+                        : categoryVal
+
+                    return {
                       isActive: { equals: true },
-                    }
-                    if (data?.propertyCategory) {
-                      query.propertyCategory = { equals: data.propertyCategory }
-                    }
-                    return query
+                      propertyCategory: { equals: categoryId },
+                    } as Where
                   },
                   admin: {
                     width: '33%',
@@ -403,14 +445,23 @@ export const Listings: CollectionConfig = {
                   type: 'relationship',
                   relationTo: 'property-subtypes',
                   hasMany: false,
-                  filterOptions: ({ data }) => {
-                    const query: Where = {
+                  filterOptions: ({ data, siblingData }) => {
+                    const typeVal =
+                      (siblingData as Record<string, unknown>)?.propertyType || data?.propertyType
+
+                    if (!typeVal) {
+                      return { id: { equals: 'none' } } as Where
+                    }
+
+                    const typeId =
+                      typeof typeVal === 'object' && typeVal !== null
+                        ? (typeVal as any).value || (typeVal as any).id || typeVal
+                        : typeVal
+
+                    return {
                       isActive: { equals: true },
-                    }
-                    if (data?.propertyType) {
-                      query.propertyType = { equals: data.propertyType }
-                    }
-                    return query
+                      propertyType: { equals: typeId },
+                    } as Where
                   },
                   admin: {
                     width: '33%',

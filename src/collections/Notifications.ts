@@ -45,9 +45,11 @@ export const Notifications: CollectionConfig = {
     group: 'System',
     description: 'System notifications for users',
     components: {
-      beforeListTable: [
-        '/components/admin/ReviewPendingButton#ReviewPendingButton'
-      ]
+      views: {
+        list: {
+          Component: '/components/admin/NotificationsInbox#NotificationsInbox',
+        },
+      },
     }
   },
   access: {
