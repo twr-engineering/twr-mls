@@ -12,7 +12,6 @@ import { SearchableSelect } from './ui/searchable-select'
 import { MultiSelect, Option } from './ui/multi-select'
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -21,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Loader2 } from 'lucide-react'
 
 import type { Media } from '@/payload-types'
 import { isMedia } from '@/lib/type-guards'
@@ -170,6 +170,7 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   /**
@@ -1305,13 +1306,10 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
               )}
 
               {step === 6 && (
-                <AlertDialog>
+                <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
                   <AlertDialogTrigger asChild>
                     <Button type="button" disabled={isLoading}>
-                      {isLoading
-                        ? (listingId ? 'Updating...' : 'Creating...')
-                        : (listingId ? 'Update Listing' : 'Create Listing')
-                      }
+                      {listingId ? 'Update Listing' : 'Create Listing'}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="sm:max-w-md">
@@ -1327,10 +1325,21 @@ export function CreateListingForm({ initialData, listingId }: CreateListingFormP
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="sm:justify-between pt-2 gap-2 sm:gap-0">
-                      <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSubmit} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-                        {listingId ? 'Save Changes' : 'Create Listing'}
-                      </AlertDialogAction>
+                      <AlertDialogCancel disabled={isLoading} className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                      <Button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleSubmit(e)
+                        }}
+                        disabled={isLoading}
+                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+                      >
+                        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isLoading
+                          ? (listingId ? 'Saving...' : 'Creating...')
+                          : (listingId ? 'Save Changes' : 'Create Listing')}
+                      </Button>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

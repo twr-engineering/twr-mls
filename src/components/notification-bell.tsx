@@ -37,14 +37,14 @@ type Notification = {
 
 function getImageUrl(img: ListingImage | string | number): string | null {
   if (typeof img === 'string' || typeof img === 'number') return null
-  // Prefer the fully-qualified URL set by Payload's S3 generateFileURL
-  if (img.url && img.url.startsWith('http')) return img.url
+  // Return the URL directly if Payload provides it.
+  // Next.js and standard img tags handle relative URLs (e.g. /media/file.jpg) perfectly fine.
+  if (img.url) return img.url
   // Fallback: construct from filename only when the project ID is available
   const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
   if (img.filename && projectId) {
     return `https://${projectId}.supabase.co/storage/v1/object/public/media/${img.filename}`
   }
-  // Never return relative URLs or undefined-based URLs — they always break
   return null
 }
 

@@ -1,20 +1,13 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { User, Mail, Shield, Camera, Loader2, Phone, Save, X, Pencil, ZoomIn, ZoomOut, Check, RotateCcw } from 'lucide-react'
+import { User, Camera, Loader2, Phone, Save, Mail, Shield, Pencil, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -33,115 +26,40 @@ type ProfileFormProps = {
 export function ProfileForm({ user }: ProfileFormProps) {
     const router = useRouter()
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const imgObjRef = useRef<HTMLImageElement | null>(null)
 
-    // Profile fields — editing state
+    // Form state
     const [firstName, setFirstName] = useState(user.firstName || '')
     const [lastName, setLastName] = useState(user.lastName || '')
     const [phone, setPhone] = useState(user.phone || '')
-    const [isEditingInfo, setIsEditingInfo] = useState(false)
 
-    // Last successfully saved values — used for read-only display and cancel-reset
-    const [savedFirstName, setSavedFirstName] = useState(user.firstName || '')
-    const [savedLastName, setSavedLastName] = useState(user.lastName || '')
-    const [savedPhone, setSavedPhone] = useState(user.phone || '')
-
-    // Avatar URL — updated immediately after upload so display doesn't wait for router.refresh()
+    // Avatar state
     const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatar || null)
-    // Track image load failure so we fall back to the User icon instead of a broken image
+    const [avatarFile, setAvatarFile] = useState<File | null>(null)
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const [avatarLoadError, setAvatarLoadError] = useState(false)
 
-    // State
-    const [isUploading, setIsUploading] = useState(false)
-    const [isSavingInfo, setIsSavingInfo] = useState(false)
+    // UI state
+    const [isEditing, setIsEditing] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+    const [hasChanges, setHasChanges] = useState(false)
 
-    // Crop dialog state
-    const [cropDialogOpen, setCropDialogOpen] = useState(false)
-    const [imgSrc, setImgSrc] = useState('')
-    const [scale, setScale] = useState(1)
-    const [offsetX, setOffsetX] = useState(0)
-    const [offsetY, setOffsetY] = useState(0)
-    const [isDragging, setIsDragging] = useState(false)
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-
-    const hasProfileChanges =
-        firstName !== savedFirstName ||
-        lastName !== savedLastName ||
-        phone !== savedPhone
-
-    // Draw the canvas preview
-    const drawCanvas = useCallback(() => {
-        const canvas = canvasRef.current
-        const img = imgObjRef.current
-        if (!canvas || !img) return
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-
-        const size = canvas.width
-        ctx.clearRect(0, 0, size, size)
-
-        // Draw dark background
-        ctx.fillStyle = '#1a1a2e'
-        ctx.fillRect(0, 0, size, size)
-
-        // Calculate scaled dimensions
-        const imgAspect = img.naturalWidth / img.naturalHeight
-        let drawW: number, drawH: number
-
-        if (imgAspect > 1) {
-            drawH = size * scale
-            drawW = drawH * imgAspect
-        } else {
-            drawW = size * scale
-            drawH = drawW / imgAspect
-        }
-
-        const drawX = (size - drawW) / 2 + offsetX
-        const drawY = (size - drawH) / 2 + offsetY
-
-        ctx.drawImage(img, drawX, drawY, drawW, drawH)
-
-        // Draw circular mask overlay
-        ctx.globalCompositeOperation = 'destination-in'
-        ctx.beginPath()
-        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.globalCompositeOperation = 'source-over'
-
-        // Draw circle border
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2)
-        ctx.stroke()
-    }, [scale, offsetX, offsetY])
-
+    // Check if form changed
     useEffect(() => {
-        drawCanvas()
-    }, [drawCanvas])
+        const infoChanged = firstName !== (user.firstName || '') ||
+            lastName !== (user.lastName || '') ||
+            phone !== (user.phone || '')
+        const avatarChanged = !!avatarFile
 
-    // Reset avatar error whenever the URL is replaced (e.g. after a successful upload)
+        setHasChanges(infoChanged || avatarChanged)
+    }, [firstName, lastName, phone, avatarFile, user.firstName, user.lastName, user.phone])
+
+    // Reset avatar error when URL changes
     useEffect(() => {
         setAvatarLoadError(false)
-    }, [avatarUrl])
-
-    // Load image when source changes
-    useEffect(() => {
-        if (!imgSrc) return
-        const img = new window.Image()
-        img.onload = () => {
-            imgObjRef.current = img
-            setScale(1)
-            setOffsetX(0)
-            setOffsetY(0)
-            drawCanvas()
-        }
-        img.src = imgSrc
-    }, [imgSrc]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [avatarUrl, avatarPreview])
 
     const handleAvatarClick = () => {
+        if (!isEditing) return
         fileInputRef.current?.click()
     }
 
@@ -149,119 +67,59 @@ export function ProfileForm({ user }: ProfileFormProps) {
         const file = e.target.files?.[0]
         if (!file) return
 
-        const reader = new FileReader()
-        reader.addEventListener('load', () => {
-            setImgSrc(reader.result?.toString() || '')
-            setCropDialogOpen(true)
-            setScale(1)
-            setOffsetX(0)
-            setOffsetY(0)
-        })
-        reader.readAsDataURL(file)
+        if (avatarPreview) {
+            URL.revokeObjectURL(avatarPreview)
+        }
 
-        // Reset input so re-selecting same file works
+        const previewUrl = URL.createObjectURL(file)
+        setAvatarFile(file)
+        setAvatarPreview(previewUrl)
         e.target.value = ''
     }
 
-    // Mouse/touch drag handlers for canvas
-    const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        setIsDragging(true)
-        setDragStart({ x: e.clientX - offsetX, y: e.clientY - offsetY })
-        e.currentTarget.setPointerCapture(e.pointerId)
-    }
-
-    const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        if (!isDragging) return
-        setOffsetX(e.clientX - dragStart.x)
-        setOffsetY(e.clientY - dragStart.y)
-    }
-
-    const handlePointerUp = () => {
-        setIsDragging(false)
-    }
-
-    const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-        e.preventDefault()
-        const delta = e.deltaY > 0 ? -0.05 : 0.05
-        setScale((prev) => Math.max(0.5, Math.min(3, prev + delta)))
-    }
-
-    const handleResetCrop = () => {
-        setScale(1)
-        setOffsetX(0)
-        setOffsetY(0)
-    }
-
-    const getCroppedBlob = useCallback(async (): Promise<Blob | null> => {
-        const canvas = canvasRef.current
-        if (!canvas) return null
-
-        // Create output canvas at desired resolution
-        const outputCanvas = document.createElement('canvas')
-        const outputSize = 400
-        outputCanvas.width = outputSize
-        outputCanvas.height = outputSize
-        const ctx = outputCanvas.getContext('2d')
-        if (!ctx) return null
-
-        ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, outputSize, outputSize)
-
-        return new Promise((resolve) => {
-            outputCanvas.toBlob(
-                (blob) => resolve(blob),
-                'image/jpeg',
-                0.92,
-            )
-        })
-    }, [])
-
-    const handleCropSave = async () => {
-        setIsUploading(true)
-        try {
-            const croppedBlob = await getCroppedBlob()
-            if (!croppedBlob) {
-                toast.error('Failed to crop image')
-                return
-            }
-
-            // Upload and link avatar in one secure server-side call
-            const formData = new FormData()
-            formData.append('file', croppedBlob, `avatar-${Date.now()}.jpg`)
-            formData.append('alt', `${user.email} avatar`)
-
-            // Using custom route handler to bypass CSRF blocks on direct payload POSTs
-            const uploadRes = await fetch('/api/users/avatar', {
-                method: 'POST',
-                credentials: 'include',
-                body: formData,
-            })
-
-            if (!uploadRes.ok) {
-                const errorData = await uploadRes.json()
-                throw new Error(errorData.error || 'Failed to update profile picture')
-            }
-
-            const uploadData = await uploadRes.json()
-            if (uploadData.avatarUrl) {
-                setAvatarUrl(uploadData.avatarUrl)
-            }
-
-            toast.success('Avatar updated!')
-            setCropDialogOpen(false)
-            setImgSrc('')
-            router.refresh()
-        } catch (error) {
-            console.error('Avatar update error:', error)
-            toast.error('Failed to update avatar')
-        } finally {
-            setIsUploading(false)
+    const handleCancelEditing = () => {
+        // Revert all changes securely
+        setFirstName(user.firstName || '')
+        setLastName(user.lastName || '')
+        setPhone(user.phone || '')
+        setAvatarFile(null)
+        if (avatarPreview) {
+            URL.revokeObjectURL(avatarPreview)
+            setAvatarPreview(null)
         }
+        setIsEditing(false)
     }
 
-    const handleSaveInfo = async () => {
-        setIsSavingInfo(true)
+    const handleSaveProfile = async () => {
+        setIsSaving(true)
+
         try {
-            // Using custom route handler to bypass CSRF blocks on direct Payload REST API PATCHes
+            let newAvatarUrl = avatarUrl
+
+            // 1. Upload Avatar if changed
+            if (avatarFile) {
+                const formData = new FormData()
+                formData.append('file', avatarFile, `avatar-${Date.now()}.jpg`)
+                formData.append('alt', `${user.email} avatar`)
+
+                const uploadRes = await fetch('/api/users/avatar', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                })
+
+                if (!uploadRes.ok) {
+                    const errorData = await uploadRes.json()
+                    throw new Error(errorData.error || 'Failed to update profile picture')
+                }
+
+                const uploadData = await uploadRes.json()
+                if (uploadData.avatarUrl) {
+                    newAvatarUrl = uploadData.avatarUrl
+                }
+            }
+
+            // 2. Update Profile Information
             const updateRes = await fetch('/api/users/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -278,69 +136,81 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 throw new Error(errorData?.error || 'Failed to update profile')
             }
 
-            setSavedFirstName(firstName.trim())
-            setSavedLastName(lastName.trim())
-            setSavedPhone(phone.trim())
-            toast.success('Profile updated!')
-            setIsEditingInfo(false)
+            // Clean up preview URL
+            if (avatarPreview) {
+                URL.revokeObjectURL(avatarPreview)
+                setAvatarPreview(null)
+            }
+
+            // Set final state
+            setAvatarFile(null)
+            setAvatarUrl(newAvatarUrl)
+            setHasChanges(false)
+            setIsEditing(false) // Close editing mode on success
+
+            toast.success('Profile saved successfully!')
             router.refresh()
         } catch (error) {
             console.error('Profile update error:', error)
-            toast.error('Failed to update profile')
+            toast.error(error instanceof Error ? error.message : 'Failed to update profile')
         } finally {
-            setIsSavingInfo(false)
+            setIsSaving(false)
         }
     }
 
-    const handleCancelEdit = () => {
-        setFirstName(savedFirstName)
-        setLastName(savedLastName)
-        setPhone(savedPhone)
-        setIsEditingInfo(false)
-    }
+    const displayName = [firstName, lastName].filter(Boolean).join(' ') ||
+        [user.firstName, user.lastName].filter(Boolean).join(' ') ||
+        user.email.split('@')[0]
 
-    const displayName = [savedFirstName, savedLastName].filter(Boolean).join(' ') || user.email.split('@')[0]
+    // Use preview if available, otherwise use saved URL
+    const displayAvatar = avatarPreview || avatarUrl
 
     return (
-        <>
-            <div className="max-w-2xl mx-auto space-y-6">
-                {/* Hero Avatar Card */}
-                <Card className="overflow-hidden">
-                    <div className="relative h-32 bg-gradient-to-br from-primary/80 via-primary/50 to-primary/20" />
-                    <CardContent className="relative pb-6">
-                        {/* Avatar - overlapping the gradient */}
-                        <div className="flex flex-col items-center -mt-16 space-y-3">
-                            <div className="relative group">
+        <div className="max-w-6xl mx-auto pb-12">
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+
+                {/* Left Column: Identity Sidebar */}
+                <div className="w-full lg:w-1/3 flex flex-col gap-6">
+                    <Card className="border shadow-sm">
+                        <CardContent className="pt-10 pb-8 px-6 flex flex-col items-center text-center">
+
+                            {/* Avatar Picker */}
+                            <div className={`relative group mb-6 ${isEditing ? 'cursor-pointer' : ''}`}>
                                 <div
-                                    className="h-28 w-28 rounded-full border-4 border-background bg-muted overflow-hidden shadow-xl cursor-pointer transition-transform duration-200 hover:scale-105"
+                                    className={`h-36 w-36 rounded-full border-4 border-white bg-slate-50 overflow-hidden shadow-md transition-all duration-200 ${isEditing ? 'group-hover:shadow-lg' : ''}`}
                                     onClick={handleAvatarClick}
                                 >
-                                    {avatarUrl && !avatarLoadError ? (
+                                    {displayAvatar && !avatarLoadError ? (
                                         <Image
-                                            src={avatarUrl}
+                                            src={displayAvatar}
                                             alt="Avatar"
-                                            width={112}
-                                            height={112}
-                                            className="object-cover w-full h-full"
+                                            fill
+                                            className="object-cover w-full h-full rounded-full"
                                             onError={() => setAvatarLoadError(true)}
+                                            sizes="(max-width: 768px) 144px, 144px"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                                            <User className="h-12 w-12 text-primary/60" />
+                                        <div className="w-full h-full rounded-full bg-slate-50 flex items-center justify-center">
+                                            <User className="h-16 w-16 text-slate-300" />
                                         </div>
                                     )}
-                                    {/* Hover overlay */}
-                                    <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                                        <Camera className="h-6 w-6 text-white" />
-                                    </div>
+                                    {/* Hover overlay - Only show in Edit Mode */}
+                                    {isEditing && (
+                                        <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200">
+                                            <Camera className="h-7 w-7 text-white mb-2" />
+                                            <span className="text-white text-xs font-medium tracking-wide">Upload Image</span>
+                                        </div>
+                                    )}
                                 </div>
-                                {/* Small camera badge */}
-                                <button
-                                    onClick={handleAvatarClick}
-                                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
-                                >
-                                    <Camera className="h-3.5 w-3.5" />
-                                </button>
+                                {/* Persistent small icon - Only show in Edit mode */}
+                                {isEditing && (
+                                    <button
+                                        onClick={handleAvatarClick}
+                                        className="absolute bottom-2 right-2 h-10 w-10 rounded-full bg-primary border-[3px] border-white text-primary-foreground flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+                                    >
+                                        <Camera className="h-4 w-4" />
+                                    </button>
+                                )}
                             </div>
 
                             <input
@@ -349,242 +219,207 @@ export function ProfileForm({ user }: ProfileFormProps) {
                                 className="hidden"
                                 accept="image/*"
                                 onChange={handleFileChange}
+                                disabled={!isEditing}
                             />
 
-                            <div className="text-center space-y-1">
-                                <h2 className="text-xl font-bold tracking-tight">{displayName}</h2>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
-                                <Badge variant="secondary" className="mt-1 capitalize text-xs">
-                                    {user.role}
-                                </Badge>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <h2 className="text-xl font-bold text-slate-900 mb-1">{displayName}</h2>
+                            <p className="text-sm text-slate-500 mb-4">{user.email}</p>
+                            <Badge variant="secondary" className="capitalize px-3 py-1 font-medium bg-slate-100 text-slate-700 hover:bg-slate-100 shadow-sm border-0">
+                                {user.role}
+                            </Badge>
 
-                {/* Personal Information */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between mb-5">
-                            <h3 className="text-base font-semibold">Personal Information</h3>
-                            {!isEditingInfo ? (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsEditingInfo(true)}
-                                    className="gap-1.5 text-muted-foreground hover:text-foreground"
-                                >
-                                    <Pencil className="h-3.5 w-3.5" />
-                                    Edit
-                                </Button>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleCancelEdit}
-                                        disabled={isSavingInfo}
-                                    >
-                                        <X className="h-3.5 w-3.5 mr-1" />
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        onClick={handleSaveInfo}
-                                        disabled={isSavingInfo || !hasProfileChanges}
-                                        className="gap-1.5"
-                                    >
-                                        {isSavingInfo ? (
-                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        ) : (
-                                            <Save className="h-3.5 w-3.5" />
-                                        )}
-                                        Save
-                                    </Button>
+                        </CardContent>
+                    </Card>
+
+                    {/* Immutable Details */}
+                    <Card className="border shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Shield className="h-5 w-5 text-slate-400" />
+                                Account Access
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Email Address</span>
+                                <div className="flex items-center gap-3 text-slate-900 font-medium py-1">
+                                    <Mail className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                    <span className="truncate">{user.email}</span>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Role Status</span>
+                                <div className="py-1">
+                                    <Badge variant="outline" className="capitalize text-slate-700 font-medium border-slate-200">
+                                        {user.role}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                        {isEditingInfo ? (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="firstName">First Name</Label>
+                {/* Right Column: Editable Profile Data */}
+                <div className="w-full lg:w-2/3 flex flex-col gap-6">
+                    <Card className="border shadow-sm flex-1">
+                        <CardHeader className="pb-6 border-b border-slate-100 shadow-sm">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <CardTitle className="text-xl">Profile Information</CardTitle>
+                                    <CardDescription className="mt-1">
+                                        {isEditing ? 'Make changes to your personal details below.' : 'Your personal details currently on file.'}
+                                    </CardDescription>
+                                </div>
+
+                                {/* Action Buttons (Desktop context) */}
+                                <div className="hidden sm:flex gap-2">
+                                    {!isEditing ? (
+                                        <Button
+                                            onClick={() => setIsEditing(true)}
+                                            variant="outline"
+                                            className="gap-2 shadow-sm whitespace-nowrap"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                            Edit Profile
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                onClick={handleCancelEditing}
+                                                variant="ghost"
+                                                disabled={isSaving}
+                                                className="gap-2 text-slate-500 hover:text-slate-900"
+                                            >
+                                                <X className="h-4 w-4" />
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                onClick={handleSaveProfile}
+                                                disabled={isSaving || !hasChanges}
+                                                className="gap-2 shadow-sm whitespace-nowrap bg-primary text-primary-foreground"
+                                            >
+                                                {isSaving ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Save className="h-4 w-4" />
+                                                )}
+                                                Save Changes
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </CardHeader>
+
+                        <CardContent className="pt-8 space-y-8">
+
+                            {/* Names Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                    <Label htmlFor="firstName" className="text-slate-700 font-medium">First Name</Label>
+                                    {isEditing ? (
                                         <Input
                                             id="firstName"
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
-                                            placeholder="Enter first name"
+                                            placeholder="e.g. John"
+                                            className="bg-slate-50/50 border-slate-200 focus-visible:ring-primary h-11"
                                         />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="lastName">Last Name</Label>
+                                    ) : (
+                                        <div className="h-11 flex items-center px-3 border border-transparent text-slate-900 font-medium bg-slate-50/50 rounded-md">
+                                            {firstName || '—'}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="space-y-3">
+                                    <Label htmlFor="lastName" className="text-slate-700 font-medium">Last Name</Label>
+                                    {isEditing ? (
                                         <Input
                                             id="lastName"
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
-                                            placeholder="Enter last name"
+                                            placeholder="e.g. Doe"
+                                            className="bg-slate-50/50 border-slate-200 focus-visible:ring-primary h-11"
                                         />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone Number</Label>
-                                    <Input
-                                        id="phone"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        placeholder="e.g., +63 912 345 6789"
-                                    />
+                                    ) : (
+                                        <div className="h-11 flex items-center px-3 border border-transparent text-slate-900 font-medium bg-slate-50/50 rounded-md">
+                                            {lastName || '—'}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+
+                            {/* Phone Row */}
+                            <div className="space-y-3 max-w-md">
+                                <Label htmlFor="phone" className="text-slate-700 font-medium">Phone Number</Label>
+                                {isEditing ? (
+                                    <>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
+                                                <Phone className="h-4 w-4" />
+                                            </div>
+                                            <Input
+                                                id="phone"
+                                                value={phone}
+                                                onChange={(e) => setPhone(e.target.value)}
+                                                placeholder="+63 9XX XXX XXXX"
+                                                className="pl-11 bg-slate-50/50 border-slate-200 focus-visible:ring-primary h-11"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-muted-foreground pt-1">
+                                            This number may be used to contact you regarding listings.
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div className="h-11 flex items-center px-3 gap-3 border border-transparent text-slate-900 font-medium bg-slate-50/50 rounded-md">
+                                        <Phone className="h-4 w-4 text-slate-400" />
+                                        {phone || '—'}
+                                    </div>
+                                )}
+                            </div>
+
+                        </CardContent>
+                    </Card>
+
+                    {/* Mobile Floating/Bottom Action button area */}
+                    <div className="sm:hidden flex flex-col gap-3 pt-4 pb-8 sticky bottom-0 bg-background/95 backdrop-blur z-20 border-t mt-4 -mx-4 px-4">
+                        {!isEditing ? (
+                            <Button
+                                onClick={() => setIsEditing(true)}
+                                variant="outline"
+                                className="w-full gap-2 shadow-sm h-12 text-base"
+                            >
+                                <Pencil className="h-5 w-5" />
+                                Edit Profile
+                            </Button>
                         ) : (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                            <User className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <div className="space-y-0.5 min-w-0">
-                                            <p className="text-xs text-muted-foreground">First Name</p>
-                                            <p className="text-sm font-medium truncate">{savedFirstName || '—'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                            <User className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <div className="space-y-0.5 min-w-0">
-                                            <p className="text-xs text-muted-foreground">Last Name</p>
-                                            <p className="text-sm font-medium truncate">{savedLastName || '—'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                        <Phone className="h-4 w-4 text-primary" />
-                                    </div>
-                                    <div className="space-y-0.5 min-w-0">
-                                        <p className="text-xs text-muted-foreground">Phone</p>
-                                        <p className="text-sm font-medium">{savedPhone || '—'}</p>
-                                    </div>
-                                </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={handleCancelEditing}
+                                    variant="outline"
+                                    disabled={isSaving}
+                                    className="flex-1 h-12 text-slate-600"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleSaveProfile}
+                                    disabled={isSaving || !hasChanges}
+                                    className="flex-[2] gap-2 shadow-md h-12 text-base"
+                                >
+                                    {isSaving ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <Save className="h-5 w-5" />
+                                    )}
+                                    Save
+                                </Button>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
-
-                {/* Account Details (read-only) */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <h3 className="text-base font-semibold mb-5">Account Details</h3>
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                                    <Mail className="h-4 w-4 text-blue-500" />
-                                </div>
-                                <div className="space-y-0.5 min-w-0">
-                                    <p className="text-xs text-muted-foreground">Email Address</p>
-                                    <p className="text-sm font-medium truncate">{user.email}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                                    <Shield className="h-4 w-4 text-amber-500" />
-                                </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-xs text-muted-foreground">Role</p>
-                                    <p className="text-sm font-medium capitalize">{user.role}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Image Crop Dialog */}
-            <Dialog open={cropDialogOpen} onOpenChange={(open) => !isUploading && setCropDialogOpen(open)}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Crop Your Avatar</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                            Drag to reposition. Use the zoom slider or scroll wheel to resize.
-                        </p>
-
-                        {/* Canvas crop area */}
-                        <div className="flex justify-center">
-                            <canvas
-                                ref={canvasRef}
-                                width={280}
-                                height={280}
-                                className="rounded-full cursor-grab active:cursor-grabbing border-2 border-border bg-muted/50"
-                                style={{ touchAction: 'none' }}
-                                onPointerDown={handlePointerDown}
-                                onPointerMove={handlePointerMove}
-                                onPointerUp={handlePointerUp}
-                                onPointerLeave={handlePointerUp}
-                                onWheel={handleWheel}
-                            />
-                        </div>
-
-                        {/* Zoom control */}
-                        <div className="flex items-center gap-3 px-2">
-                            <ZoomOut className="h-4 w-4 text-muted-foreground shrink-0" />
-                            <input
-                                type="range"
-                                min={50}
-                                max={300}
-                                value={Math.round(scale * 100)}
-                                onChange={(e) => setScale(Number(e.target.value) / 100)}
-                                className="flex-1 h-1.5 bg-primary/20 rounded-full appearance-none cursor-pointer accent-primary
-                                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:cursor-pointer
-                                    [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
-                            />
-                            <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
-                        </div>
-
-                        {/* Reset button */}
-                        <div className="flex justify-center">
-                            <Button variant="ghost" size="sm" onClick={handleResetCrop} className="gap-1.5 text-xs text-muted-foreground">
-                                <RotateCcw className="h-3 w-3" />
-                                Reset Position
-                            </Button>
-                        </div>
                     </div>
 
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setCropDialogOpen(false)
-                                setImgSrc('')
-                            }}
-                            disabled={isUploading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleCropSave}
-                            disabled={isUploading || !imgSrc}
-                            className="gap-2"
-                        >
-                            {isUploading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Uploading...
-                                </>
-                            ) : (
-                                <>
-                                    <Check className="h-4 w-4" />
-                                    Apply &amp; Save
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </>
+                </div>
+            </div>
+        </div>
     )
 }
